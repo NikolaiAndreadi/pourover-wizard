@@ -131,6 +131,6 @@ export function expectedPoints(value: Recipe, endMs: number) {
     Math.max(180000, endMs),
   ]);
   return [...times]
-    .sort((a, b) => a - b)
+    .toSorted((a, b) => a - b)
     .map((atMs) => ({ atMs, grams: expectedWeight(value, atMs) }));
 }

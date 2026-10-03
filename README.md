@@ -27,7 +27,8 @@ browser once with `npx playwright install chromium` (Linux CI also uses
   `reports/complexity.json`; no CRAP score or hard gate.
 - `npm run quality:report` — coverage followed by complexity reporting.
 - `npm run test:mutation` — targeted engine/recipe-function/BOOKOO codec mutations
-  with an incremental cache in `reports/mutation/incremental.json` and two workers.
+  with an incremental cache in `reports/mutation/incremental.json` and four workers
+  (two compiler checkers and two test runners).
 - `npm run test:mutation:full` — fresh mutation evidence after dependency,
   configuration, or fixture changes and before releases; results in
   `reports/mutation/index.html` and `reports/mutation/mutation.json`.
@@ -39,13 +40,26 @@ tracks Vitest 5 nested suite name separators causing Stryker's per-test filters
 to skip those tests. Upgrading this pair requires a known-mutant canary proving the relevant nested tests run, followed by a fresh
 full mutation run and the normal checks.
 
-TypeScript **6.0.3** supplies the classic compiler API used by the syntax-aware
-guards and dependency checks. [TypeScript 7.0 ships without that API](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/),
-but supports running its native checker alongside the classic API package.
-The [typescript-eslint compatibility range](https://typescript-eslint.io/users/dependency-versions/#typescript)
-also requires the classic API below 6.1. This repository keeps 6.0.3 for its
-checks until that migration is verified. Node declarations use **26.6.4**,
-matching the required Node 26 runtime.
+On a 14-core, 36 GiB machine, a fresh mutation run with four workers took 2m25s
+versus 4m49s with two, with identical outcomes for every mutant. This is local
+timing evidence; on a smaller machine, use
+`npm run test:mutation:full -- --concurrency 2` to limit CPU and memory use.
+
+TypeScript **7.0.2** checks the application and DOM-free core through `tsc`.
+[Microsoft's supported side-by-side aliases](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-60)
+install it as `@typescript/native: npm:typescript@7.0.2` and expose the classic
+API as `typescript: npm:@typescript/typescript6@6.0.2`. The compatibility package
+re-exports TypeScript **6.0.3**, pinned transitively in the lockfile, and owns
+only `tsc6`; the native package owns `tsc`. Syntax-aware guards, dependency
+checks, the complexity parser, and Stryker's checker continue using that classic
+API. The [typescript-eslint compatibility range](https://typescript-eslint.io/users/dependency-versions/#typescript)
+requires the classic API below 6.1. `typecheck` also retains the classic core
+check; architecture fixtures prove both compilers reject DOM access in core.
+Verify the installation with `npm exec -- tsc --version`, `npm exec -- tsc6
+--version`, and `node --input-type=module -e 'import ts from "typescript";
+console.log(ts.version, typeof ts.createSourceFile)'`. Node declarations use
+**26.6.4**, matching the required Node 26 runtime. Source APIs remain within
+the existing ES2023 target; the recipe chart uses nonmutating `toSorted`.
 
 Browser tests start and stop their own production preview server and exercise
 `/pourover-wizard/`, including direct hash-route reloads. Screenshots and traces

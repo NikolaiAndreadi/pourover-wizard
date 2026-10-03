@@ -19,7 +19,7 @@ export default {
   vitest: { configFile: "vitest.config.ts" },
   checkers: ["typescript"],
   tsconfigFile: "tsconfig.json",
-  concurrency: 2,
+  concurrency: 4,
   incremental: true,
   incrementalFile: "reports/mutation/incremental.json",
   reporters: ["clear-text", "progress", "html", "json"],

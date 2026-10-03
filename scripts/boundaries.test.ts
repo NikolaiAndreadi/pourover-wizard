@@ -69,6 +69,17 @@ it("rejects forbidden dependency edges, cycles, DOM core code, and Bluetooth acc
     const core = run([path.join(root, "scripts/check-core.mjs")]);
     expect(core.status, core.stdout + core.stderr).not.toBe(0);
     expect(core.stdout + core.stderr).toContain("Cannot find name 'document'");
+    const nativeCore = run([
+      path.join(root, "node_modules/@typescript/native/bin/tsc"),
+      "-p",
+      "tsconfig.core.json",
+    ]);
+    expect(nativeCore.status, nativeCore.stdout + nativeCore.stderr).not.toBe(
+      0,
+    );
+    expect(nativeCore.stdout + nativeCore.stderr).toContain(
+      "Cannot find name 'document'",
+    );
     rmSync(path.join(fixture, "src/core"), { recursive: true });
     write("tsconfig.core.json", "{ broken");
     expect(run([path.join(root, "scripts/check-core.mjs")]).status).not.toBe(0);

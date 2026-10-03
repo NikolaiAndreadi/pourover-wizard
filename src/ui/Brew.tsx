@@ -27,6 +27,51 @@ function Source() {
     </p>
   );
 }
+function LiveControls({ model }: { model: BrewModel }) {
+  return (
+    <aside aria-label="Live scale connection">
+      <p role="status">
+        Scale: {model.liveState.status}.{" "}
+        {model.session?.lastSample
+          ? `${model.liveWeight?.toFixed(1) ?? "—"} g`
+          : "Waiting for fresh readings."}
+      </p>
+      {model.liveState.error && <p role="alert">{model.liveState.error}</p>}
+      {model.liveState.status === "disconnected" ? (
+        <button
+          type="button"
+          disabled={!model.liveSupported}
+          onClick={model.connectLive}
+        >
+          Connect BOOKOO scale
+        </button>
+      ) : (
+        <button type="button" onClick={model.disconnectLive}>
+          Disconnect scale
+        </button>
+      )}
+      {!model.liveSupported && (
+        <p>Live connection requires a browser with Web Bluetooth support.</p>
+      )}
+      {model.session?.phase === "preparation" && (
+        <button
+          type="button"
+          disabled={
+            model.liveState.status !== "connected" ||
+            model.liveState.pendingTare
+          }
+          onClick={model.tareLive}
+        >
+          {model.liveState.pendingTare ? "Taring scale…" : "Tare live scale"}
+        </button>
+      )}
+      <p>
+        The app timer continues through connection loss. Tare never arms.
+        Auto-start needs tare and fresh stable readings within 1 g of zero.
+      </p>
+    </aside>
+  );
+}
 function Chart({ model }: { model: BrewModel }) {
   const session = model.session;
   if (!session) return null;
@@ -43,7 +88,9 @@ function Chart({ model }: { model: BrewModel }) {
         aria-label={
           session.mode === "timer"
             ? "Expected water guidance curve"
-            : "Expected and simulated water curves"
+            : session.mode === "live"
+              ? "Expected and measured water curves"
+              : "Expected and simulated water curves"
         }
       >
         <path
@@ -62,14 +109,22 @@ function Chart({ model }: { model: BrewModel }) {
           strokeDasharray="5 4"
         />
         {session.mode !== "timer" && (
-          <polyline
-            points={session.samples
-              .map((sample) => point(sample.atMs, sample.grams))
-              .join(" ")}
-            fill="none"
-            stroke="var(--accent)"
-            strokeWidth="3"
-          />
+          <g>
+            {Array.from(
+              new Set(session.samples.map((sample) => sample.segment ?? 0)),
+            ).map((segment) => (
+              <polyline
+                key={segment}
+                points={session.samples
+                  .filter((sample) => (sample.segment ?? 0) === segment)
+                  .map((sample) => point(sample.atMs, sample.grams))
+                  .join(" ")}
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth="3"
+              />
+            ))}
+          </g>
         )}
         <text x="20" y="178">
           0:00
@@ -84,7 +139,9 @@ function Chart({ model }: { model: BrewModel }) {
       <figcaption>
         Dashed: expected water
         {session.mode !== "timer"
-          ? " · Solid: simulated samples"
+          ? session.mode === "live"
+            ? " · Solid: measured samples; gaps indicate lost readings"
+            : " · Solid: simulated samples"
           : " · No scale measurements"}
       </figcaption>
     </figure>
@@ -136,10 +193,57 @@ export function Brew({ model }: { model: BrewModel }) {
               }
             >
               <option value="timer">Timer only</option>
+              <option value="live">BOOKOO live scale</option>
               <option value="fake">Simulated scale</option>
               <option value="learn">Learn · simulated rehearsal</option>
             </select>
           </label>
+          {model.mode === "live" && (
+            <fieldset>
+              <legend>Confirmed BOOKOO encoding</legend>
+              <p>
+                Enter byte codes confirmed against your scale display in the
+                BOOKOO lab. The official protocol does not specify these codes.
+                No defaults are assumed.
+              </p>
+              {(["gramsUnit", "positiveSign", "negativeSign"] as const).map(
+                (key) => (
+                  <label key={key}>
+                    {
+                      {
+                        gramsUnit: "Grams unit code",
+                        positiveSign: "Positive sign code",
+                        negativeSign: "Negative sign code",
+                      }[key]
+                    }
+                    <input
+                      type="number"
+                      min="0"
+                      max="255"
+                      value={model.mapping[key]}
+                      onChange={(event) => {
+                        model.setMapping({
+                          ...model.mapping,
+                          [key]: event.target.value,
+                        });
+                        model.setMappingConfirmed(false);
+                      }}
+                    />
+                  </label>
+                ),
+              )}
+              <label>
+                <input
+                  type="checkbox"
+                  checked={model.mappingConfirmed}
+                  onChange={(event) =>
+                    model.setMappingConfirmed(event.target.checked)
+                  }
+                />
+                I confirmed these codes against the scale display.
+              </label>
+            </fieldset>
+          )}
           {model.mode === "learn" && (
             <label>
               Playback speed
@@ -164,7 +268,11 @@ export function Brew({ model }: { model: BrewModel }) {
           <button
             type="button"
             className="button"
-            disabled={!model.doseValid || !Number.isFinite(Number(model.seed))}
+            disabled={
+              !model.doseValid ||
+              !Number.isFinite(Number(model.seed)) ||
+              (model.mode === "live" && !model.mappingValid)
+            }
             onClick={model.prepare}
           >
             Prepare brew
@@ -212,15 +320,33 @@ export function Brew({ model }: { model: BrewModel }) {
         ) : (
           <>
             <p>
-              Simulated poured water:{" "}
+              {session.mode === "live"
+                ? "Measured settled water estimate: "
+                : "Simulated poured water: "}
               {session.pouredGrams === null
                 ? "unavailable"
                 : `${session.pouredGrams.toFixed(1)} g`}
               .{" "}
               {session.pouredGrams !== null &&
-                `Simulated ratio: 1:${(session.pouredGrams / session.recipe.doseGrams).toFixed(2)}.`}
+                `${session.mode === "live" ? "Estimated" : "Simulated"} ratio: 1:${(session.pouredGrams / session.recipe.doseGrams).toFixed(2)}.`}
             </p>
-            <p>Simulated data for rehearsal.</p>
+            <p>
+              {session.mode === "live"
+                ? "Highest settled reading; sustained load disturbances can inflate this estimate."
+                : "Simulated data for rehearsal."}
+            </p>
+            {session.mode === "live" && !session.baselineVerified && (
+              <p>
+                No verified zero baseline was available at the start. Net poured
+                water and ratio are unavailable.
+              </p>
+            )}
+            {session.mode === "live" && session.missingData && (
+              <p>
+                Readings are missing from part of this brew. The estimate may
+                omit poured water.
+              </p>
+            )}
           </>
         )}
         <Chart model={model} />
@@ -238,7 +364,9 @@ export function Brew({ model }: { model: BrewModel }) {
           ? "Timer only"
           : session.mode === "learn"
             ? "Learn · simulated rehearsal"
-            : "Simulated scale · synthetic data"}
+            : session.mode === "live"
+              ? "BOOKOO live scale"
+              : "Simulated scale · synthetic data"}
       </p>
       <h1>
         {brewing
@@ -250,13 +378,14 @@ export function Brew({ model }: { model: BrewModel }) {
       <p className="timer" role="timer" aria-label="Elapsed brew time">
         {formatTime(session.elapsedMs)}
       </p>
+      {session.mode === "live" && <LiveControls model={model} />}
       {!brewing ? (
         <>
           <p>
             Place the V60 and server on your scale and tare after preparation.
             Pour now starts at your tap.
           </p>
-          {session.mode !== "timer" && (
+          {(session.mode === "fake" || session.mode === "learn") && (
             <button
               type="button"
               disabled={session.phase === "armed" || session.tared}
@@ -269,6 +398,7 @@ export function Brew({ model }: { model: BrewModel }) {
             <button
               type="button"
               className="button"
+              disabled={session.mode === "live" && model.liveState.pendingTare}
               onClick={() => dispatch("start")}
             >
               Pour now
@@ -276,13 +406,17 @@ export function Brew({ model }: { model: BrewModel }) {
             {session.mode !== "timer" && (
               <button
                 type="button"
-                disabled={!session.tared || session.phase === "armed"}
+                disabled={
+                  !session.tared ||
+                  session.phase === "armed" ||
+                  (session.mode === "live" && !model.liveCanArm)
+                }
                 onClick={() => dispatch("arm")}
               >
                 Arm auto-start
               </button>
             )}
-            {session.phase === "armed" && (
+            {session.phase === "armed" && session.mode !== "live" && (
               <button type="button" onClick={model.simulatePour}>
                 Simulate a pour
               </button>
@@ -326,8 +460,17 @@ export function Brew({ model }: { model: BrewModel }) {
             </div>
             {session.mode !== "timer" && (
               <div>
-                <dt>Simulated weight</dt>
-                <dd>{session.lastSample?.grams.toFixed(1) ?? "—"} g</dd>
+                <dt>
+                  {session.mode === "live"
+                    ? "Measured weight"
+                    : "Simulated weight"}
+                </dt>
+                <dd>
+                  {(session.mode === "live"
+                    ? model.liveWeight?.toFixed(1)
+                    : session.lastSample?.grams.toFixed(1)) ?? "—"}{" "}
+                  g
+                </dd>
               </div>
             )}
           </dl>

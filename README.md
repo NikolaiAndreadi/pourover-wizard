@@ -2,7 +2,8 @@
 
 A small React and TypeScript V60 brewing SPA with a guided timer, deterministic
 simulated scale, and Learn playback at 1× or 4×. The separate BOOKOO lab supports
-raw capture and replay; live-scale brewing and native iOS remain unfinished.
+raw capture and replay. Live BOOKOO brewing uses explicitly confirmed encoding;
+native iOS remains unfinished.
 
 ## Develop and verify
 
@@ -66,6 +67,20 @@ visibility changes require separate authorization.
 
 ## Brewing behavior and source
 
+**Pour now** starts at tap time in every mode, including live brewing without a
+connected scale. Choose BOOKOO live scale and enter sign/unit byte codes confirmed
+against your scale display in the lab; no hardware codes are assumed or persisted.
+Connect, explicitly tare, wait for at least 500 ms of fresh stable readings within
+1 g of zero, then explicitly **Arm auto-start** if desired. A completed tare write
+is not proof that the hardware tared; zero readings are also required. Tare never
+arms. Connection loss or readings older than 500 ms clear readiness and detection;
+reconnect and tare again before arming. The app timer continues through loss.
+No automatic tare or scale timer synchronization occurs. Live weight display uses
+a short median; detection and settled estimation use unsmoothed decoded readings.
+Opening the scale lab disconnects a live brewing connection, preserving the brew
+timer while keeping one GATT owner. Completion, cancellation, restart and app
+teardown release the live connection.
+
 **Pour now** starts at tap time. In simulation, tare, explicitly **Arm auto-start**,
 then **Simulate a pour**. Tare and opening the screen never arm or start a brew.
 Detection requires fresh consecutive rises totaling at least 3 g over at least
@@ -87,10 +102,15 @@ Doses of 10–25 g scale water while retaining timing; only the original recipe
 was source-verified, and scaled brewing results remain untested.
 
 Timer summaries show targets without fabricated measurements. Fake/Learn data
-is labeled synthetic. Final simulated weight uses the highest settled reading
-(at least 500 ms within 1 g), excluding brief spikes and dripper removal;
-sustained load disturbances may inflate it. Charts retain at most 600 display
-samples and are not raw recordings.
+is labeled synthetic. Final simulated weight and live measured estimates use the
+highest settled reading (at least 500 ms within 1 g), excluding brief spikes and
+dripper removal; sustained load disturbances may inflate it. Live water/ratio
+estimates require a verified tared stable zero baseline at manual start or
+explicit arming; starting without that baseline still provides the timer and raw
+measured chart, but no net poured-water estimate. Reconnect retains that original
+baseline. Live summaries identify missing readings and show an estimated ratio
+only when a settled measurement exists. Charts split across lost readings,
+retain at most 600 display samples, and are not raw recordings.
 
 See the [BOOKOO lab guide](docs/bookoo-lab.md) for `#/scale-lab`, protocol limits,
 capture/replay, and the hardware checklist. No real-device, iOS, or SideStore

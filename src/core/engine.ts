@@ -1,6 +1,6 @@
 import { type Recipe, scaleRecipe } from "./recipe";
 import type { ScaleSample } from "./scale";
-export type Mode = "timer" | "fake" | "learn";
+export type Mode = "timer" | "fake" | "learn" | "live";
 export type Phase =
   | "preparation"
   | "armed"
@@ -23,12 +23,23 @@ export interface Session {
   stable: readonly ScaleSample[];
   samples: readonly ScaleSample[];
   pouredGrams: number | null;
+  missingData: boolean;
+  baselineVerified: boolean;
+  segment: number;
   holdAtMs: number | null;
   holdElapsedMs: number;
 }
 export type Event =
   | {
-      type: "tick" | "tare" | "arm" | "start" | "done" | "hold" | "release";
+      type:
+        | "tick"
+        | "tare"
+        | "arm"
+        | "start"
+        | "done"
+        | "hold"
+        | "release"
+        | "signalLost";
       nowMs: number;
       holdNowMs?: number;
     }
@@ -54,6 +65,9 @@ export function createSession(dose: number, mode: Mode, nowMs = 0): Session {
     stable: [],
     samples: [],
     pouredGrams: null,
+    missingData: false,
+    baselineVerified: false,
+    segment: 0,
     holdAtMs: null,
     holdElapsedMs: 0,
   };
@@ -62,6 +76,10 @@ function begin(state: Session, originMs: number): Session {
   return {
     ...state,
     phase: "brewing",
+    baselineVerified:
+      state.mode !== "live" || state.baselineVerified || canArmLive(state),
+    missingData:
+      state.missingData || (state.mode === "live" && state.lastSample === null),
     originMs,
     elapsedMs: state.nowMs - originMs,
     armedAtMs: null,
@@ -78,6 +96,37 @@ function appendSample(
   return all.length > MAX_SAMPLES
     ? all.filter((_, index) => index % 2 === 0 || index === all.length - 1)
     : all;
+}
+export function canArmLive(state: Session): boolean {
+  const first = state.stable[0];
+  return (
+    state.tared &&
+    state.lastSample !== null &&
+    state.nowMs - state.lastSample.atMs <= 500 &&
+    first !== undefined &&
+    state.lastSample.atMs - first.atMs >= 500 &&
+    state.stable.length >= 3 &&
+    Math.max(...state.stable.map((sample) => sample.grams)) -
+      Math.min(...state.stable.map((sample) => sample.grams)) <=
+      1 &&
+    state.stable.every((sample) => Math.abs(sample.grams) <= 1)
+  );
+}
+function loseSignal(state: Session): Session {
+  return {
+    ...state,
+    phase: state.phase === "armed" ? "preparation" : state.phase,
+    tared: false,
+    baselineVerified: state.phase === "brewing" && state.baselineVerified,
+    armedAtMs: null,
+    onset: null,
+    riseCount: 0,
+    detectorLast: null,
+    lastSample: null,
+    stable: [],
+    segment: state.segment + 1,
+    missingData: state.missingData || state.phase === "brewing",
+  };
 }
 function receiveSample(state: Session, sample: ScaleSample): Session {
   if (
@@ -126,6 +175,21 @@ function receiveSample(state: Session, sample: ScaleSample): Session {
     )
       next = begin(next, onset.atMs);
   }
+  if (next.mode === "live" && next.phase === "preparation") {
+    return {
+      ...next,
+      stable: gap
+        ? [sample]
+        : [
+            ...next.stable.filter(
+              (item) =>
+                sample.atMs - item.atMs <= 750 &&
+                Math.floor(item.atMs / 100) !== Math.floor(sample.atMs / 100),
+            ),
+            sample,
+          ],
+    };
+  }
   if (
     next.phase !== "brewing" ||
     next.originMs === null ||
@@ -145,6 +209,7 @@ function receiveSample(state: Session, sample: ScaleSample): Session {
       ];
   let pouredGrams = next.pouredGrams;
   if (
+    (next.mode !== "live" || next.baselineVerified) &&
     stable.length >= 3 &&
     sample.atMs - (stable[0]?.atMs ?? sample.atMs) >= 500
   ) {
@@ -162,6 +227,7 @@ function receiveSample(state: Session, sample: ScaleSample): Session {
     samples: appendSample(next.samples, {
       atMs: sample.atMs - next.originMs,
       grams: sample.grams,
+      ...(next.mode === "live" ? { segment: next.segment } : {}),
     }),
   };
 }
@@ -178,6 +244,12 @@ export function updateSession(state: Session, event: Event): Session {
     nowMs: event.nowMs,
     elapsedMs: state.originMs === null ? 0 : event.nowMs - state.originMs,
   };
+  if (
+    next.mode === "live" &&
+    next.lastSample !== null &&
+    event.nowMs - next.lastSample.atMs > 500
+  )
+    next = loseSignal(next);
   const holdNowMs = event.holdNowMs ?? event.nowMs;
   next.holdElapsedMs =
     next.holdAtMs === null ? 0 : Math.max(0, holdNowMs - next.holdAtMs);
@@ -201,18 +273,30 @@ export function updateSession(state: Session, event: Event): Session {
   switch (event.type) {
     case "tare":
       if (next.phase === "preparation")
-        next = { ...next, tared: true, lastSample: null, onset: null };
+        next = {
+          ...next,
+          tared: true,
+          lastSample: null,
+          stable: [],
+          onset: null,
+        };
       break;
     case "arm":
-      if (next.phase === "preparation" && next.tared && next.mode !== "timer")
+      if (
+        next.phase === "preparation" &&
+        next.tared &&
+        next.mode !== "timer" &&
+        (next.mode !== "live" || canArmLive(next))
+      )
         next = {
           ...next,
           phase: "armed",
+          baselineVerified: next.mode !== "live" || canArmLive(next),
           armedAtMs: event.nowMs,
           onset: null,
           riseCount: 0,
           detectorLast: null,
-          lastSample: null,
+          lastSample: next.mode === "live" ? next.lastSample : null,
         };
       break;
     case "start":
@@ -231,6 +315,9 @@ export function updateSession(state: Session, event: Event): Session {
       break;
     case "release":
       next = { ...next, holdAtMs: null, holdElapsedMs: 0 };
+      break;
+    case "signalLost":
+      next = loseSignal(next);
       break;
     case "tick":
       break;

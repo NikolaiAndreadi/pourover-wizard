@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  canArmLive,
   createSession,
   type Event,
   HOLD_MS,
@@ -9,12 +10,31 @@ import {
 } from "@/core/engine";
 import { expectedPoints, expectedWeight, stepAt } from "@/core/recipe";
 import { fakeSample } from "@/scale/fake";
+import {
+  createLiveScale,
+  createWebTransport,
+  type LiveSnapshot,
+  supportsScaleConnection,
+} from "./liveScale";
 export type BrewModel = ReturnType<typeof useBrew>;
 export function useBrew() {
   const [dose, setDose] = useState("15");
   const [mode, setMode] = useState<Mode>("timer");
   const [speed, setSpeed] = useState(1);
   const [seed, setSeed] = useState("42");
+  const [mapping, setMapping] = useState({
+    gramsUnit: "",
+    positiveSign: "",
+    negativeSign: "",
+  });
+  const [mappingConfirmed, setMappingConfirmed] = useState(false);
+  const [liveState, setLiveState] = useState<LiveSnapshot>({
+    status: "disconnected",
+    pendingTare: false,
+    error: "",
+  });
+  const smooth = useRef<{ atMs: number; grams: number }[]>([]);
+  const live = useRef<ReturnType<typeof createLiveScale> | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const clock = useRef({ real: performance.now(), virtual: 0, speed: 1 });
   const active = useRef<Session | null>(null);
@@ -47,7 +67,10 @@ export function useBrew() {
         nowMs: atMs,
         holdNowMs: performance.now(),
       });
-      if (next.mode !== "timer" && atMs - lastFake.current >= 250) {
+      if (
+        (next.mode === "fake" || next.mode === "learn") &&
+        atMs - lastFake.current >= 250
+      ) {
         lastFake.current = atMs;
         next = updateSession(next, {
           type: "sample",
@@ -81,13 +104,45 @@ export function useBrew() {
       document.removeEventListener("visibilitychange", release);
     };
   }, [seed]);
+  useEffect(() => {
+    const route = () => {
+      if (window.location.hash.startsWith("#/scale-lab"))
+        live.current?.disconnect();
+    };
+    window.addEventListener("hashchange", route);
+    return () => {
+      window.removeEventListener("hashchange", route);
+      live.current?.dispose();
+    };
+  }, []);
+  useEffect(() => {
+    if (session?.phase === "completed" || session?.phase === "cancelled") {
+      live.current?.dispose();
+      live.current = null;
+    }
+  }, [session?.phase]);
+  const mappingValid =
+    mappingConfirmed &&
+    Object.values(mapping).every(
+      (value) =>
+        value.trim() !== "" &&
+        Number.isInteger(Number(value)) &&
+        Number(value) >= 0 &&
+        Number(value) <= 255,
+    ) &&
+    Number(mapping.positiveSign) !== Number(mapping.negativeSign);
   const doseValid =
     dose.trim() !== "" &&
     Number.isFinite(Number(dose)) &&
     Number(dose) >= 10 &&
     Number(dose) <= 25;
   const prepare = () => {
-    if (!doseValid || !Number.isFinite(Number(seed))) return;
+    if (
+      !doseValid ||
+      !Number.isFinite(Number(seed)) ||
+      (mode === "live" && !mappingValid)
+    )
+      return;
     clock.current = {
       real: performance.now(),
       virtual: 0,
@@ -97,8 +152,46 @@ export function useBrew() {
     fakeOrigin.current = null;
     lastFake.current = -Infinity;
     setSession(active.current);
+    if (mode === "live") {
+      live.current?.dispose();
+      setLiveState({ status: "disconnected", pendingTare: false, error: "" });
+      const event = (type: "signalLost" | "tare") => {
+        smooth.current = [];
+        dispatch(type);
+      };
+      live.current = createLiveScale(
+        createWebTransport(),
+        {
+          gramsUnit: Number(mapping.gramsUnit),
+          positiveSign: Number(mapping.positiveSign),
+          negativeSign: Number(mapping.negativeSign),
+        },
+        now,
+        (sample) => {
+          if (active.current?.mode !== "live") return;
+          smooth.current = [
+            ...smooth.current.filter(
+              (value) => sample.atMs - value.atMs <= 500,
+            ),
+            sample,
+          ].slice(-5);
+          active.current = updateSession(active.current, {
+            type: "sample",
+            nowMs: now(),
+            holdNowMs: performance.now(),
+            sample,
+          });
+          setSession(active.current);
+        },
+        () => event("signalLost"),
+        () => event("tare"),
+        setLiveState,
+      );
+    }
   };
   const restart = () => {
+    live.current?.dispose();
+    live.current = null;
     active.current = null;
     fakeOrigin.current = null;
     setSession(null);
@@ -121,7 +214,30 @@ export function useBrew() {
     session?.holdAtMs === null || session?.holdAtMs === undefined
       ? 0
       : Math.min(1, session.holdElapsedMs / HOLD_MS);
+  const sortedWeights = smooth.current
+    .map((sample) => sample.grams)
+    .sort((a, b) => a - b);
+  const liveWeight = session?.lastSample
+    ? (sortedWeights[Math.floor(sortedWeights.length / 2)] ??
+      session.lastSample.grams)
+    : null;
   return {
+    liveWeight,
+    mapping,
+    setMapping,
+    mappingConfirmed,
+    setMappingConfirmed,
+    mappingValid,
+    liveState,
+    liveSupported: supportsScaleConnection(),
+    connectLive: () => live.current?.connect(),
+    disconnectLive: () => live.current?.disconnect(),
+    tareLive: () => live.current?.tare(),
+    liveCanArm:
+      session !== null &&
+      canArmLive(session) &&
+      liveState.status === "connected" &&
+      !liveState.pendingTare,
     dose,
     setDose,
     mode,

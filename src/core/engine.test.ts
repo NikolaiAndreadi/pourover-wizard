@@ -239,3 +239,57 @@ it("accepts settled poured water only after a full half-second stable window", (
   state = sample(state, 500, 250);
   expect(state.pouredGrams).toBe(250);
 });
+
+describe("live stream readiness and loss", () => {
+  function ready() {
+    let state = event(createSession(15, "live"), "tare", 0);
+    for (const atMs of [100, 350, 600]) state = sample(state, atMs, 0);
+    return state;
+  }
+  it("requires fresh stable zero after tare and disarms on silence immediately after arming", () => {
+    let state = event(createSession(15, "live"), "tare", 0);
+    expect(event(state, "arm", 0).phase).toBe("preparation");
+    for (const atMs of [100, 350, 600]) state = sample(state, atMs, 4);
+    expect(event(state, "arm", 600).phase).toBe("preparation");
+    state = event(ready(), "arm", 600);
+    expect(state.phase).toBe("armed");
+    state = event(state, "tick", 1101);
+    expect(state.phase).toBe("preparation");
+    expect(state.tared).toBe(false);
+    expect(state.detectorLast).toBeNull();
+    expect(state.lastSample).toBeNull();
+    expect(state.baselineVerified).toBe(false);
+    expect(event(state, "start", 1101).baselineVerified).toBe(false);
+  });
+  it("keeps timer through loss, separates chart segments and prevents settlement across gaps", () => {
+    let state = event(ready(), "start", 600);
+    state = sample(state, 850, 100);
+    state = sample(state, 1100, 100);
+    state = event(state, "signalLost", 1200);
+    expect(state.originMs).toBe(600);
+    expect(state.elapsedMs).toBe(600);
+    expect(state.missingData).toBe(true);
+    expect(state.pouredGrams).toBeNull();
+    state = sample(state, 1300, 100);
+    state = sample(state, 1550, 100);
+    expect(state.pouredGrams).toBeNull();
+    state = sample(state, 1800, 100);
+    expect(state.pouredGrams).toBe(100);
+    expect(state.samples[0]?.segment).not.toBe(state.samples.at(-1)?.segment);
+  });
+  it("marks manual start without any received stream as missing and still permits timer completion", () => {
+    let state = event(createSession(15, "live"), "start", 0);
+    expect(state.missingData).toBe(true);
+    state = event(state, "done", 125000);
+    expect(state.phase).toBe("completed");
+    expect(state.pouredGrams).toBeNull();
+  });
+});
+
+it("live manual readings without a verified zero baseline cannot become poured-water estimates", () => {
+  let state = event(createSession(15, "live"), "start", 0);
+  for (const atMs of [100, 350, 600, 850]) state = sample(state, atMs, 500);
+  expect(state.baselineVerified).toBe(false);
+  expect(state.pouredGrams).toBeNull();
+  expect(state.samples.length).toBe(4);
+});

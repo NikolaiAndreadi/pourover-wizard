@@ -2,4 +2,6 @@
 export interface ScaleSample {
   atMs: number;
   grams: number;
+  /** Display chart continuity; omitted for synthetic samples. */
+  segment?: number;
 }

@@ -1,7 +1,15 @@
 import { type Route, routeHrefs } from "@/app/routes";
 import type { BrewModel } from "@/app/useBrew";
 import { Brew } from "./Brew";
-export function Shell({ route, brew }: { route: Route; brew: BrewModel }) {
+export function Shell({
+  route,
+  brew,
+  offline,
+}: {
+  route: Route;
+  brew: BrewModel;
+  offline: { offlineReady: boolean; updateReady: boolean };
+}) {
   return (
     <div className={`shell ${brew.session ? "active-session" : ""}`}>
       <button
@@ -61,6 +69,14 @@ export function Shell({ route, brew }: { route: Route; brew: BrewModel }) {
           </>
         )}
       </main>
+      {offline.updateReady ? (
+        <p role="status" className="offline-status">
+          Update ready. After brewing, close all app tabs and windows, then
+          reopen to use it.
+        </p>
+      ) : offline.offlineReady ? (
+        <p className="offline-status">Available offline</p>
+      ) : null}
       <footer>
         Pourover Wizzard <span>Made for a quieter coffee ritual.</span>
       </footer>

@@ -151,3 +151,25 @@ The Capacitor CLI uses `xcode`, whose CommonJS `uuid.v4()` call remains compatib
 with the narrowly overridden `uuid` **11.1.1**. This avoids the older uuid
 [buffer bounds advisory](https://github.com/advisories/GHSA-w5hq-g745-h8pq); native
 sync and archive validate the CLI dependency path.
+
+## Offline web app and updates
+
+The production web build includes an installable PWA manifest and a service
+worker scoped to `/pourover-wizard/`. Open it online once and wait for
+**Available offline** before relying on it without internet. The complete app
+and recipe are cached; a later offline launch or hash-route reload works without
+a network connection. Installation is optional. HTTPS is required except on
+localhost. Browser storage clearing or eviction removes the offline copy.
+
+The app checks for updates when opened, when internet returns, and when brought
+back to the foreground. A complete new version downloads in the background;
+failed downloads leave the current version usable. **Update ready** means the
+next version is cached. Finish brewing, then close **all** tabs and installed
+app windows and reopen to activate it. Reloading a still-open tab does not force
+an update. Updates never automatically reload a brew, an armed session, or its
+summary; a manually closed session still loses its in-memory data.
+
+The iOS/SideStore bundle already contains its web assets and does not register
+or emit the web service worker or manifest. Native updates use a replacement
+IPA. Chromium production tests cover offline reload and waiting-worker updates;
+installed iOS/Safari offline behavior and physical BLE use remain unverified.

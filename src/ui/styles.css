@@ -563,3 +563,9 @@ progress {
     --swirl: #cd9ded;
   }
 }
+
+.offline-status {
+  margin: 1rem 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}

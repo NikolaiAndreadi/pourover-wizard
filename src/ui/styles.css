@@ -363,3 +363,203 @@ progress {
     font-size: 13px;
   }
 }
+.brew-panel:has(.brew-chart) {
+  max-width: 900px;
+}
+.brew-chart {
+  --recommendation: #a65e10;
+  --actual: #007b88;
+}
+.brew-chart svg {
+  overflow: visible;
+}
+.chart-surface {
+  fill: #e6e2d755;
+}
+.chart-step {
+  fill: #a65e1010;
+  transition:
+    x 350ms ease,
+    width 350ms ease;
+}
+.chart-grid {
+  stroke: currentColor;
+  stroke-width: 0.5;
+  opacity: 0.18;
+}
+.brew-chart text {
+  font-size: 7px;
+  font-variant-numeric: tabular-nums;
+}
+.chart-stages {
+  stroke: var(--stage, #687251);
+  stroke-width: 1;
+  opacity: 0.65;
+}
+.chart-stages .chart-stage-swirl {
+  stroke: var(--swirl);
+}
+.chart-recommendation {
+  stroke: var(--recommendation);
+}
+.chart-actual {
+  stroke: var(--actual);
+}
+.chart-now {
+  stroke: var(--recommendation);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 5;
+  opacity: 0.45;
+  transition:
+    x1 100ms linear,
+    x2 100ms linear;
+}
+.chart-marker {
+  transition:
+    cx 100ms linear,
+    cy 100ms linear;
+}
+.chart-marker.chart-recommendation {
+  fill: var(--recommendation);
+}
+.chart-marker.chart-actual {
+  fill: var(--actual);
+}
+.brew-chart figcaption {
+  font-size: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+.chart-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chart-key::before {
+  content: "";
+  width: 22px;
+  border-top: 0.75px solid var(--actual);
+}
+.recommendation-key::before {
+  border-top: 0.5px dashed var(--recommendation);
+}
+.chart-caption {
+  flex-basis: 100%;
+  opacity: 0.75;
+}
+.step-context {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 0;
+  margin: 18px 0;
+  list-style: none;
+  gap: 10px;
+  animation: step-enter 350ms ease both;
+}
+.step-context li {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  background: #d9dbcf33;
+}
+.step-context span {
+  display: block;
+  font-size: 11px;
+  margin-bottom: 6px;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+.step-context .step-current {
+  background: #d9dbcf99;
+  box-shadow: inset 0 0 0 1px #68725155;
+}
+.step-previous {
+  opacity: 0.65;
+}
+@keyframes step-enter {
+  from {
+    opacity: 0.6;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .brew-chart {
+    --recommendation: #e9b665;
+    --actual: #69d6df;
+    --stage: #b9c49e;
+  }
+}
+@media (max-width: 600px) {
+  .shell.active-session {
+    padding: 0 12px;
+  }
+  .active-session .brew-panel {
+    padding: 12px;
+  }
+  .step-context {
+    gap: 6px;
+  }
+  .step-context li {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-context {
+    animation: none;
+  }
+  .chart-step,
+  .chart-now,
+  .chart-marker {
+    transition: none;
+  }
+}
+.disconnect-dialog {
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 28px;
+  border: 1px solid #68725155;
+  border-radius: 16px;
+  background: #f6f3ed;
+  color: #292e27;
+  box-shadow: 0 20px 60px #0003;
+}
+.disconnect-dialog h2 {
+  font-size: 24px;
+  margin-top: 0;
+}
+.disconnect-dialog::backdrop {
+  background: #20251fcc;
+}
+@media (prefers-color-scheme: dark) {
+  .disconnect-dialog {
+    background: #292e27;
+    color: #f6f3ed;
+  }
+}
+.brew-chart {
+  --swirl: #8d51b3;
+}
+.chart-swirl rect {
+  fill: var(--swirl);
+  opacity: 0.12;
+}
+.chart-swirl line {
+  stroke: var(--swirl);
+  stroke-width: 0.75;
+  stroke-dasharray: 3 3;
+}
+.swirl-key::before {
+  border-top: 0.75px dashed var(--swirl);
+}
+@media (prefers-color-scheme: dark) {
+  .brew-chart {
+    --swirl: #cd9ded;
+  }
+}

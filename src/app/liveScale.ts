@@ -21,6 +21,7 @@ export function createLiveScale(
   lost: () => void,
   tared: () => void,
   changed: (value: LiveSnapshot) => void,
+  disconnected: () => void = () => {},
 ) {
   validateEncoding(encoding);
   const decoder = new BookooDecoder();
@@ -39,8 +40,10 @@ export function createLiveScale(
     lost();
   };
   const disconnect = () => {
+    const wasConnected = snapshot.status === "connected";
     generation++;
     transport.disconnect();
+    if (wasConnected) disconnected();
     clear();
     publish({ status: "disconnected", pendingTare: false });
   };
@@ -69,6 +72,7 @@ export function createLiveScale(
           onDisconnect() {
             if (mine !== generation) return;
             generation++;
+            if (snapshot.status === "connected") disconnected();
             clear();
             publish({ status: "disconnected", pendingTare: false });
           },

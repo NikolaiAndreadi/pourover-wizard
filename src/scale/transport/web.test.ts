@@ -80,7 +80,7 @@ function fixture() {
 describe("mock transport lifecycle (does not prove device acceptance)", () => {
   it("requests only explicit service access, preserves view bounds, writes commands, and tears down once", async () => {
     const f = fixture();
-    const transport = createWebTransport(bookooUuids, f.radio);
+    const transport = createWebTransport(f.radio);
     const chunks: Uint8Array[] = [];
     let lost = 0;
     await transport.connect({
@@ -108,7 +108,7 @@ describe("mock transport lifecycle (does not prove device acceptance)", () => {
   });
   it("ignores superseded listeners, supports fallback writes, and surfaces command failure", async () => {
     const f = fixture();
-    const transport = createWebTransport(bookooUuids, f.radio);
+    const transport = createWebTransport(f.radio);
     let count = 0;
     await transport.connect({ onChunk: () => count++, onDisconnect: () => {} });
     await transport.connect({
@@ -136,7 +136,7 @@ describe("mock transport lifecycle (does not prove device acceptance)", () => {
         finish = resolve;
       }),
     );
-    const transport = createWebTransport(bookooUuids, f.radio);
+    const transport = createWebTransport(f.radio);
     const pending = transport.connect({
       onChunk: () => {},
       onDisconnect: () => {},
@@ -148,10 +148,10 @@ describe("mock transport lifecycle (does not prove device acceptance)", () => {
     expect(f.server.connected).toBe(false);
     expect(f.notify.starts).toBe(0);
   });
-  it("cancels an open chooser without connecting and rejects invalid service selection", async () => {
+  it("cancels an open chooser without connecting", async () => {
     const f = fixture();
     let choose: (device: typeof f.device) => void = () => {};
-    const transport = createWebTransport(bookooUuids, {
+    const transport = createWebTransport({
       requestDevice() {
         return new Promise((resolve) => {
           choose = resolve;
@@ -166,8 +166,5 @@ describe("mock transport lifecycle (does not prove device acceptance)", () => {
     choose(f.device);
     await expect(pending).rejects.toThrow("cancelled");
     expect(f.server.connected).toBe(false);
-    expect(() =>
-      createWebTransport({ ...bookooUuids, service: "bad" }, f.radio),
-    ).toThrow("UUID");
   });
 });

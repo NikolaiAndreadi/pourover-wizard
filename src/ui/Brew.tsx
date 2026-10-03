@@ -1,4 +1,5 @@
 import type { BrewModel } from "@/app/useBrew";
+import { BrewChart, BrewSteps } from "./BrewChart";
 
 function formatTime(ms: number) {
   const seconds = Math.floor(ms / 1000);
@@ -65,86 +66,8 @@ function LiveControls({ model }: { model: BrewModel }) {
           {model.liveState.pendingTare ? "Taring scale…" : "Tare live scale"}
         </button>
       )}
-      <p>
-        The app timer continues through connection loss. Tare never arms.
-        Auto-start needs tare and fresh stable readings within 1 g of zero.
-      </p>
+      <p>A scale disconnect stops the brew. Tare before arming auto-start.</p>
     </aside>
-  );
-}
-function Chart({ model }: { model: BrewModel }) {
-  const session = model.session;
-  if (!session) return null;
-  const width = Math.max(180000, session.elapsedMs);
-  const yMax = session.recipe.waterGrams * 1.15;
-  const point = (atMs: number, grams: number) =>
-    `${20 + (atMs / width) * 300},${155 - (grams / yMax) * 135}`;
-
-  return (
-    <figure>
-      <svg
-        viewBox="0 0 340 185"
-        role="img"
-        aria-label={
-          session.mode === "timer"
-            ? "Expected water guidance curve"
-            : session.mode === "live"
-              ? "Expected and measured water curves"
-              : "Expected and simulated water curves"
-        }
-      >
-        <path
-          d="M20 20 V155 H325"
-          fill="none"
-          stroke="currentColor"
-          opacity=".3"
-        />
-        <polyline
-          points={model.curve
-            .map((sample) => point(sample.atMs, sample.grams))
-            .join(" ")}
-          fill="none"
-          stroke="var(--muted)"
-          strokeWidth="2"
-          strokeDasharray="5 4"
-        />
-        {session.mode !== "timer" && (
-          <g>
-            {Array.from(
-              new Set(session.samples.map((sample) => sample.segment ?? 0)),
-            ).map((segment) => (
-              <polyline
-                key={segment}
-                points={session.samples
-                  .filter((sample) => (sample.segment ?? 0) === segment)
-                  .map((sample) => point(sample.atMs, sample.grams))
-                  .join(" ")}
-                fill="none"
-                stroke="var(--accent)"
-                strokeWidth="3"
-              />
-            ))}
-          </g>
-        )}
-        <text x="20" y="178">
-          0:00
-        </text>
-        <text x="275" y="178">
-          {formatTime(width)}
-        </text>
-        <text x="22" y="16">
-          {Math.round(session.recipe.waterGrams)} g
-        </text>
-      </svg>
-      <figcaption>
-        Dashed: expected water
-        {session.mode !== "timer"
-          ? session.mode === "live"
-            ? " · Solid: measured samples; gaps indicate lost readings"
-            : " · Solid: simulated samples"
-          : " · No scale measurements"}
-      </figcaption>
-    </figure>
   );
 }
 export function Brew({ model }: { model: BrewModel }) {
@@ -194,24 +117,8 @@ export function Brew({ model }: { model: BrewModel }) {
             >
               <option value="timer">Timer only</option>
               <option value="live">BOOKOO live scale</option>
-              <option value="fake">Simulated scale</option>
-              <option value="learn">Learn · simulated rehearsal</option>
             </select>
           </label>
-          {model.mode === "learn" && (
-            <label>
-              Playback speed
-              <select
-                value={model.speed}
-                onChange={(event) =>
-                  model.changeSpeed(Number(event.target.value))
-                }
-              >
-                <option value="1">1×</option>
-                <option value="4">4×</option>
-              </select>
-            </label>
-          )}
           <ol>
             <li>Rinse the paper and preheat the V60.</li>
             <li>Add medium-fine coffee; make a small well.</li>
@@ -222,7 +129,7 @@ export function Brew({ model }: { model: BrewModel }) {
           <button
             type="button"
             className="button"
-            disabled={!model.doseValid || !Number.isFinite(Number(model.seed))}
+            disabled={!model.doseValid}
             onClick={model.prepare}
           >
             Prepare brew
@@ -241,12 +148,24 @@ export function Brew({ model }: { model: BrewModel }) {
         </button>
       </section>
     );
+  if (session.phase === "interrupted")
+    return (
+      <section className="brew-panel">
+        <h1>Brew stopped</h1>
+        <p>The scales disconnected. Start a fresh brew when connected again.</p>
+        <p className="timer" role="timer" aria-label="Elapsed brew time">
+          {formatTime(session.elapsedMs)}
+        </p>
+        <BrewChart model={model} />
+        <button type="button" className="button" onClick={model.restart}>
+          Prepare another brew
+        </button>
+      </section>
+    );
   if (session.phase === "completed")
     return (
       <section className="brew-panel">
-        <p className="eyebrow">
-          {session.mode === "learn" ? "Rehearsal complete" : "Your brew"}
-        </p>
+        <p className="eyebrow">Your brew</p>
         <h1>Brew summary</h1>
         <dl className="metrics">
           <div>
@@ -270,20 +189,17 @@ export function Brew({ model }: { model: BrewModel }) {
         ) : (
           <>
             <p>
-              {session.mode === "live"
-                ? "Measured settled water estimate: "
-                : "Simulated poured water: "}
+              Measured settled water estimate:{" "}
               {session.pouredGrams === null
                 ? "unavailable"
                 : `${session.pouredGrams.toFixed(1)} g`}
               .{" "}
               {session.pouredGrams !== null &&
-                `${session.mode === "live" ? "Estimated" : "Simulated"} ratio: 1:${(session.pouredGrams / session.recipe.doseGrams).toFixed(2)}.`}
+                `Estimated ratio: 1:${(session.pouredGrams / session.recipe.doseGrams).toFixed(2)}.`}
             </p>
             <p>
-              {session.mode === "live"
-                ? "Highest settled reading; sustained load disturbances can inflate this estimate."
-                : "Simulated data for rehearsal."}
+              Highest settled reading; sustained load disturbances can inflate
+              this estimate.
             </p>
             {session.mode === "live" && !session.baselineVerified && (
               <p>
@@ -299,7 +215,7 @@ export function Brew({ model }: { model: BrewModel }) {
             )}
           </>
         )}
-        <Chart model={model} />
+        <BrewChart model={model} />
         <button type="button" className="button" onClick={model.restart}>
           Prepare another brew
         </button>
@@ -310,16 +226,10 @@ export function Brew({ model }: { model: BrewModel }) {
   return (
     <section className="brew-panel">
       <p className="eyebrow">
-        {session.mode === "timer"
-          ? "Timer only"
-          : session.mode === "learn"
-            ? "Learn · simulated rehearsal"
-            : session.mode === "live"
-              ? "BOOKOO live scale"
-              : "Simulated scale · synthetic data"}
+        {session.mode === "timer" ? "Timer only" : "BOOKOO live scale"}
       </p>
       <h1>
-        {brewing
+        {brewing || model.isPreviewing
           ? model.step?.label
           : session.phase === "armed"
             ? "Waiting for a pour"
@@ -335,41 +245,41 @@ export function Brew({ model }: { model: BrewModel }) {
             Place the V60 and server on your scale and tare after preparation.
             Pour now starts at your tap.
           </p>
-          {(session.mode === "fake" || session.mode === "learn") && (
-            <button
-              type="button"
-              disabled={session.phase === "armed" || session.tared}
-              onClick={() => dispatch("tare")}
-            >
-              {session.tared ? "Simulated scale tared" : "Tare simulated scale"}
-            </button>
-          )}
           <div className="controls">
-            <button
-              type="button"
-              className="button"
-              disabled={session.mode === "live" && model.liveState.pendingTare}
-              onClick={() => dispatch("start")}
-            >
-              Pour now
-            </button>
-            {session.mode !== "timer" && (
+            {model.isPreviewing ? (
               <button
                 type="button"
-                disabled={
-                  !session.tared ||
-                  session.phase === "armed" ||
-                  (session.mode === "live" && !model.liveCanArm)
-                }
-                onClick={() => dispatch("arm")}
+                className="button"
+                onClick={model.goToStart}
               >
-                Arm auto-start
+                Go to start
               </button>
-            )}
-            {session.phase === "armed" && session.mode !== "live" && (
-              <button type="button" onClick={model.simulatePour}>
-                Simulate a pour
-              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="button"
+                  disabled={
+                    session.mode === "live" && model.liveState.pendingTare
+                  }
+                  onClick={() => dispatch("start")}
+                >
+                  Pour now
+                </button>
+                {session.mode !== "timer" && (
+                  <button
+                    type="button"
+                    disabled={
+                      !session.tared ||
+                      session.phase === "armed" ||
+                      (session.mode === "live" && !model.liveCanArm)
+                    }
+                    onClick={() => dispatch("arm")}
+                  >
+                    Arm auto-start
+                  </button>
+                )}
+              </>
             )}
           </div>
           {session.phase === "armed" && (
@@ -379,8 +289,16 @@ export function Brew({ model }: { model: BrewModel }) {
             </p>
           )}
         </>
-      ) : (
+      ) : null}
+      {(brewing || model.canPreview) && (
         <>
+          {model.canPreview && (
+            <p>
+              Step {model.previewIndex + 1} of {session.recipe.steps.length} ·
+              At {formatTime(model.displayElapsedMs)} · Preview, timer stays at
+              zero.
+            </p>
+          )}
           <div
             className={`action-art ${model.step?.action}`}
             aria-hidden="true"
@@ -410,55 +328,52 @@ export function Brew({ model }: { model: BrewModel }) {
             </div>
             {session.mode !== "timer" && (
               <div>
-                <dt>
-                  {session.mode === "live"
-                    ? "Measured weight"
-                    : "Simulated weight"}
-                </dt>
-                <dd>
-                  {(session.mode === "live"
-                    ? model.liveWeight?.toFixed(1)
-                    : session.lastSample?.grams.toFixed(1)) ?? "—"}{" "}
-                  g
-                </dd>
+                <dt>Measured weight</dt>
+                <dd>{model.liveWeight?.toFixed(1) ?? "—"} g</dd>
               </div>
             )}
           </dl>
           {model.step?.action === "drawdown" && (
             <p>
-              About 3:00 is a guide. Tap Done when the coffee has drained; a
-              scale cannot detect drawdown.
+              About 3:00 is a guide.{" "}
+              {brewing
+                ? "Tap Done when the coffee has drained."
+                : "Finish when the coffee has drained."}{" "}
+              A scale cannot detect drawdown.
             </p>
           )}
-          {model.nextStep && (
-            <p>
-              Next: {model.nextStep.label} in{" "}
-              {formatTime(model.nextStep.atMs - session.elapsedMs)}
-            </p>
+          {brewing && (
+            <button
+              type="button"
+              className="button"
+              disabled={session.elapsedMs < 125000}
+              onClick={() => dispatch("done")}
+            >
+              Done
+            </button>
           )}
-          <Chart model={model} />
-          <button
-            type="button"
-            className="button"
-            disabled={session.elapsedMs < 125000}
-            onClick={() => dispatch("done")}
-          >
-            Done
-          </button>
         </>
       )}
-      {session.mode === "learn" && (
-        <label>
-          Playback speed
-          <select
-            value={model.speed}
-            onChange={(event) => model.changeSpeed(Number(event.target.value))}
+      {model.canPreview && (
+        <nav className="controls" aria-label="Preview brew steps">
+          <button
+            type="button"
+            disabled={model.previewIndex === 0}
+            onClick={() => model.browseStep(-1)}
           >
-            <option value="1">1×</option>
-            <option value="4">4×</option>
-          </select>
-        </label>
+            ← Previous step
+          </button>
+          <button
+            type="button"
+            disabled={model.previewIndex === session.recipe.steps.length - 1}
+            onClick={() => model.browseStep(1)}
+          >
+            Next step →
+          </button>
+        </nav>
       )}
+      <BrewSteps model={model} />
+      <BrewChart model={model} />
       <div className="cancel-control">
         <button
           type="button"
@@ -484,7 +399,7 @@ export function Brew({ model }: { model: BrewModel }) {
             }
           }}
         >
-          Hold 3 seconds to cancel
+          Hold 1 second to cancel
         </button>
         <progress
           aria-label="Cancel hold progress"

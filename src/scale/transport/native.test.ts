@@ -60,7 +60,7 @@ function fixture(write = true, withoutResponse = false) {
   return {
     radio,
     observers,
-    transport: createNativeTransport(bookooUuids, radio),
+    transport: createNativeTransport(radio),
     notify: (value: DataView) => chunk?.(value),
     lose: () => lost?.(),
   };
@@ -77,7 +77,7 @@ describe("native scale transport", () => {
     });
     f.transport.disconnect();
     await entered.promise;
-    const replacement = createNativeTransport(bookooUuids, f.radio);
+    const replacement = createNativeTransport(f.radio);
     const pending = replacement.connect(f.observers);
     await Promise.resolve();
     expect(f.radio.connect).toHaveBeenCalledTimes(1);
@@ -215,12 +215,5 @@ describe("native scale transport", () => {
     await expect(f.transport.write(new Uint8Array([1]))).rejects.toThrow(
       "disconnected",
     );
-  });
-  it("rejects invalid UUIDs before native access", () => {
-    const f = fixture();
-    expect(() =>
-      createNativeTransport({ ...bookooUuids, command: "bad" }, f.radio),
-    ).toThrow("full service");
-    expect(f.radio.initialize).not.toHaveBeenCalled();
   });
 });

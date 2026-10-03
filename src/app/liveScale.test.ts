@@ -15,7 +15,8 @@ function setup() {
   const sample = vi.fn(),
     lost = vi.fn(),
     tared = vi.fn(),
-    changed = vi.fn();
+    changed = vi.fn(),
+    disconnected = vi.fn();
   const live = createLiveScale(
     transport,
     { gramsUnit: 2, positiveSign: 7, negativeSign: 9 },
@@ -24,6 +25,7 @@ function setup() {
     lost,
     tared,
     changed,
+    disconnected,
   );
   return {
     live,
@@ -32,10 +34,31 @@ function setup() {
     lost,
     tared,
     changed,
+    disconnected,
     observers: () => observers!,
   };
 }
 describe("live brewing adapter", () => {
+  it("notifies physical and explicit disconnects once, without treating setup, tare or disposal as disconnects", async () => {
+    const s = setup();
+    s.live.disconnect();
+    await s.live.connect();
+    await s.live.tare();
+    expect(s.disconnected).not.toHaveBeenCalled();
+    s.observers().onDisconnect();
+    s.observers().onDisconnect();
+    expect(s.disconnected).toHaveBeenCalledTimes(1);
+    await s.live.connect();
+    s.live.disconnect();
+    s.live.disconnect();
+    expect(s.disconnected).toHaveBeenCalledTimes(2);
+    await s.live.connect();
+    s.live.dispose();
+    expect(s.disconnected).toHaveBeenCalledTimes(2);
+    s.transport.connect.mockRejectedValueOnce(new Error("Connection failed"));
+    await s.live.connect();
+    expect(s.disconnected).toHaveBeenCalledTimes(2);
+  });
   it("accepts only confirmed frames, ignores old subscriptions and resets partial decoding on reconnect", async () => {
     const s = setup();
     await s.live.connect();

@@ -1,9 +1,9 @@
 # Pourover Wizzard
 
-A small React and TypeScript V60 brewing SPA with a guided timer, deterministic
-simulated scale, and Learn playback at 1× or 4×. The separate BOOKOO lab supports
-raw capture and replay. Live BOOKOO brewing uses a built-in Mini encoding confirmed at zero and ±12.2 g;
-the iOS shell uses native BLE. Physical scale and SideStore acceptance are pending.
+A small React and TypeScript V60 brewing SPA with a guided timer and step-by-step
+recipe preview. Live BOOKOO brewing uses a built-in Mini encoding confirmed at
+zero and ±12.2 g; the iOS shell uses native BLE. Full physical brewing and
+SideStore acceptance remain pending.
 
 ## Develop and verify
 
@@ -57,8 +57,8 @@ and the version and `createSourceFile` export from `import ts from "typescript"`
 
 ## Architecture and delivery
 
-`core/` owns pure recipe/session logic without DOM types. `scale/` owns fake,
-codec, recording/replay, and transport modules. `app/` composes adapters; `ui/`
+`core/` owns pure recipe/session logic without DOM types. `scale/` owns the
+BOOKOO codec and transport modules. `app/` composes adapters; `ui/`
 uses app and type-only core imports. Dependency checks reject cycles and invalid
 layer imports; Bluetooth APIs and native imports belong in `scale/transport/`.
 
@@ -75,23 +75,30 @@ Mini profile handles signed grams without setup codes or a confirmation checkbox
 Connect, explicitly tare, wait for at least 500 ms of fresh stable readings within
 1 g of zero, then explicitly **Arm auto-start** if desired. A completed tare write
 is not proof that the hardware tared; zero readings are also required. Tare never
-arms. Connection loss or readings older than 500 ms clear readiness and detection;
-reconnect and tare again before arming. The app timer continues through loss.
+arms. Readings older than 500 ms clear readiness and detection; the timer continues
+while waiting for fresh readings. An actual Bluetooth disconnect stops a live
+brew immediately, preserves its elapsed time and chart, and shows
+**scales disconnected!**. If armed, disconnect disarms instead. Reconnect and
+tare again before arming a new brew.
 No automatic tare or scale timer synchronization occurs. Live weight display uses
 a short median; detection and settled estimation use unsmoothed decoded readings.
-Opening the scale lab disconnects a live brewing connection, preserving the brew
-timer while keeping one GATT owner. Completion, cancellation, restart and app
-teardown release the live connection.
+Completion, cancellation, interruption, restart and app teardown release the
+live connection.
 
-**Pour now** starts at tap time. In simulation, tare, explicitly **Arm auto-start**,
-then **Simulate a pour**. Tare and opening the screen never arm or start a brew.
-Detection requires fresh consecutive rises totaling at least 3 g over at least
-500 ms and backdates start to the rise baseline. The first manual or detected
-start wins. These thresholds need validation against physical recordings.
+The chart appears immediately after **Prepare brew**. Before starting, use the
+previous/next buttons or Left/Right arrow keys to preview the
+recipe. Previewing a later stage hides start and arm controls; **Go to start** or
+returning to the first stage restores them. Previewing never starts a timer or
+produces scale measurements.
 
-Hold cancel, Space, or Enter for three physical seconds, including in accelerated
-Learn mode. Early release, pointer cancellation, lost focus, or page hiding resets
-the hold. Cancellation clears the session; **Done** manually ends drawdown.
+Tare and opening the screen never arm or start a brew. Detection requires fresh
+consecutive rises totaling at least 3 g over at least 500 ms and backdates start
+to the rise baseline. The first manual or detected start wins. These thresholds
+need validation with the physical scale.
+
+Hold cancel, Space, or Enter for one physical second. Early release, pointer
+cancellation, lost focus, or page hiding resets the hold. Cancellation clears the
+session; **Done** manually ends drawdown.
 About navigation preserves the in-memory brew; reload clears it. No history is saved.
 
 James Hoffmann's [A Better 1 Cup V60 Technique](https://www.youtube.com/watch?v=1oB1oDrDkHM)
@@ -103,21 +110,40 @@ swirl at 2:05; around 3:00 is guidance. Linear pour ramps are modeled approximat
 Doses of 10–25 g scale water while retaining timing; only the original recipe
 was source-verified, and scaled brewing results remain untested.
 
-Timer summaries show targets without fabricated measurements. Fake/Learn data
-is labeled synthetic. Final simulated weight and live measured estimates use the
+Timer summaries show targets without fabricated measurements. Live measured estimates use the
 highest settled reading (at least 500 ms within 1 g), excluding brief spikes and
 dripper removal; sustained load disturbances may inflate it. Live water/ratio
 estimates require a verified tared stable zero baseline at manual start or
-explicit arming; starting without that baseline still provides the timer and raw
-measured chart, but no net poured-water estimate. Reconnect retains that original
-baseline. Live summaries identify missing readings and show an estimated ratio
+explicit arming; starting without that baseline still provides the timer and
+measured chart, but no net poured-water estimate. A stopped brew retains its
+original baseline and measurements. Live summaries identify missing readings
+and show an estimated ratio
 only when a settled measurement exists. Charts split across lost readings,
-retain at most 600 display samples, and are not raw recordings.
+retain at most 600 display samples, and are not raw recordings. The enlarged chart
+shows gram/time ticks, a grid, amber recommendation and teal actual weight, plus
+moving progress dots in timer and scale modes. The complete recommendation stays
+visible alongside animated previous/current/next step cards; reduced motion turns
+off transitions. Purple bands mark the prescribed swirl intervals (0:10–0:15 and
+2:00–2:05). Movement readings are hidden from the actual trace and chart scale in
+those intervals, with no line bridging them; the purple dashed plateau is guidance,
+not a measurement. Session samples remain unchanged. Negative display/chart readings are clamped to zero without changing raw samples;
+above-target readings outside swirl intervals expand the chart scale; extended drawdown expands
+the time axis. Swirling outside the prescribed intervals is not detected.
 
-See the [BOOKOO lab guide](docs/bookoo-lab.md) for `#/scale-lab`, protocol limits,
-capture/replay, and the hardware checklist. Only the Mini unit/sign encoding at zero and ±12.2 g has been physically confirmed.
-Full brewing, iOS, and SideStore acceptance remain pending; browser mocks do not provide that evidence.
+The vendor's [Mini protocol](https://github.com/BooKooCode/OpenSource/blob/6e3f48a81aa7b209871517cf7cda19399d8a16ba/bookoo_mini_scale/protocols.md)
+defines the BOOKOO service, notifications, command characteristic, weight fields,
+and XOR checksum. The built-in gram/sign mapping was confirmed using physical
+Mini notifications at zero and ±12.2 g. Exact packets are retained in
+[`hardware.fixture.ts`](src/scale/bookoo/hardware.fixture.ts). No supplied packet
+encodes -12.3 g, though that value was observed on the display. Other units and
+unknown sign codes are not converted. The app uses monotonic receipt times for
+samples rather than the scale timer, and only sends explicit tare commands.
+Successful writes alone do not establish that the scale executed a command.
 
+Tare execution, full brews, disconnect/reconnect behavior, native iOS, and
+SideStore acceptance still require physical verification. Compare displayed
+weight and brew behavior on the actual hardware; browser mocks do not provide
+that evidence.
 See the [iOS and SideStore guide](docs/ios.md) for the native build, private IPA
 workflow, phone import, foreground limits, and pending acceptance checks.
 

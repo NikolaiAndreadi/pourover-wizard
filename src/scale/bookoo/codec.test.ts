@@ -139,12 +139,7 @@ describe("synthetic BOOKOO protocol fixtures", () => {
       expect(decoder.push(valid)).toHaveLength(1);
     }
   });
-  it.each([
-    ["tare", [3, 10, 1, 0, 0, 8]],
-    ["startTimer", [3, 10, 4, 0, 0, 13]],
-    ["stopTimer", [3, 10, 5, 0, 0, 12]],
-    ["resetTimer", [3, 10, 6, 0, 0, 15]],
-  ] as const)(
+  it.each([["tare", [3, 10, 1, 0, 0, 8]]] as const)(
     "encodes %s against independent command bytes",
     (command, expected) => {
       expect(Array.from(encodeCommand(command))).toEqual(expected);

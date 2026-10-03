@@ -1,7 +1,6 @@
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { bookooUuids } from "@/scale/bookoo/codec";
 import type { ScaleTransport } from "@/scale/contracts";
-import type { ServiceSelection } from "./web";
 
 export type NativeRadio = Pick<
   typeof BleClient,
@@ -16,7 +15,7 @@ export type NativeRadio = Pick<
   | "writeWithoutResponse"
 >;
 
-// One radio backs both lab and brew adapters. Serialize their complete operations,
+// One radio backs successive brew adapters. Serialize their complete operations,
 // including teardown, so replacing an adapter cannot disconnect its successor.
 const radioTails = new WeakMap<NativeRadio, Promise<unknown>>();
 const canonicalUuid = (uuid: string) => {
@@ -30,16 +29,8 @@ const canonicalUuid = (uuid: string) => {
 
 /** Foreground central-role connection. The chooser is always explicitly opened. */
 export function createNativeTransport(
-  selection: ServiceSelection = bookooUuids,
   radio: NativeRadio = BleClient,
 ): ScaleTransport {
-  for (const uuid of Object.values(selection))
-    if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        uuid,
-      )
-    )
-      throw new Error("Supply full service/characteristic UUIDs.");
   let generation = 0;
   const queue = <T>(work: () => Promise<T>): Promise<T> => {
     const next = (radioTails.get(radio) ?? Promise.resolve()).then(work);
@@ -62,7 +53,7 @@ export function createNativeTransport(
     if (!binding) return;
     if (binding.subscribed)
       await radio
-        .stopNotifications(binding.id, selection.service, selection.notify)
+        .stopNotifications(binding.id, bookooUuids.service, bookooUuids.notify)
         .catch(() => {});
     // Also release a connection whose connect promise rejected after partial setup.
     await radio.disconnect(binding.id).catch(() => {});
@@ -80,7 +71,7 @@ export function createNativeTransport(
           await radio.initialize();
           current(mine);
           const device = await radio.requestDevice({
-            optionalServices: [selection.service],
+            optionalServices: [bookooUuids.service],
           });
           current(mine);
           const binding = {
@@ -104,15 +95,15 @@ export function createNativeTransport(
           current(mine);
           const service = services.find(
             (value) =>
-              canonicalUuid(value.uuid) === selection.service.toLowerCase(),
+              canonicalUuid(value.uuid) === bookooUuids.service.toLowerCase(),
           );
           const notify = service?.characteristics.find(
             (value) =>
-              canonicalUuid(value.uuid) === selection.notify.toLowerCase(),
+              canonicalUuid(value.uuid) === bookooUuids.notify.toLowerCase(),
           );
           const command = service?.characteristics.find(
             (value) =>
-              canonicalUuid(value.uuid) === selection.command.toLowerCase(),
+              canonicalUuid(value.uuid) === bookooUuids.command.toLowerCase(),
           );
           if (!notify?.properties.notify && !notify?.properties.indicate)
             throw new Error(
@@ -129,8 +120,8 @@ export function createNativeTransport(
           binding.subscribed = true;
           await radio.startNotifications(
             binding.id,
-            selection.service,
-            selection.notify,
+            bookooUuids.service,
+            bookooUuids.notify,
             (view) => {
               if (mine !== generation || active !== binding) return;
               observers.onChunk(
@@ -162,8 +153,8 @@ export function createNativeTransport(
           : radio.writeWithoutResponse.bind(radio);
         await write(
           binding.id,
-          selection.service,
-          selection.command,
+          bookooUuids.service,
+          bookooUuids.command,
           new DataView(copy.buffer),
         );
         current(mine);

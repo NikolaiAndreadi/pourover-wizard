@@ -22,6 +22,7 @@ test("loads built assets under the project path and preserves hash navigation", 
   await expect(
     page.getByRole("navigation").getByRole("link", { name: "Home" }),
   ).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: "Scale lab" })).toHaveCount(0);
   await page.screenshot({
     path: testInfo.outputPath("home.png"),
     fullPage: true,

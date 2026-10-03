@@ -1,7 +1,6 @@
 import { type Route, routeHrefs } from "@/app/routes";
 import type { BrewModel } from "@/app/useBrew";
 import { Brew } from "./Brew";
-import { ScaleLab } from "./ScaleLab";
 export function Shell({ route, brew }: { route: Route; brew: BrewModel }) {
   return (
     <div className={`shell ${brew.session ? "active-session" : ""}`}>
@@ -32,20 +31,12 @@ export function Shell({ route, brew }: { route: Route; brew: BrewModel }) {
           >
             About
           </a>
-          <a
-            href={routeHrefs["scale-lab"]}
-            aria-current={route === "scale-lab" ? "page" : undefined}
-          >
-            Scale lab
-          </a>
         </nav>
       </header>
       <main id="content" tabIndex={-1}>
         <p className="eyebrow">A little care, a better cup</p>
         {route === "home" ? (
           <Brew model={brew} />
-        ) : route === "scale-lab" ? (
-          <ScaleLab />
         ) : (
           <>
             <h1>
@@ -59,10 +50,9 @@ export function Shell({ route, brew }: { route: Route; brew: BrewModel }) {
             <section aria-labelledby="preview">
               <h2 id="preview">An early preview</h2>
               <p>
-                Follow the timed recipe with a timer alone or rehearse with a
-                simulated scale, or connect your BOOKOO Themis Mini on Mac
-                Chrome or the iOS app. Physical scale and SideStore acceptance
-                are pending.
+                Preview each step before brewing, follow the timed recipe with a
+                timer alone, or connect your BOOKOO Themis Mini on Mac Chrome or
+                the iOS app.
               </p>
               <a className="button" href={routeHrefs.home}>
                 Back to home <span aria-hidden="true">↗</span>

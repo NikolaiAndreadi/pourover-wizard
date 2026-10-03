@@ -1,14 +1,9 @@
-export type Route = "home" | "about" | "scale-lab";
+export type Route = "home" | "about";
 export const routeHrefs = {
   home: "#/",
   about: "#/about",
-  "scale-lab": "#/scale-lab",
 } as const satisfies Record<Route, `#/${string}`>;
 
 export function routeFromHash(hash: string): Route {
-  return hash === routeHrefs["scale-lab"]
-    ? "scale-lab"
-    : hash === routeHrefs.about
-      ? "about"
-      : "home";
+  return hash === routeHrefs.about ? "about" : "home";
 }

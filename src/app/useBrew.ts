@@ -9,7 +9,6 @@ import {
   updateSession,
 } from "@/core/engine";
 import { expectedPoints, expectedWeight, stepAt } from "@/core/recipe";
-import { fakeSample } from "@/scale/fake";
 import {
   bookooMiniEncoding,
   createLiveScale,
@@ -17,12 +16,13 @@ import {
   type LiveSnapshot,
   supportsScaleConnection,
 } from "./liveScale";
+import { routeFromHash } from "./routes";
 export type BrewModel = ReturnType<typeof useBrew>;
 export function useBrew() {
   const [dose, setDose] = useState("15");
   const [mode, setMode] = useState<Mode>("timer");
-  const [speed, setSpeed] = useState(1);
-  const [seed, setSeed] = useState("42");
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const preview = useRef(0);
   const [liveState, setLiveState] = useState<LiveSnapshot>({
     status: "disconnected",
     pendingTare: false,
@@ -31,54 +31,29 @@ export function useBrew() {
   const smooth = useRef<{ atMs: number; grams: number }[]>([]);
   const live = useRef<ReturnType<typeof createLiveScale> | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const clock = useRef({ real: performance.now(), virtual: 0, speed: 1 });
+  const [disconnectNotice, setDisconnectNotice] = useState(false);
+  const clock = useRef(performance.now());
   const active = useRef<Session | null>(null);
-  const fakeOrigin = useRef<number | null>(null);
-  const lastFake = useRef(-Infinity);
-  const now = () =>
-    clock.current.virtual +
-    (performance.now() - clock.current.real) * clock.current.speed;
+  const now = () => performance.now() - clock.current;
   const dispatch = (type: Event["type"]) => {
     if (!active.current || type === "sample") return;
+    if ((type === "start" || type === "arm") && preview.current > 0) return;
     active.current = updateSession(active.current, {
       type,
       nowMs: now(),
       holdNowMs: performance.now(),
     });
-    if (
-      type === "start" &&
-      active.current.originMs !== null &&
-      fakeOrigin.current === null
-    )
-      fakeOrigin.current = active.current.originMs;
     setSession(active.current);
   };
   useEffect(() => {
     const timer = window.setInterval(() => {
       if (!active.current) return;
       const atMs = now();
-      let next = updateSession(active.current, {
+      const next = updateSession(active.current, {
         type: "tick",
         nowMs: atMs,
         holdNowMs: performance.now(),
       });
-      if (
-        (next.mode === "fake" || next.mode === "learn") &&
-        atMs - lastFake.current >= 250
-      ) {
-        lastFake.current = atMs;
-        next = updateSession(next, {
-          type: "sample",
-          nowMs: atMs,
-          holdNowMs: performance.now(),
-          sample: fakeSample(
-            atMs,
-            fakeOrigin.current,
-            next.recipe.waterGrams,
-            Number(seed),
-          ),
-        });
-      }
       active.current = next;
       setSession(next);
     }, 100);
@@ -98,20 +73,57 @@ export function useBrew() {
       window.removeEventListener("blur", release);
       document.removeEventListener("visibilitychange", release);
     };
-  }, [seed]);
+  }, []);
+  useEffect(() => () => live.current?.dispose(), []);
+  const browseStep = (delta: number) => {
+    if (active.current?.phase !== "preparation") return;
+    const index = Math.max(
+      0,
+      Math.min(active.current.recipe.steps.length - 1, preview.current + delta),
+    );
+    preview.current = index;
+    setPreviewIndex(index);
+  };
+  const goToStart = () => {
+    preview.current = 0;
+    setPreviewIndex(0);
+  };
   useEffect(() => {
-    const route = () => {
-      if (window.location.hash.startsWith("#/scale-lab"))
-        live.current?.disconnect();
+    const browse = (event: KeyboardEvent) => {
+      if (
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.defaultPrevented
+      )
+        return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest("input, textarea, select, [contenteditable]"))
+      )
+        return;
+      if (
+        active.current?.phase !== "preparation" ||
+        routeFromHash(window.location.hash) !== "home" ||
+        document.querySelector("[role=dialog], dialog[open]")
+      )
+        return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      browseStep(event.key === "ArrowLeft" ? -1 : 1);
     };
-    window.addEventListener("hashchange", route);
-    return () => {
-      window.removeEventListener("hashchange", route);
-      live.current?.dispose();
-    };
+    window.addEventListener("keydown", browse);
+    return () => window.removeEventListener("keydown", browse);
   }, []);
   useEffect(() => {
-    if (session?.phase === "completed" || session?.phase === "cancelled") {
+    if (
+      session?.phase === "completed" ||
+      session?.phase === "cancelled" ||
+      session?.phase === "interrupted"
+    ) {
       live.current?.dispose();
       live.current = null;
     }
@@ -122,15 +134,12 @@ export function useBrew() {
     Number(dose) >= 10 &&
     Number(dose) <= 25;
   const prepare = () => {
-    if (!doseValid || !Number.isFinite(Number(seed))) return;
-    clock.current = {
-      real: performance.now(),
-      virtual: 0,
-      speed: mode === "learn" ? speed : 1,
-    };
+    if (!doseValid) return;
+    clock.current = performance.now();
+    goToStart();
     active.current = createSession(Number(dose), mode);
-    fakeOrigin.current = null;
-    lastFake.current = -Infinity;
+    setDisconnectNotice(false);
+    smooth.current = [];
     setSession(active.current);
     if (mode === "live") {
       live.current?.dispose();
@@ -163,6 +172,16 @@ export function useBrew() {
         () => event("signalLost"),
         () => event("tare"),
         setLiveState,
+        () => {
+          if (
+            active.current?.mode !== "live" ||
+            (active.current.phase !== "brewing" &&
+              active.current.phase !== "armed")
+          )
+            return;
+          dispatch("disconnect");
+          setDisconnectNotice(true);
+        },
       );
     }
   };
@@ -170,23 +189,22 @@ export function useBrew() {
     live.current?.dispose();
     live.current = null;
     active.current = null;
-    fakeOrigin.current = null;
+    goToStart();
     setSession(null);
+    setDisconnectNotice(false);
   };
-  const changeSpeed = (value: number) => {
-    clock.current = { real: performance.now(), virtual: now(), speed: value };
-    setSpeed(value);
-  };
-  const elapsed = session?.elapsedMs ?? 0;
-  const step = session ? stepAt(session.recipe, elapsed) : null;
+  const canPreview = session?.phase === "preparation";
+  const isPreviewing = canPreview && previewIndex > 0;
+  const displayElapsedMs = canPreview
+    ? (session.recipe.steps[previewIndex]?.atMs ?? 0)
+    : (session?.elapsedMs ?? 0);
+  const step = session ? stepAt(session.recipe, displayElapsedMs) : null;
   const nextStep =
-    session?.recipe.steps.find((item) => item.atMs > elapsed) ?? null;
-  const curve = session ? expectedPoints(session.recipe, elapsed) : [];
-  const expected = session ? expectedWeight(session.recipe, elapsed) : 0;
-  const simulatePour = () => {
-    if (active.current?.phase === "armed" && fakeOrigin.current === null)
-      fakeOrigin.current = now();
-  };
+    session?.recipe.steps.find((item) => item.atMs > displayElapsedMs) ?? null;
+  const curve = session ? expectedPoints(session.recipe, displayElapsedMs) : [];
+  const expected = session
+    ? expectedWeight(session.recipe, displayElapsedMs)
+    : 0;
   const holdProgress =
     session?.holdAtMs === null || session?.holdAtMs === undefined
       ? 0
@@ -195,10 +213,15 @@ export function useBrew() {
     .map((sample) => sample.grams)
     .sort((a, b) => a - b);
   const liveWeight = session?.lastSample
-    ? (sortedWeights[Math.floor(sortedWeights.length / 2)] ??
-      session.lastSample.grams)
+    ? Math.max(
+        0,
+        sortedWeights[Math.floor(sortedWeights.length / 2)] ??
+          session.lastSample.grams,
+      )
     : null;
   return {
+    disconnectNotice,
+    dismissDisconnectNotice: () => setDisconnectNotice(false),
     liveWeight,
     liveState,
     liveSupported: supportsScaleConnection(),
@@ -214,10 +237,12 @@ export function useBrew() {
     setDose,
     mode,
     setMode,
-    speed,
-    changeSpeed,
-    seed,
-    setSeed,
+    previewIndex,
+    displayElapsedMs,
+    isPreviewing,
+    canPreview,
+    browseStep,
+    goToStart,
     session,
     doseValid,
     prepare,
@@ -228,7 +253,6 @@ export function useBrew() {
     expected,
     curve,
     nextStep,
-    simulatePour,
     holdProgress,
   };
 }

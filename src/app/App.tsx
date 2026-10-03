@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { DisconnectDialog } from "@/ui/DisconnectDialog";
 import { Shell } from "@/ui/Shell";
 import { routeFromHash } from "./routes";
 import { useBrew } from "./useBrew";
@@ -13,5 +14,13 @@ export function App() {
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
-  return <Shell route={route} brew={brew} />;
+  return (
+    <>
+      <Shell route={route} brew={brew} />
+      <DisconnectDialog
+        open={brew.disconnectNotice}
+        dismiss={brew.dismissDisconnectNotice}
+      />
+    </>
+  );
 }

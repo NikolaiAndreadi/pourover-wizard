@@ -11,7 +11,7 @@ declare global {
     };
   }
 }
-test("mocked live brewing uses the Mini profile and gates arming, survives loss and reports missing measurements", async ({
+test("mocked live brewing uses the Mini profile, gates arming and stops on disconnection", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
@@ -81,6 +81,7 @@ test("mocked live brewing uses the Mini profile and gates arming, survives loss 
   await page.getByRole("button", { name: "Prepare brew" }).click();
   await page.getByRole("button", { name: "Connect BOOKOO scale" }).click();
   await expect(page.getByRole("status")).toContainText("connected");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.evaluate(() => {
     window.brewMock.failTare = true;
   });
@@ -98,9 +99,9 @@ test("mocked live brewing uses the Mini profile and gates arming, survives loss 
       (bytes) => window.brewMock.emit(bytes),
       Array.from(
         syntheticFrame({
-          magnitude: Math.round(grams * 100),
+          magnitude: Math.round(Math.abs(grams) * 100),
           unit: 1,
-          sign: 0x2b,
+          sign: grams < 0 ? 0x2d : 0x2b,
         }),
       ),
     );
@@ -121,7 +122,17 @@ test("mocked live brewing uses the Mini profile and gates arming, survives loss 
   await expect(
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Arm auto-start" }).click();
+  await page.evaluate(() => window.brewMock.drop());
+  await expect(
+    page.getByRole("dialog", { name: "scales disconnected!" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "OK", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Ready when you are" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Connect BOOKOO scale" }).click();
   await page.clock.runFor(600);
   await expect(
     page.getByRole("heading", { name: "Ready when you are" }),
@@ -144,29 +155,40 @@ test("mocked live brewing uses the Mini profile and gates arming, survives loss 
     await emit(250);
   }
   await page.evaluate(() => window.brewMock.drop());
+  await expect(
+    page.getByRole("dialog", { name: "scales disconnected!" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "OK", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Brew stopped" }),
+  ).toBeVisible();
+  const stoppedChart = await page.locator("svg").first().innerHTML();
+  const stoppedSummary = await page.locator("main").innerText();
   await page.clock.runFor(2000);
-  await expect(page.getByRole("timer")).toHaveText("0:03");
-  await expect(
-    page.getByText("Measured weight", { exact: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Connect BOOKOO scale" }).click();
-  for (let i = 0; i < 3; i++) {
-    await page.clock.runFor(250);
-    await emit(250);
-  }
-  await expect(page.locator("svg g polyline")).toHaveCount(2);
+  await emit(999);
   await page.clock.fastForward(130000);
-  await page.getByRole("button", { name: "Done", exact: true }).click();
+  expect(await page.locator("svg").first().innerHTML()).toBe(stoppedChart);
+  expect(await page.locator("main").innerText()).toBe(stoppedSummary);
   await expect(
-    page.getByText("Measured settled water estimate: 250.0 g", {
-      exact: false,
-    }),
-  ).toBeVisible();
+    page.getByRole("button", { name: "Done", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Prepare another brew" }).click();
+  await page.getByRole("button", { name: "Prepare brew" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Connect BOOKOO scale" }).click();
+  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.clock.runFor(1000);
+  await expect(page.getByRole("timer")).toHaveText("0:01");
+  for (let i = 0; i < 4; i++) {
+    await page.clock.runFor(250);
+    await emit(-12.2);
+  }
+  await expect(page.getByRole("status")).toContainText("0.0 g");
+  await page.getByRole("button", { name: "Disconnect scale" }).click();
   await expect(
-    page.getByText("Readings are missing from part of this brew.", {
-      exact: false,
-    }),
+    page.getByRole("dialog", { name: "scales disconnected!" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "OK", exact: true }).click();
   expect(await page.evaluate(() => window.brewMock.writes)).toEqual([
     [3, 10, 1, 0, 0, 8],
     [3, 10, 1, 0, 0, 8],
@@ -196,7 +218,7 @@ test("live mode without Bluetooth remains a manual timer and never fabricates sa
   await expect(page.getByRole("status")).toContainText(
     "Waiting for fresh readings",
   );
-  await expect(page.locator("svg g polyline")).toHaveCount(0);
+  await expect(page.getByTestId("actual-series")).toHaveCount(0);
   await page.clock.fastForward(130000);
   await page.getByRole("button", { name: "Done", exact: true }).click();
   await expect(

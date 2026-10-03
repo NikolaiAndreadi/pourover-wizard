@@ -2,7 +2,7 @@
 
 The native app displays **Pourover Wizzard** and uses stable bundle identifier
 `com.nikolaiandreadi.pouroverwizard`. It wraps the same SPA in Capacitor, with
-native BLE selected for both brewing and the BOOKOO lab. Browser builds retain
+native BLE selected for BOOKOO brewing. Browser builds retain
 `/pourover-wizard/`; native builds use root-relative assets in `dist-ios/`.
 
 ## Build a private device artifact
@@ -89,14 +89,10 @@ states that BLE is unavailable in the iOS simulator.
 
 Before accepting the native app, record exact phone/iOS, SideStore, scale firmware,
 and app build versions. Verify permission denial and retry; chooser cancellation;
-the [BOOKOO calibration and command checklist](bookoo-lab.md); both manual start
-and explicitly armed detection; hold cancellation; disconnect/reconnect while
-brewing; movement between lab and brewing without duplicate callbacks; notch and
-home indicator layout in portrait/landscape; and SideStore refresh and relaunch.
-Compare physical weight/timer displays, retaining annotated raw recordings.
-
-Lab downloads currently use the browser Blob download path. Saving and importing
-JSON through WKWebView/Files is **unverified**. If export does not work on the
-phone, capture calibration evidence using Mac Chrome; native export needs an
-adapter before iPhone-only recording acceptance. File import, native BLE, and
+positive, zero, and negative weight readings against the scale display; tare;
+both manual start and explicitly armed detection; hold cancellation;
+disconnect/reconnect while brewing; notch and home indicator layout in
+portrait/landscape; and SideStore refresh and relaunch. A Bluetooth disconnect
+must stop an active brew and display **scales disconnected!**. Negative readings
+remain available to brew detection but are shown as zero. Native BLE and
 SideStore checks remain hardware acceptance work, not automated test results.

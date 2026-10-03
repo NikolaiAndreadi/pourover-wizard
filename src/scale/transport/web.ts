@@ -27,11 +27,6 @@ export interface Radio {
     optionalServices: string[];
   }): Promise<Device>;
 }
-export interface ServiceSelection {
-  service: string;
-  notify: string;
-  command: string;
-}
 
 export function supportsScaleConnection(): boolean {
   return (
@@ -39,22 +34,12 @@ export function supportsScaleConnection(): boolean {
     !!(navigator as Navigator & { bluetooth?: Radio }).bluetooth
   );
 }
-export function createWebTransport(
-  selection: ServiceSelection = bookooUuids,
-  radio?: Radio,
-): ScaleTransport {
+export function createWebTransport(radio?: Radio): ScaleTransport {
   const adapter =
     radio ??
     (typeof navigator !== "undefined"
       ? (navigator as Navigator & { bluetooth?: Radio }).bluetooth
       : undefined);
-  for (const uuid of Object.values(selection))
-    if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        uuid,
-      )
-    )
-      throw new Error("Supply full service/characteristic UUIDs.");
   let generation = 0;
   let active: {
     device: Device;
@@ -90,7 +75,7 @@ export function createWebTransport(
         );
       const device = await adapter.requestDevice({
         acceptAllDevices: true,
-        optionalServices: [selection.service],
+        optionalServices: [bookooUuids.service],
       });
       if (mine !== generation) throw new Error("Connection cancelled.");
       const server = device.gatt;
@@ -130,11 +115,11 @@ export function createWebTransport(
       try {
         await server.connect();
         current();
-        const service = await server.getPrimaryService(selection.service);
+        const service = await server.getPrimaryService(bookooUuids.service);
         current();
-        binding.notify = await service.getCharacteristic(selection.notify);
+        binding.notify = await service.getCharacteristic(bookooUuids.notify);
         current();
-        binding.command = await service.getCharacteristic(selection.command);
+        binding.command = await service.getCharacteristic(bookooUuids.command);
         current();
         binding.notify.addEventListener(
           "characteristicvaluechanged",

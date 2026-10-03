@@ -63,9 +63,6 @@ export function toSample(
 }
 const commandCodes = {
   tare: 1,
-  startTimer: 4,
-  stopTimer: 5,
-  resetTimer: 6,
 } as const;
 export type BookooCommand = keyof typeof commandCodes;
 export function encodeCommand(command: BookooCommand): Uint8Array {

@@ -104,6 +104,19 @@ export function Shell({
                   before the next brew.
                 </li>
                 <li>
+                  The device list shows only BOOKOO scales. The app remembers
+                  the last scale you connected and, where the browser or iOS
+                  allows, reconnects to it without the list.
+                  {brew.rememberedScale && (
+                    <>
+                      {" "}
+                      <button type="button" onClick={brew.forgetScale}>
+                        Forget scale
+                      </button>
+                    </>
+                  )}
+                </li>
+                <li>
                   To cancel, hold <strong>Hold to cancel</strong> for one
                   second. With a keyboard, focus it and hold Space or Enter.
                 </li>

@@ -6,9 +6,11 @@ import {
   toSample,
   validateEncoding,
 } from "@/scale/bookoo/codec";
-import type { ScaleTransport } from "@/scale/contracts";
+import type { ConnectStep, ScaleTransport } from "@/scale/contracts";
 export interface LiveSnapshot {
   status: "disconnected" | "connecting" | "connected";
+  /** While connecting: the chooser is open, or a known scale is being reached. */
+  progress: ConnectStep | null;
   pendingTare: boolean;
   error: string;
 }
@@ -28,6 +30,7 @@ export function createLiveScale(
   let generation = 0;
   let snapshot: LiveSnapshot = {
     status: "disconnected",
+    progress: null,
     pendingTare: false,
     error: "",
   };
@@ -45,16 +48,25 @@ export function createLiveScale(
     transport.disconnect();
     if (wasConnected) disconnected();
     clear();
-    publish({ status: "disconnected", pendingTare: false });
+    publish({ status: "disconnected", progress: null, pendingTare: false });
   };
   return {
     async connect() {
       const mine = ++generation;
       transport.disconnect();
       clear();
-      publish({ status: "connecting", pendingTare: false, error: "" });
+      publish({
+        status: "connecting",
+        progress: null,
+        pendingTare: false,
+        error: "",
+      });
       try {
         await transport.connect({
+          onProgress(step) {
+            if (mine === generation && snapshot.status === "connecting")
+              publish({ progress: step });
+          },
           onChunk(bytes) {
             if (mine !== generation) return;
             for (const frame of decoder.push(bytes)) {
@@ -74,10 +86,15 @@ export function createLiveScale(
             generation++;
             if (snapshot.status === "connected") disconnected();
             clear();
-            publish({ status: "disconnected", pendingTare: false });
+            publish({
+              status: "disconnected",
+              progress: null,
+              pendingTare: false,
+            });
           },
         });
-        if (mine === generation) publish({ status: "connected" });
+        if (mine === generation)
+          publish({ status: "connected", progress: null });
       } catch (error) {
         if (mine !== generation) return;
         generation++;
@@ -85,6 +102,7 @@ export function createLiveScale(
         clear();
         publish({
           status: "disconnected",
+          progress: null,
           pendingTare: false,
           error: error instanceof Error ? error.message : "Connection failed.",
         });
@@ -120,6 +138,11 @@ export function createLiveScale(
 }
 export type { ConfirmedEncoding } from "@/scale/bookoo/codec";
 export { bookooMiniEncoding } from "@/scale/bookoo/codec";
+export type {
+  ConnectStep,
+  RememberedDevice,
+  RememberedScale,
+} from "@/scale/contracts";
 export {
   createScaleTransport,
   supportsScaleConnection,

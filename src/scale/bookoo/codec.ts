@@ -5,6 +5,16 @@ export const bookooUuids = {
   notify: "0000ff11-0000-1000-8000-00805f9b34fb",
   command: "0000ff12-0000-1000-8000-00805f9b34fb",
 } as const;
+/**
+ * Chooser criteria. The Themis Mini advertises a name beginning with
+ * "BOOKOO_SC" followed by a space and a device-specific suffix; the vendor's
+ * Mini protocol does not document advertising, so the service UUID is an
+ * alternative match where a chooser can OR criteria.
+ */
+export const bookooMatch = {
+  namePrefix: "BOOKOO_SC",
+  service: bookooUuids.service,
+} as const;
 
 // Numeric sign/unit codes are absent from the official Mini protocol.
 // Sample conversion requires a known encoding.

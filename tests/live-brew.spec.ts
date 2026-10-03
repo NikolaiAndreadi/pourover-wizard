@@ -8,6 +8,13 @@ declare global {
       drop(): void;
       failTare: boolean;
       writes: number[][];
+      requests: number;
+    };
+    knownScale: {
+      requests: number;
+      lookups: number;
+      hold(): void;
+      release(): void;
     };
   }
 }
@@ -50,11 +57,17 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
         };
       },
     };
-    const device = Object.assign(new EventTarget(), { gatt: server });
+    const device = Object.assign(new EventTarget(), {
+      id: "mock-scale",
+      name: "BOOKOO_SC 000000",
+      gatt: server,
+    });
+    // Like stable Chrome without flags: no getDevices, so the chooser always opens.
     Object.defineProperty(navigator, "bluetooth", {
       configurable: true,
       value: {
         async requestDevice() {
+          window.brewMock.requests++;
           return device;
         },
       },
@@ -62,6 +75,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     window.brewMock = {
       failTare: false,
       writes: [],
+      requests: 0,
       emit(bytes) {
         notify.value = new DataView(Uint8Array.from(bytes).buffer);
         characteristic.dispatchEvent(new Event("characteristicvaluechanged"));
@@ -82,6 +96,9 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await page.getByRole("button", { name: "Connect scale" }).click();
   await expect(page.getByRole("status")).toContainText("connected");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(
+    await page.evaluate(() => localStorage.getItem("pourover-wizard.scale")),
+  ).toBe(JSON.stringify({ id: "mock-scale", name: "BOOKOO_SC 000000" }));
   await page.evaluate(() => {
     window.brewMock.failTare = true;
   });
@@ -213,6 +230,109 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     [3, 10, 1, 0, 0, 8],
     [3, 10, 1, 0, 0, 8],
   ]);
+});
+
+test("mocked live brewing reconnects to the remembered scale without the chooser and can forget it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const notify = Object.assign(new EventTarget(), {
+      value: new DataView(new ArrayBuffer(0)),
+      properties: { write: true, writeWithoutResponse: false },
+      async startNotifications() {
+        return this;
+      },
+      async stopNotifications() {
+        return this;
+      },
+      async writeValueWithResponse() {},
+      async writeValueWithoutResponse() {},
+    });
+    let gate: Promise<void> | null = null;
+    let open = () => {};
+    const server = {
+      connected: false,
+      async connect() {
+        if (gate) await gate;
+        this.connected = true;
+        return this;
+      },
+      disconnect() {
+        this.connected = false;
+      },
+      async getPrimaryService() {
+        return {
+          async getCharacteristic() {
+            return notify;
+          },
+        };
+      },
+    };
+    const device = Object.assign(new EventTarget(), {
+      id: "mock-scale",
+      name: "BOOKOO_SC 000000",
+      gatt: server,
+    });
+    Object.defineProperty(navigator, "bluetooth", {
+      configurable: true,
+      value: {
+        async requestDevice() {
+          window.knownScale.requests++;
+          return device;
+        },
+        async getDevices() {
+          window.knownScale.lookups++;
+          return [device];
+        },
+      },
+    });
+    window.knownScale = {
+      requests: 0,
+      lookups: 0,
+      hold() {
+        gate = new Promise((resolve) => {
+          open = resolve;
+        });
+      },
+      release() {
+        gate = null;
+        open();
+      },
+    };
+  });
+  await page.goto("./");
+  await page.getByLabel("Guide mode").selectOption("live");
+  await page.getByRole("button", { name: "Get ready" }).click();
+  await page.getByRole("button", { name: "Connect scale" }).click();
+  await expect(page.getByRole("status")).toContainText("Scale connected");
+  expect(await page.evaluate(() => window.knownScale)).toMatchObject({
+    requests: 1,
+    lookups: 0,
+  });
+  await page.getByRole("button", { name: "Disconnect scale" }).click();
+  await expect(page.getByRole("status")).toContainText("Scale disconnected");
+  await page.evaluate(() => window.knownScale.hold());
+  await page.getByRole("button", { name: "Connect scale" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Connecting to BOOKOO_SC 000000…",
+  );
+  await page.evaluate(() => window.knownScale.release());
+  await expect(page.getByRole("status")).toContainText("Scale connected");
+  expect(await page.evaluate(() => window.knownScale)).toMatchObject({
+    requests: 1,
+    lookups: 1,
+  });
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: "About" })
+    .click();
+  await page.getByRole("button", { name: "Forget scale" }).click();
+  await expect(page.getByRole("button", { name: "Forget scale" })).toHaveCount(
+    0,
+  );
+  expect(
+    await page.evaluate(() => localStorage.getItem("pourover-wizard.scale")),
+  ).toBeNull();
 });
 
 test("live mode without Bluetooth remains a manual timer and never fabricates samples", async ({

@@ -1,16 +1,21 @@
-import { type RefObject, useEffect, useRef, useState } from "react";
+import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { canArmLive, type Event, type Mode, type Session } from "@/core/engine";
 import type { ScaleSample } from "@/core/scale";
+import { createRememberedDevice } from "@/platform/rememberedDevice";
 import {
   bookooMiniEncoding,
   createLiveScale,
   createScaleTransport,
   type LiveSnapshot,
+  type RememberedDevice,
+  type RememberedScale,
   supportsScaleConnection,
 } from "./liveScale";
 
+const scaleMemory = createRememberedDevice();
 const disconnected: LiveSnapshot = {
   status: "disconnected",
+  progress: null,
   pendingTare: false,
   error: "",
 };
@@ -45,6 +50,23 @@ export interface LiveBrew {
 export function useLiveScale(session: Session | null, brew: LiveBrew) {
   const [liveState, setLiveState] = useState<LiveSnapshot>(disconnected);
   const [disconnectNotice, setDisconnectNotice] = useState(false);
+  const [rememberedScale, setRememberedScale] =
+    useState<RememberedScale | null>(() => scaleMemory.load());
+  // Tracks saves and forgets so About can offer Forget scale only when relevant.
+  const memory = useMemo<RememberedDevice>(
+    () => ({
+      load: () => scaleMemory.load(),
+      save(value) {
+        scaleMemory.save(value);
+        setRememberedScale(scaleMemory.load());
+      },
+      clear() {
+        scaleMemory.clear();
+        setRememberedScale(null);
+      },
+    }),
+    [],
+  );
   const smooth = useRef<ScaleSample[]>([]);
   const live = useRef<ReturnType<typeof createLiveScale> | null>(null);
   const release = () => {
@@ -72,7 +94,7 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
       brew.dispatch(type);
     };
     live.current = createLiveScale(
-      createScaleTransport(),
+      createScaleTransport(memory),
       bookooMiniEncoding,
       brew.now,
       (sample) => {
@@ -114,6 +136,9 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
     liveWeight: displayWeight(smooth.current, session?.lastSample ?? null),
     liveState,
     liveSupported: supportsScaleConnection(),
+    /** The scale a later connection tries before opening the chooser. */
+    rememberedScale,
+    forgetScale: () => memory.clear(),
     connectLive: () => live.current?.connect(),
     disconnectLive: () => live.current?.disconnect(),
     tareLive: () => live.current?.tare(),

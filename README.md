@@ -58,7 +58,8 @@ and the version and `createSourceFile` export from `import ts from "typescript"`
 ## Architecture and delivery
 
 `core/` owns pure recipe/session logic without DOM types. `scale/` owns the
-BOOKOO codec and transport modules. `app/` composes adapters; `ui/`
+BOOKOO codec and transport modules. `platform/` holds browser storage adapters,
+such as the remembered scale, and depends only on core and itself. `app/` composes adapters; `ui/`
 uses app and type-only core imports. Dependency checks reject cycles and invalid
 layer imports; Bluetooth APIs and native imports belong in `scale/transport/`.
 
@@ -84,6 +85,28 @@ No automatic tare or scale timer synchronization occurs. Live weight display use
 a short median; detection and settled estimation use unsmoothed decoded readings.
 Completion, cancellation, interruption, restart and app teardown release the
 live connection.
+
+The device chooser lists only BOOKOO scales: on the web, devices advertising the
+BOOKOO service or a name beginning with `BOOKOO_SC`; on iOS, names beginning with
+`BOOKOO_SC`, because the native plugin combines criteria with AND and service
+advertising is unverified. The prefix (`BOOKOO_SC`, a space, then a
+device-specific suffix) was observed on the user's Themis Mini in Chrome's
+chooser; the vendor's Mini protocol does not document advertising. After a
+successful pick the app remembers the scale's id and name in local storage
+(blocked storage only means the chooser opens each time). The next **Connect
+scale** first tries that scale without the chooser, showing **Connecting to**
+its name: on iOS by retrieving the peripheral by id with a 5 s connection
+bound, and on the web only where `navigator.bluetooth.getDevices()` exists, by
+waiting up to 4 s for an advertisement and then connecting with a 10 s bound.
+Chrome currently exposes `getDevices()` and `watchAdvertisements()` only behind
+`chrome://flags/#enable-experimental-web-platform-features`, so stable Chrome
+shows the filtered chooser on every connection. If the remembered scale cannot
+be reached, the filtered chooser opens and a new pick replaces the remembered
+scale; if the browser refuses the chooser because the tap has expired, the next
+tap opens it directly. **Forget scale** in About's "How the guide works"
+section clears the remembered scale. Filtering, remembering and reconnecting
+are covered only by mocked radios; real-device behavior on Chrome and iOS
+is unverified.
 
 **Get ready** opens the ready screen: in live mode **Tare** first, then **Pour
 now**, one short instruction, **Start when I pour** in live mode, and a

@@ -1,4 +1,5 @@
 import { Capacitor } from "@capacitor/core";
+import type { RememberedDevice } from "@/scale/contracts";
 import { createNativeTransport } from "./native";
 import {
   createWebTransport,
@@ -9,8 +10,9 @@ export function supportsScaleConnection(): boolean {
   return Capacitor.getPlatform() === "ios" || supportsWebConnection();
 }
 
-export function createScaleTransport() {
+/** The remembered scale lets a later connection skip the chooser. */
+export function createScaleTransport(remembered?: RememberedDevice) {
   return Capacitor.getPlatform() === "ios"
-    ? createNativeTransport()
-    : createWebTransport();
+    ? createNativeTransport(undefined, remembered)
+    : createWebTransport(undefined, remembered);
 }

@@ -121,4 +121,28 @@ describe("live brewing adapter", () => {
     await pending;
     expect(s.changed).toHaveBeenCalledTimes(calls);
   });
+  it("publishes chooser and known-scale progress while connecting, then clears it", async () => {
+    const s = setup();
+    let finish = () => {};
+    s.transport.connect.mockImplementationOnce(
+      (value: TransportObservers) =>
+        new Promise<void>((resolve) => {
+          value.onProgress?.({ kind: "chooser" });
+          value.onProgress?.({ kind: "device", name: "BOOKOO_SC 000000" });
+          finish = resolve;
+        }),
+    );
+    const pending = s.live.connect();
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        status: "connecting",
+        progress: { kind: "device", name: "BOOKOO_SC 000000" },
+      }),
+    );
+    finish();
+    await pending;
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "connected", progress: null }),
+    );
+  });
 });

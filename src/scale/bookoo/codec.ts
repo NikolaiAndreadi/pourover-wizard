@@ -7,12 +7,19 @@ export const bookooUuids = {
 } as const;
 
 // Numeric sign/unit codes are absent from the official Mini protocol.
-// Only an explicitly confirmed encoding permits conversion into ScaleSample.
+// Sample conversion requires a known encoding.
 export interface ConfirmedEncoding {
   gramsUnit: number;
   positiveSign: number;
   negativeSign: number;
 }
+// Mini profile confirmed against the physical gram display at zero and +/-12.2 g.
+// Exact user-supplied notifications are preserved in hardware.fixture.ts.
+export const bookooMiniEncoding: Readonly<ConfirmedEncoding> = {
+  gramsUnit: 1,
+  positiveSign: 0x2b,
+  negativeSign: 0x2d,
+};
 export interface BookooFrame {
   scaleTimerMs: number;
   unitCode: number;

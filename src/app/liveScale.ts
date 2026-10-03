@@ -12,7 +12,7 @@ export interface LiveSnapshot {
   pendingTare: boolean;
   error: string;
 }
-/** Only confirmed unit/sign mappings may turn BOOKOO notifications into brewing samples. */
+/** Only matching unit/sign codes may turn BOOKOO notifications into brewing samples. */
 export function createLiveScale(
   transport: ScaleTransport,
   encoding: ConfirmedEncoding,
@@ -61,7 +61,7 @@ export function createLiveScale(
                 lost();
                 publish({
                   error:
-                    "Unconfirmed unit or sign; reading ignored. Check the scale and mapping.",
+                    "Unsupported scale reading. Check that the scale is set to grams.",
                 });
               }
             }
@@ -115,6 +115,7 @@ export function createLiveScale(
   };
 }
 export type { ConfirmedEncoding } from "@/scale/bookoo/codec";
+export { bookooMiniEncoding } from "@/scale/bookoo/codec";
 export {
   createScaleTransport,
   supportsScaleConnection,

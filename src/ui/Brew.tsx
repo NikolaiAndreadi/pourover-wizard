@@ -198,52 +198,6 @@ export function Brew({ model }: { model: BrewModel }) {
               <option value="learn">Learn · simulated rehearsal</option>
             </select>
           </label>
-          {model.mode === "live" && (
-            <fieldset>
-              <legend>Confirmed BOOKOO encoding</legend>
-              <p>
-                Enter byte codes confirmed against your scale display in the
-                BOOKOO lab. The official protocol does not specify these codes.
-                No defaults are assumed.
-              </p>
-              {(["gramsUnit", "positiveSign", "negativeSign"] as const).map(
-                (key) => (
-                  <label key={key}>
-                    {
-                      {
-                        gramsUnit: "Grams unit code",
-                        positiveSign: "Positive sign code",
-                        negativeSign: "Negative sign code",
-                      }[key]
-                    }
-                    <input
-                      type="number"
-                      min="0"
-                      max="255"
-                      value={model.mapping[key]}
-                      onChange={(event) => {
-                        model.setMapping({
-                          ...model.mapping,
-                          [key]: event.target.value,
-                        });
-                        model.setMappingConfirmed(false);
-                      }}
-                    />
-                  </label>
-                ),
-              )}
-              <label>
-                <input
-                  type="checkbox"
-                  checked={model.mappingConfirmed}
-                  onChange={(event) =>
-                    model.setMappingConfirmed(event.target.checked)
-                  }
-                />
-                I confirmed these codes against the scale display.
-              </label>
-            </fieldset>
-          )}
           {model.mode === "learn" && (
             <label>
               Playback speed
@@ -268,11 +222,7 @@ export function Brew({ model }: { model: BrewModel }) {
           <button
             type="button"
             className="button"
-            disabled={
-              !model.doseValid ||
-              !Number.isFinite(Number(model.seed)) ||
-              (model.mode === "live" && !model.mappingValid)
-            }
+            disabled={!model.doseValid || !Number.isFinite(Number(model.seed))}
             onClick={model.prepare}
           >
             Prepare brew

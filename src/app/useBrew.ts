@@ -11,6 +11,7 @@ import {
 import { expectedPoints, expectedWeight, stepAt } from "@/core/recipe";
 import { fakeSample } from "@/scale/fake";
 import {
+  bookooMiniEncoding,
   createLiveScale,
   createScaleTransport,
   type LiveSnapshot,
@@ -22,12 +23,6 @@ export function useBrew() {
   const [mode, setMode] = useState<Mode>("timer");
   const [speed, setSpeed] = useState(1);
   const [seed, setSeed] = useState("42");
-  const [mapping, setMapping] = useState({
-    gramsUnit: "",
-    positiveSign: "",
-    negativeSign: "",
-  });
-  const [mappingConfirmed, setMappingConfirmed] = useState(false);
   const [liveState, setLiveState] = useState<LiveSnapshot>({
     status: "disconnected",
     pendingTare: false,
@@ -121,28 +116,13 @@ export function useBrew() {
       live.current = null;
     }
   }, [session?.phase]);
-  const mappingValid =
-    mappingConfirmed &&
-    Object.values(mapping).every(
-      (value) =>
-        value.trim() !== "" &&
-        Number.isInteger(Number(value)) &&
-        Number(value) >= 0 &&
-        Number(value) <= 255,
-    ) &&
-    Number(mapping.positiveSign) !== Number(mapping.negativeSign);
   const doseValid =
     dose.trim() !== "" &&
     Number.isFinite(Number(dose)) &&
     Number(dose) >= 10 &&
     Number(dose) <= 25;
   const prepare = () => {
-    if (
-      !doseValid ||
-      !Number.isFinite(Number(seed)) ||
-      (mode === "live" && !mappingValid)
-    )
-      return;
+    if (!doseValid || !Number.isFinite(Number(seed))) return;
     clock.current = {
       real: performance.now(),
       virtual: 0,
@@ -161,11 +141,7 @@ export function useBrew() {
       };
       live.current = createLiveScale(
         createScaleTransport(),
-        {
-          gramsUnit: Number(mapping.gramsUnit),
-          positiveSign: Number(mapping.positiveSign),
-          negativeSign: Number(mapping.negativeSign),
-        },
+        bookooMiniEncoding,
         now,
         (sample) => {
           if (active.current?.mode !== "live") return;
@@ -224,11 +200,6 @@ export function useBrew() {
     : null;
   return {
     liveWeight,
-    mapping,
-    setMapping,
-    mappingConfirmed,
-    setMappingConfirmed,
-    mappingValid,
     liveState,
     liveSupported: supportsScaleConnection(),
     connectLive: () => live.current?.connect(),

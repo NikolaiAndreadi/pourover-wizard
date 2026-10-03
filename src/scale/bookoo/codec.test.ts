@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   BookooDecoder,
+  bookooMiniEncoding,
   encodeCommand,
   toSample,
   validateEncoding,
 } from "@/scale/bookoo/codec";
+import { hardwareNotifications } from "@/scale/bookoo/hardware.fixture";
 import { syntheticFrame } from "@/scale/bookoo/synthetic.fixture";
 
 const encoding = { gramsUnit: 2, positiveSign: 7, negativeSign: 9 };
-describe("synthetic BOOKOO protocol fixtures; hardware encoding remains unverified", () => {
+describe("synthetic BOOKOO protocol fixtures", () => {
   it("decodes big-endian timer, signed weight through confirmed mapping, and independent fields", () => {
     const decoder = new BookooDecoder();
     const [positive, negative] = decoder.push(
@@ -146,6 +148,32 @@ describe("synthetic BOOKOO protocol fixtures; hardware encoding remains unverifi
     "encodes %s against independent command bytes",
     (command, expected) => {
       expect(Array.from(encodeCommand(command))).toEqual(expected);
+    },
+  );
+});
+
+describe("user-supplied Mini notifications compared with the physical gram display", () => {
+  it.each([
+    ["zero", 0],
+    ["negative", -12.2],
+    ["positive", 12.2],
+  ] as const)(
+    "decodes %s readings using the built-in profile",
+    (kind, grams) => {
+      const decoder = new BookooDecoder();
+      for (const hex of hardwareNotifications[kind]) {
+        const bytes = Uint8Array.from(
+          hex.split(" ").map((byte) => Number.parseInt(byte, 16)),
+        );
+        const frames = decoder.push(bytes);
+        expect(frames).toHaveLength(1);
+        expect(toSample(frames[0]!, 0, bookooMiniEncoding)).toEqual({
+          atMs: 0,
+          grams,
+        });
+        expect(frames[0]?.scaleTimerMs).toBe(0);
+      }
+      expect(decoder.rejectedFrames).toBe(0);
     },
   );
 });

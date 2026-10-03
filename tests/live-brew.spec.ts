@@ -11,7 +11,7 @@ declare global {
     };
   }
 }
-test("mocked live brewing gates mapping and arming, survives loss and reports missing measurements", async ({
+test("mocked live brewing uses the Mini profile and gates arming, survives loss and reports missing measurements", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
@@ -74,15 +74,10 @@ test("mocked live brewing gates mapping and arming, survives loss and reports mi
   });
   await page.goto("./");
   await page.getByLabel("Guide mode").selectOption("live");
-  await expect(
-    page.getByRole("button", { name: "Prepare brew" }),
-  ).toBeDisabled();
-  await page.getByLabel("Grams unit code").fill("2");
-  await page.getByLabel("Positive sign code").fill("7");
-  await page.getByLabel("Negative sign code").fill("9");
-  await page
-    .getByLabel("I confirmed these codes against the scale display.")
-    .check();
+  await expect(page.getByLabel("Grams unit code")).toHaveCount(0);
+  await expect(page.getByLabel("Positive sign code")).toHaveCount(0);
+  await expect(page.getByLabel("Negative sign code")).toHaveCount(0);
+  await expect(page.getByRole("checkbox")).toHaveCount(0);
   await page.getByRole("button", { name: "Prepare brew" }).click();
   await page.getByRole("button", { name: "Connect BOOKOO scale" }).click();
   await expect(page.getByRole("status")).toContainText("connected");
@@ -101,7 +96,13 @@ test("mocked live brewing gates mapping and arming, survives loss and reports mi
   const emit = async (grams: number) =>
     page.evaluate(
       (bytes) => window.brewMock.emit(bytes),
-      Array.from(syntheticFrame({ magnitude: Math.round(grams * 100) })),
+      Array.from(
+        syntheticFrame({
+          magnitude: Math.round(grams * 100),
+          unit: 1,
+          sign: 0x2b,
+        }),
+      ),
     );
   for (let i = 0; i < 3; i++) {
     await page.clock.runFor(250);
@@ -114,7 +115,7 @@ test("mocked live brewing gates mapping and arming, survives loss and reports mi
       window.brewMock.emit(bytes);
       window.brewMock.emit(bytes);
     },
-    Array.from(syntheticFrame({ magnitude: 99900 })),
+    Array.from(syntheticFrame({ magnitude: 99900, unit: 1, sign: 0x2b })),
   );
   await expect(page.getByRole("status")).toContainText("0.0 g");
   await expect(
@@ -185,12 +186,6 @@ test("live mode without Bluetooth remains a manual timer and never fabricates sa
   );
   await page.goto("./");
   await page.getByLabel("Guide mode").selectOption("live");
-  await page.getByLabel("Grams unit code").fill("2");
-  await page.getByLabel("Positive sign code").fill("7");
-  await page.getByLabel("Negative sign code").fill("9");
-  await page
-    .getByLabel("I confirmed these codes against the scale display.")
-    .check();
   await page.getByRole("button", { name: "Prepare brew" }).click();
   await expect(
     page.getByRole("button", { name: "Connect BOOKOO scale" }),

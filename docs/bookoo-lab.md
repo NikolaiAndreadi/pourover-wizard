@@ -4,8 +4,10 @@ Open **Scale lab** from the guide navigation. This is an isolated diagnostic
 screen; lab commands do not start or arm a brewing session. Use Mac Chrome on
 localhost or HTTPS. Safari can import and decode a recording but has no supported
 live connection path here. The iOS app selects native BLE; see the
-[iOS guide](ios.md) for foreground limits and pending native file export validation. No actual scale, OS, browser, firmware, or native iOS
-behavior has been accepted yet; all committed protocol fixtures are synthetic.
+[iOS guide](ios.md) for foreground limits and pending native file export validation. The Mini gram/sign encoding was confirmed against the physical display at zero
+and ±12.2 g. Exact notifications are in
+[`hardware.fixture.ts`](../src/scale/bookoo/hardware.fixture.ts). Full physical
+brewing, transport behavior, and native iOS acceptance remain pending.
 
 ## Protocol evidence and limits
 
@@ -17,9 +19,10 @@ a big-endian 24-bit weight magnitude in hundredths of grams, flow data, battery,
 settings, reserved byte, and XOR checksum. Commands are six bytes with prefix
 `03 0A`; tare uses command `01`, start timer `04`, stop `05`, reset `06`.
 
-The vendor does not specify numeric sign or gram-unit codes. Raw decoding therefore
-shows the code values and unsigned magnitude; signed gram readings are gated
-behind explicitly confirmed mapping. No other units are converted. Unknown sign
+The vendor does not specify numeric sign or gram-unit codes. Physical Mini
+notifications confirmed gram unit `01`, positive sign `2B`, and negative sign
+`2D`. Normal brewing uses this built-in profile. Raw lab decoding shows code
+values and unsigned magnitude; lab signed readings use explicitly confirmed mapping. No other units are converted. Unknown sign
 or unit codes produce no signed sample. The scale timer is diagnostic data; app
 sample timestamps use the monotonic recording clock, never the scale timer.
 

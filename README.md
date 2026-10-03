@@ -2,7 +2,7 @@
 
 A small React and TypeScript V60 brewing SPA with a guided timer, deterministic
 simulated scale, and Learn playback at 1× or 4×. The separate BOOKOO lab supports
-raw capture and replay. Live BOOKOO brewing uses explicitly confirmed encoding;
+raw capture and replay. Live BOOKOO brewing uses a built-in Mini encoding confirmed at zero and ±12.2 g;
 the iOS shell uses native BLE. Physical scale and SideStore acceptance are pending.
 
 ## Develop and verify
@@ -70,8 +70,8 @@ visibility changes require separate authorization.
 ## Brewing behavior and source
 
 **Pour now** starts at tap time in every mode, including live brewing without a
-connected scale. Choose BOOKOO live scale and enter sign/unit byte codes confirmed
-against your scale display in the lab; no hardware codes are assumed or persisted.
+connected scale. Choose BOOKOO live scale, prepare the brew, and connect. The built-in
+Mini profile handles signed grams without setup codes or a confirmation checkbox.
 Connect, explicitly tare, wait for at least 500 ms of fresh stable readings within
 1 g of zero, then explicitly **Arm auto-start** if desired. A completed tare write
 is not proof that the hardware tared; zero readings are also required. Tare never
@@ -115,8 +115,8 @@ only when a settled measurement exists. Charts split across lost readings,
 retain at most 600 display samples, and are not raw recordings.
 
 See the [BOOKOO lab guide](docs/bookoo-lab.md) for `#/scale-lab`, protocol limits,
-capture/replay, and the hardware checklist. No real-device, iOS, or SideStore
-behavior has been accepted; browser mocks do not provide that evidence.
+capture/replay, and the hardware checklist. Only the Mini unit/sign encoding at zero and ±12.2 g has been physically confirmed.
+Full brewing, iOS, and SideStore acceptance remain pending; browser mocks do not provide that evidence.
 
 See the [iOS and SideStore guide](docs/ios.md) for the native build, private IPA
 workflow, phone import, foreground limits, and pending acceptance checks.

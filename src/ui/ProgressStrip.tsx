@@ -47,14 +47,15 @@ function PourZoom({ model }: { model: StripModel }) {
       traces.push([]);
     traces.at(-1)?.push(sample);
   });
-  const readings = shown.map((sample) => Math.max(0, sample.grams));
   const headroom = Math.max(5, (to - from) * 0.15);
-  const low = Math.max(0, Math.min(from, ...readings) - headroom);
-  const high = Math.max(to, ...readings) + headroom;
+  const low = from - headroom;
+  const high = to + headroom;
   const x = (atMs: number) =>
     SIDE + ((atMs - start) / (end - start)) * (WIDTH - 2 * SIDE);
+  const outside = (grams: number) => grams < low || grams > high;
   const y = (grams: number) =>
-    ZOOM_HEIGHT - ((Math.max(0, grams) - low) / (high - low)) * ZOOM_HEIGHT;
+    ZOOM_HEIGHT -
+    ((Math.min(high, Math.max(low, grams)) - low) / (high - low)) * ZOOM_HEIGHT;
   const latest = shown.at(-1);
   // Like the full chart, mark the newest recorded reading while readings are fresh.
   const fresh =
@@ -108,7 +109,9 @@ function PourZoom({ model }: { model: StripModel }) {
         </svg>
         {fresh && (
           <span
-            className="zoom-dot"
+            className={
+              outside(latest.grams) ? "zoom-dot is-clipped" : "zoom-dot"
+            }
             data-testid="pour-zoom-latest"
             style={
               {

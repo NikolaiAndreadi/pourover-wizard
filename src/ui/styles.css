@@ -910,6 +910,9 @@ progress {
   box-shadow: 0 0 0 2px #f6f3ed;
   transform: translate(-50%, -50%);
 }
+.zoom-dot.is-clipped {
+  opacity: 0.45;
+}
 .pour-zoom-key {
   display: flex;
   justify-content: space-between;

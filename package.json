@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=24.21.0 <25",
-    "npm": ">=11 <12"
+    "node": ">=26.10.0 <27",
+    "npm": ">=12.2.0 <13"
   },
-  "packageManager": "npm@11.19.0",
+  "packageManager": "npm@12.2.0",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
@@ -20,7 +20,12 @@
     "test:watch": "vitest",
     "check:fast": "run-p --max-parallel 2 --continue-on-error --print-label typecheck lint architecture test",
     "test:e2e": "npm run build && playwright test",
-    "check": "run-p --max-parallel 2 --continue-on-error --print-label check:fast test:e2e"
+    "check": "run-p --max-parallel 2 --continue-on-error --print-label check:fast test:e2e",
+    "test:coverage": "vitest run --coverage",
+    "test:mutation": "stryker run",
+    "test:mutation:full": "stryker run --force",
+    "report:complexity": "node scripts/report-complexity.mjs",
+    "quality:report": "run-s test:coverage report:complexity"
   },
   "dependencies": {
     "react": "19.3.0",
@@ -29,14 +34,25 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@playwright/test": "1.63.0",
-    "@types/node": "24.10.1",
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2",
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/typescript-checker": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
+    "@types/node": "26.6.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@typescript-eslint/parser": "8.71.0",
     "@vitejs/plugin-react": "6.1.1",
+    "@vitest/coverage-v8": "4.1.11",
     "dependency-cruiser": "18.5.0",
+    "eslint": "10.12.0",
     "npm-run-all2": "9.0.3",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "vite": "8.3.2",
-    "vitest": "5.0.3"
+    "vitest": "4.1.11"
+  },
+  "overrides": {
+    "typed-rest-client": {
+      "qs": "6.16.0"
+    }
   }
 }

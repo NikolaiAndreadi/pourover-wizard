@@ -4,6 +4,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      mutation:
+        description: Run fresh core and codec mutation diagnostics
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -19,7 +24,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm install --global npm@11.19.0
+      - run: npm install --global npm@12.2.0
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Verify production app and boundaries
@@ -27,6 +32,8 @@ jobs:
           mkdir -p reports
           set -o pipefail
           npm run check 2>&1 | tee reports/check.log
+      - name: Report core and codec coverage and complexity
+        run: npm run quality:report
       - name: Retain private verification evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -46,3 +53,24 @@ jobs:
           path: dist/
           retention-days: 7
           if-no-files-found: error
+  mutation:
+    if: github.event_name == 'workflow_dispatch' && inputs.mutation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@12.2.0
+      - run: npm ci
+      - run: npm run test:mutation:full
+      - name: Retain private mutation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mutation-${{ github.sha }}
+          path: reports/mutation/
+          retention-days: 7
+          if-no-files-found: warn

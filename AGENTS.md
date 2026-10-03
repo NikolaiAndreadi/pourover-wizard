@@ -25,7 +25,10 @@ only after explicit arming. Hold to cancel.
 
 ## Application conventions
 
-- Use Node 24.21.0 and npm 11.19.0, `npm ci`, and the committed lockfile.
+- Track the latest stable Node Current release, including non-LTS releases, and
+  the latest compatible npm. Currently pin Node 26.10.0 and npm 12.2.0; use
+  `npm ci` and the committed lockfile. Verify runtime and tooling compatibility
+  when updating these pins.
 - Run `npm run check` before committing application or tooling changes. See
   `README.md` for focused commands and generated report locations.
 - Keep `core/` pure and DOM-free; `scale/` and `platform/` depend only on core

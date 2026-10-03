@@ -6,3 +6,4 @@ reports/
 test-results/
 playwright-report/
 *.tsbuildinfo
+.stryker-tmp/

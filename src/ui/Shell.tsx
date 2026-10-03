@@ -1,7 +1,10 @@
 import { type Route, routeHrefs } from "@/app/routes";
-export function Shell({ route }: { route: Route }) {
+import type { BrewModel } from "@/app/useBrew";
+import { Brew } from "./Brew";
+import { ScaleLab } from "./ScaleLab";
+export function Shell({ route, brew }: { route: Route; brew: BrewModel }) {
   return (
-    <div className="shell">
+    <div className={`shell ${brew.session ? "active-session" : ""}`}>
       <button
         type="button"
         className="skip"
@@ -29,29 +32,20 @@ export function Shell({ route }: { route: Route }) {
           >
             About
           </a>
+          <a
+            href={routeHrefs["scale-lab"]}
+            aria-current={route === "scale-lab" ? "page" : undefined}
+          >
+            Scale lab
+          </a>
         </nav>
       </header>
       <main id="content" tabIndex={-1}>
         <p className="eyebrow">A little care, a better cup</p>
         {route === "home" ? (
-          <>
-            <h1>
-              Your daily pour-over,
-              <br />
-              with room to focus.
-            </h1>
-            <p className="intro">A simple guide for one cup of V60 coffee.</p>
-            <section aria-labelledby="status">
-              <h2 id="status">The guide is taking shape</h2>
-              <p>
-                The brewing timer and scale connection are being built. This
-                preview establishes the app’s layout and navigation.
-              </p>
-              <a className="button" href={routeHrefs.about}>
-                About this guide <span aria-hidden="true">↗</span>
-              </a>
-            </section>
-          </>
+          <Brew model={brew} />
+        ) : route === "scale-lab" ? (
+          <ScaleLab />
         ) : (
           <>
             <h1>
@@ -65,8 +59,9 @@ export function Shell({ route }: { route: Route }) {
             <section aria-labelledby="preview">
               <h2 id="preview">An early preview</h2>
               <p>
-                Recipe guidance, a timer, and BOOKOO Themis Mini support will
-                follow. Brewing and Bluetooth are not available in this preview.
+                Follow the timed recipe with a timer alone or rehearse with a
+                simulated scale. Real Bluetooth and native iOS are still being
+                developed.
               </p>
               <a className="button" href={routeHrefs.home}>
                 Back to home <span aria-hidden="true">↗</span>

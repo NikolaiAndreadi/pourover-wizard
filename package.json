@@ -1,0 +1,42 @@
+{
+  "name": "pourover-wizard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.21.0 <25",
+    "npm": ">=11 <12"
+  },
+  "packageManager": "npm@11.19.0",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "typecheck": "tsc -p tsconfig.json && node scripts/check-core.mjs",
+    "architecture": "depcruise src --config .dependency-cruiser.cjs && node scripts/check-bluetooth.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:fast": "run-p --max-parallel 2 --continue-on-error --print-label typecheck lint architecture test",
+    "test:e2e": "npm run build && playwright test",
+    "check": "run-p --max-parallel 2 --continue-on-error --print-label check:fast test:e2e"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "6.1.1",
+    "dependency-cruiser": "18.5.0",
+    "npm-run-all2": "9.0.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.2",
+    "vitest": "5.0.3"
+  }
+}

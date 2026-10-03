@@ -1,2 +1,8 @@
-.idea
-.agent
+.idea/
+.agent/
+node_modules/
+dist/
+reports/
+test-results/
+playwright-report/
+*.tsbuildinfo

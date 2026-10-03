@@ -1,5 +1,13 @@
-import { type Recipe, scaleRecipe } from "./recipe";
+import { type Detector, IDLE_DETECTOR, observePour } from "./detector";
+import { drawdownStartMs, type Recipe, scaleRecipe } from "./recipe";
 import type { ScaleSample } from "./scale";
+import {
+  addReading,
+  EMPTY_SETTLED,
+  highestSettled,
+  readsZero,
+  type Settled,
+} from "./settled";
 export type Mode = "timer" | "live";
 export type Phase =
   | "preparation"
@@ -17,11 +25,11 @@ export interface Session {
   elapsedMs: number;
   tared: boolean;
   armedAtMs: number | null;
-  onset: ScaleSample | null;
-  riseCount: number;
-  detectorLast: ScaleSample | null;
+  /** Auto-start detection; only fed while armed. */
+  detector: Detector;
   lastSample: ScaleSample | null;
-  stable: readonly ScaleSample[];
+  /** Settled-weight window for zero readiness and poured-water estimates. */
+  settled: Settled;
   samples: readonly ScaleSample[];
   pouredGrams: number | null;
   missingData: boolean;
@@ -48,6 +56,8 @@ export type Event =
   | { type: "sample"; nowMs: number; sample: ScaleSample; holdNowMs?: number };
 export const HOLD_MS = 1000;
 export const MAX_SAMPLES = 600;
+/** Readings older than this are stale; larger gaps break stream continuity. */
+const FRESH_MS = 500;
 export function createSession(dose: number, mode: Mode, nowMs = 0): Session {
   if (!Number.isFinite(nowMs) || nowMs < 0)
     throw new Error("Clock must be finite and nonnegative.");
@@ -60,11 +70,9 @@ export function createSession(dose: number, mode: Mode, nowMs = 0): Session {
     elapsedMs: 0,
     tared: false,
     armedAtMs: null,
-    onset: null,
-    riseCount: 0,
-    detectorLast: null,
+    detector: IDLE_DETECTOR,
     lastSample: null,
-    stable: [],
+    settled: EMPTY_SETTLED,
     samples: [],
     pouredGrams: null,
     missingData: false,
@@ -84,9 +92,7 @@ function begin(state: Session, originMs: number): Session {
     originMs,
     elapsedMs: state.nowMs - originMs,
     armedAtMs: null,
-    onset: null,
-    riseCount: 0,
-    detectorLast: null,
+    detector: IDLE_DETECTOR,
   };
 }
 function appendSample(
@@ -98,19 +104,13 @@ function appendSample(
     ? all.filter((_, index) => index % 2 === 0 || index === all.length - 1)
     : all;
 }
+/** A tared scale is freshly reporting a settled zero. */
 export function canArmLive(state: Session): boolean {
-  const first = state.stable[0];
   return (
     state.tared &&
     state.lastSample !== null &&
-    state.nowMs - state.lastSample.atMs <= 500 &&
-    first !== undefined &&
-    state.lastSample.atMs - first.atMs >= 500 &&
-    state.stable.length >= 3 &&
-    Math.max(...state.stable.map((sample) => sample.grams)) -
-      Math.min(...state.stable.map((sample) => sample.grams)) <=
-      1 &&
-    state.stable.every((sample) => Math.abs(sample.grams) <= 1)
+    state.nowMs - state.lastSample.atMs <= FRESH_MS &&
+    readsZero(state.settled)
   );
 }
 function loseSignal(state: Session): Session {
@@ -120,11 +120,9 @@ function loseSignal(state: Session): Session {
     tared: false,
     baselineVerified: state.phase === "brewing" && state.baselineVerified,
     armedAtMs: null,
-    onset: null,
-    riseCount: 0,
-    detectorLast: null,
+    detector: IDLE_DETECTOR,
     lastSample: null,
-    stable: [],
+    settled: EMPTY_SETTLED,
     segment: state.segment + 1,
     missingData: state.missingData || state.phase === "brewing",
   };
@@ -136,7 +134,7 @@ function receiveSample(state: Session, sample: ScaleSample): Session {
     sample.atMs < 0 ||
     !Number.isFinite(sample.grams) ||
     sample.atMs > state.nowMs ||
-    state.nowMs - sample.atMs > 500 ||
+    state.nowMs - sample.atMs > FRESH_MS ||
     (state.lastSample !== null && sample.atMs <= state.lastSample.atMs)
   )
     return state;
@@ -146,85 +144,34 @@ function receiveSample(state: Session, sample: ScaleSample): Session {
     sample.atMs < state.armedAtMs
   )
     return state;
-  const gap =
-    state.lastSample === null || sample.atMs - state.lastSample.atMs > 500;
+  const continuous =
+    state.lastSample !== null &&
+    sample.atMs - state.lastSample.atMs <= FRESH_MS;
   let next: Session = { ...state, lastSample: sample };
-  if (
-    state.phase === "armed" &&
-    state.armedAtMs !== null &&
-    sample.atMs >= state.armedAtMs
-  ) {
-    const reference = state.detectorLast;
-    if (gap || reference === null)
-      next = { ...next, detectorLast: sample, onset: null, riseCount: 0 };
-    else if (sample.atMs - reference.atMs >= 100) {
-      const rising = sample.grams - reference.grams > 0.15;
-      const onset = rising ? (state.onset ?? reference) : null;
-      next = {
-        ...next,
-        detectorLast: sample,
-        onset,
-        riseCount: rising ? state.riseCount + 1 : 0,
-      };
-    }
-    const onset = next.onset;
-    if (
-      onset !== null &&
-      next.riseCount >= 2 &&
-      sample.atMs - onset.atMs >= 500 &&
-      sample.grams - onset.grams >= 3
-    )
-      next = begin(next, onset.atMs);
+  if (state.phase === "armed") {
+    const { detector, pourStartMs } = observePour(
+      state.detector,
+      sample,
+      continuous,
+    );
+    next = { ...next, detector };
+    if (pourStartMs !== null) next = begin(next, pourStartMs);
   }
-  if (next.phase === "preparation") {
-    return {
-      ...next,
-      stable: gap
-        ? [sample]
-        : [
-            ...next.stable.filter(
-              (item) =>
-                sample.atMs - item.atMs <= 750 &&
-                Math.floor(item.atMs / 100) !== Math.floor(sample.atMs / 100),
-            ),
-            sample,
-          ],
-    };
-  }
+  if (next.phase === "preparation")
+    return { ...next, settled: addReading(next.settled, sample, continuous) };
   if (
     next.phase !== "brewing" ||
     next.originMs === null ||
     sample.atMs < next.originMs
   )
     return next;
-  const bucket = Math.floor(sample.atMs / 100);
-  const stable = gap
-    ? [sample]
-    : [
-        ...next.stable.filter(
-          (item) =>
-            sample.atMs - item.atMs <= 750 &&
-            Math.floor(item.atMs / 100) !== bucket,
-        ),
-        sample,
-      ];
-  let pouredGrams = next.pouredGrams;
-  if (
-    next.baselineVerified &&
-    stable.length >= 3 &&
-    sample.atMs - (stable[0]?.atMs ?? sample.atMs) >= 500
-  ) {
-    const weights = stable.map((item) => item.grams);
-    if (Math.max(...weights) - Math.min(...weights) <= 1) {
-      const settled =
-        weights.reduce((sum, grams) => sum + grams, 0) / weights.length;
-      if (settled >= 0) pouredGrams = Math.max(pouredGrams ?? 0, settled);
-    }
-  }
+  const settled = addReading(next.settled, sample, continuous);
   return {
     ...next,
-    stable,
-    pouredGrams,
+    settled,
+    pouredGrams: next.baselineVerified
+      ? highestSettled(next.pouredGrams, settled)
+      : next.pouredGrams,
     samples: appendSample(next.samples, {
       atMs: sample.atMs - next.originMs,
       grams: sample.grams,
@@ -267,7 +214,7 @@ export function updateSession(state: Session, event: Event): Session {
   if (
     next.mode === "live" &&
     next.lastSample !== null &&
-    event.nowMs - next.lastSample.atMs > 500
+    event.nowMs - next.lastSample.atMs > FRESH_MS
   )
     next = loseSignal(next);
   const holdNowMs = event.holdNowMs ?? event.nowMs;
@@ -280,13 +227,11 @@ export function updateSession(state: Session, event: Event): Session {
       originMs: null,
       elapsedMs: 0,
       armedAtMs: null,
-      onset: null,
-      riseCount: 0,
-      detectorLast: null,
+      detector: IDLE_DETECTOR,
       holdAtMs: null,
       holdElapsedMs: 0,
       samples: [],
-      stable: [],
+      settled: EMPTY_SETTLED,
       pouredGrams: null,
       tared: false,
     };
@@ -297,8 +242,8 @@ export function updateSession(state: Session, event: Event): Session {
           ...next,
           tared: true,
           lastSample: null,
-          stable: [],
-          onset: null,
+          settled: EMPTY_SETTLED,
+          detector: IDLE_DETECTOR,
         };
       break;
     case "arm":
@@ -313,10 +258,7 @@ export function updateSession(state: Session, event: Event): Session {
           phase: "armed",
           baselineVerified: canArmLive(next),
           armedAtMs: event.nowMs,
-          onset: null,
-          riseCount: 0,
-          detectorLast: null,
-          lastSample: next.lastSample,
+          detector: IDLE_DETECTOR,
         };
       break;
     case "start":
@@ -324,7 +266,10 @@ export function updateSession(state: Session, event: Event): Session {
         next = begin(next, event.nowMs);
       break;
     case "done":
-      if (next.phase === "brewing" && next.elapsedMs >= 125000)
+      if (
+        next.phase === "brewing" &&
+        next.elapsedMs >= drawdownStartMs(next.recipe)
+      )
         next = { ...next, phase: "completed", holdAtMs: null };
       break;
     case "hold":

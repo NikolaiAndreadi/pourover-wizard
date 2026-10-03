@@ -241,7 +241,7 @@ describe("live stream readiness and loss", () => {
     state = event(state, "tick", 1101);
     expect(state.phase).toBe("preparation");
     expect(state.tared).toBe(false);
-    expect(state.detectorLast).toBeNull();
+    expect(state.detector.last).toBeNull();
     expect(state.lastSample).toBeNull();
     expect(state.baselineVerified).toBe(false);
     expect(event(state, "start", 1101).baselineVerified).toBe(false);
@@ -249,7 +249,7 @@ describe("live stream readiness and loss", () => {
   it("stable zero readings cannot arm without an explicit successful tare", () => {
     let state = createSession(15, "live");
     for (const atMs of [100, 350, 600]) state = sample(state, atMs, 0);
-    expect(state.stable).toHaveLength(3);
+    expect(state.settled.readings).toHaveLength(3);
     expect(canArmLive(state)).toBe(false);
     expect(event(state, "arm", 600).phase).toBe("preparation");
     state = event(state, "tare", 600);

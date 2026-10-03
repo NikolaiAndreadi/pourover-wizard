@@ -12,6 +12,8 @@ const endLine = recipeSource.split("\n").length;
 export default {
   mutate: [
     "src/core/engine.ts",
+    "src/core/detector.ts",
+    "src/core/settled.ts",
     `src/core/recipe.ts:${startLine}-${endLine}`,
     "src/scale/bookoo/codec.ts",
   ],

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  drawdownStartMs,
   expectedPoints,
   expectedWeight,
   recipe,
@@ -84,7 +85,7 @@ it("does not allow water target changes during non-pour actions", () => {
         { atMs: 1000, action: "wait", label: "wait", targetFraction: 1 },
       ],
     }),
-  ).toThrow();
+  ).toThrow(/cumulative fractions/);
 });
 describe("independent recipe validation failures", () => {
   it.each([0, -1, NaN, Infinity])(
@@ -151,5 +152,37 @@ describe("independent recipe validation failures", () => {
     expect(() => validateRecipe({ ...recipe, steps: incomplete })).toThrow(
       /full water target/,
     );
+  });
+});
+describe("drawdown start", () => {
+  it("is the final drawdown step time for original and scaled recipes", () => {
+    expect(drawdownStartMs(recipe)).toBe(125000);
+    expect(drawdownStartMs(scaleRecipe(20))).toBe(125000);
+    const later = recipe.steps.map((step, index, all) =>
+      index === all.length - 1 ? { ...step, atMs: 130000 } : step,
+    );
+    expect(drawdownStartMs({ ...recipe, steps: later })).toBe(130000);
+  });
+  it.each([
+    ["no drawdown", recipe.steps.slice(0, -1)],
+    [
+      "two drawdowns",
+      recipe.steps.map((step, index) =>
+        index === 10 ? { ...step, action: "drawdown" as const } : step,
+      ),
+    ],
+    [
+      "a drawdown before the final step",
+      recipe.steps.map((step, index, all) =>
+        index === 10
+          ? { ...step, action: "drawdown" as const }
+          : index === all.length - 1
+            ? { ...step, action: "wait" as const }
+            : step,
+      ),
+    ],
+  ])("rejects a recipe with %s", (_, steps) => {
+    expect(() => drawdownStartMs({ ...recipe, steps })).toThrow(/drawdown/);
+    expect(() => validateRecipe({ ...recipe, steps })).toThrow(/drawdown/);
   });
 });

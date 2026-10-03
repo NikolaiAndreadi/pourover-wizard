@@ -22,7 +22,7 @@ the runtime.
 | `npm run test:coverage`      | Core/BOOKOO codec coverage, including untouched files; `reports/coverage/`                       |
 | `npm run report:complexity`  | Cyclomatic complexity; `reports/complexity.json`                                                 |
 | `npm run quality:report`     | Coverage then complexity; no metric gate or CRAP score                                           |
-| `npm run test:mutation`      | Engine, recipe functions, BOOKOO codec; incremental cache in `reports/mutation/incremental.json` |
+| `npm run test:mutation`      | Core session modules, recipe functions, BOOKOO codec; cache `reports/mutation/incremental.json`  |
 | `npm run test:mutation:full` | Fresh mutation run; `reports/mutation/index.html` and `mutation.json`                            |
 | `npm run format`             | Format source and configuration                                                                  |
 | `npm run ios:sync`           | Build native web assets and sync the iOS SPM project                                             |

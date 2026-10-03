@@ -346,7 +346,7 @@ export function Brew({ model }: { model: BrewModel }) {
             <button
               type="button"
               className="button"
-              disabled={session.elapsedMs < 125000}
+              disabled={!model.canFinish}
               onClick={() => dispatch("done")}
             >
               Done

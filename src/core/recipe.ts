@@ -84,6 +84,17 @@ export function validateRecipe(value: Recipe): void {
     throw new Error(
       "Recipe must begin at zero and reach its full water target.",
     );
+  drawdownStartMs(value);
+}
+/** Brewing can be finished once its single, final drawdown step begins. */
+export function drawdownStartMs(value: Recipe): number {
+  const last = value.steps.at(-1);
+  if (
+    last?.action !== "drawdown" ||
+    value.steps.filter((step) => step.action === "drawdown").length !== 1
+  )
+    throw new Error("Recipe must end with its only drawdown step.");
+  return last.atMs;
 }
 export function scaleRecipe(dose: number, source: Recipe = recipe): Recipe {
   validateRecipe(source);

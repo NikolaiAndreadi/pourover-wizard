@@ -12,21 +12,21 @@ with `npm ci`, then `npx playwright install chromium` (Linux CI adds `--with-dep
 Track the latest stable Node Current and latest compatible npm when updating
 the runtime.
 
-| Command | Purpose / output |
-| --- | --- |
-| `npm run dev` | Local app at `/pourover-wizard/` |
-| `npm run check:fast` | Type checks, Biome, dependency/Bluetooth boundaries, unit tests |
-| `npm run test:watch` | Unit tests while editing |
-| `npm run test:e2e` | Build and test production assets with Playwright |
-| `npm run check` | Fast checks and production browser checks |
-| `npm run test:coverage` | Core/BOOKOO codec coverage, including untouched files; `reports/coverage/` |
-| `npm run report:complexity` | Cyclomatic complexity; `reports/complexity.json` |
-| `npm run quality:report` | Coverage then complexity; no metric gate or CRAP score |
-| `npm run test:mutation` | Engine, recipe functions, BOOKOO codec; incremental cache in `reports/mutation/incremental.json` |
-| `npm run test:mutation:full` | Fresh mutation run; `reports/mutation/index.html` and `mutation.json` |
-| `npm run format` | Format source and configuration |
-| `npm run ios:sync` | Build native web assets and sync the iOS SPM project |
-| `npm run ios:package` | Unsigned device IPA and SHA-256 in `reports/ios/`; requires macOS/Xcode |
+| Command                      | Purpose / output                                                                                 |
+|------------------------------|--------------------------------------------------------------------------------------------------|
+| `npm run dev`                | Local app at `/pourover-wizard/`                                                                 |
+| `npm run check:fast`         | Type checks, Biome, dependency/Bluetooth boundaries, unit tests                                  |
+| `npm run test:watch`         | Unit tests while editing                                                                         |
+| `npm run test:e2e`           | Build and test production assets with Playwright                                                 |
+| `npm run check`              | Fast checks and production browser checks                                                        |
+| `npm run test:coverage`      | Core/BOOKOO codec coverage, including untouched files; `reports/coverage/`                       |
+| `npm run report:complexity`  | Cyclomatic complexity; `reports/complexity.json`                                                 |
+| `npm run quality:report`     | Coverage then complexity; no metric gate or CRAP score                                           |
+| `npm run test:mutation`      | Engine, recipe functions, BOOKOO codec; incremental cache in `reports/mutation/incremental.json` |
+| `npm run test:mutation:full` | Fresh mutation run; `reports/mutation/index.html` and `mutation.json`                            |
+| `npm run format`             | Format source and configuration                                                                  |
+| `npm run ios:sync`           | Build native web assets and sync the iOS SPM project                                             |
+| `npm run ios:package`        | Unsigned device IPA and SHA-256 in `reports/ios/`; requires macOS/Xcode                          |
 
 Run fresh mutation checks after dependency, configuration, or fixture changes
 and before releases; review survivors rather than treating a score as proof.

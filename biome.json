@@ -11,9 +11,20 @@
       "!**/.agent",
       "!**/.idea",
       "!!**/.stryker-tmp",
-      "!package-lock.json"
+      "!package-lock.json",
+      "!**/dist-ios",
+      "!**/ios"
     ]
   },
-  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2 },
-  "linter": { "enabled": true, "rules": { "preset": "none" } }
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "none"
+    }
+  }
 }

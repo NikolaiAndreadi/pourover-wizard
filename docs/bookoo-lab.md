@@ -3,7 +3,8 @@
 Open **Scale lab** from the guide navigation. This is an isolated diagnostic
 screen; lab commands do not start or arm a brewing session. Use Mac Chrome on
 localhost or HTTPS. Safari can import and decode a recording but has no supported
-live connection path here. No actual scale, OS, browser, firmware, or native iOS
+live connection path here. The iOS app selects native BLE; see the
+[iOS guide](ios.md) for foreground limits and pending native file export validation. No actual scale, OS, browser, firmware, or native iOS
 behavior has been accepted yet; all committed protocol fixtures are synthetic.
 
 ## Protocol evidence and limits

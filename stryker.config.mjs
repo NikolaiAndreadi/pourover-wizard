@@ -15,6 +15,15 @@ export default {
     `src/core/recipe.ts:${startLine}-${endLine}`,
     "src/scale/bookoo/codec.ts",
   ],
+  // Native projects and browser artifacts are not inputs to Vitest mutation checks.
+  ignorePatterns: [
+    "/reports",
+    "/ios",
+    "/dist",
+    "/dist-ios",
+    "/test-results",
+    "/playwright-report",
+  ],
   testRunner: "vitest",
   vitest: { configFile: "vitest.config.ts" },
   checkers: ["typescript"],

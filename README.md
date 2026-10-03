@@ -1,9 +1,9 @@
-# Brew Guide
+# Pourover Wizzard
 
 A small React and TypeScript V60 brewing SPA with a guided timer, deterministic
 simulated scale, and Learn playback at 1× or 4×. The separate BOOKOO lab supports
 raw capture and replay. Live BOOKOO brewing uses explicitly confirmed encoding;
-native iOS remains unfinished.
+the iOS shell uses native BLE. Physical scale and SideStore acceptance are pending.
 
 ## Develop and verify
 
@@ -25,6 +25,8 @@ the runtime.
 | `npm run test:mutation` | Engine, recipe functions, BOOKOO codec; incremental cache in `reports/mutation/incremental.json` |
 | `npm run test:mutation:full` | Fresh mutation run; `reports/mutation/index.html` and `mutation.json` |
 | `npm run format` | Format source and configuration |
+| `npm run ios:sync` | Build native web assets and sync the iOS SPM project |
+| `npm run ios:package` | Unsigned device IPA and SHA-256 in `reports/ios/`; requires macOS/Xcode |
 
 Run fresh mutation checks after dependency, configuration, or fixture changes
 and before releases; review survivors rather than treating a score as proof.
@@ -115,3 +117,11 @@ retain at most 600 display samples, and are not raw recordings.
 See the [BOOKOO lab guide](docs/bookoo-lab.md) for `#/scale-lab`, protocol limits,
 capture/replay, and the hardware checklist. No real-device, iOS, or SideStore
 behavior has been accepted; browser mocks do not provide that evidence.
+
+See the [iOS and SideStore guide](docs/ios.md) for the native build, private IPA
+workflow, phone import, foreground limits, and pending acceptance checks.
+
+The Capacitor CLI uses `xcode`, whose CommonJS `uuid.v4()` call remains compatible
+with the narrowly overridden `uuid` **11.1.1**. This avoids the older uuid
+[buffer bounds advisory](https://github.com/advisories/GHSA-w5hq-g745-h8pq); native
+sync and archive validate the CLI dependency path.

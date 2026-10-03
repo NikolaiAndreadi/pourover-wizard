@@ -25,14 +25,21 @@
     "test:mutation": "stryker run",
     "test:mutation:full": "stryker run --force",
     "report:complexity": "node scripts/report-complexity.mjs",
-    "quality:report": "run-s test:coverage report:complexity"
+    "quality:report": "run-s test:coverage report:complexity",
+    "build:ios": "vite build --base / --outDir dist-ios",
+    "ios:sync": "npm run build:ios && cap sync ios",
+    "ios:package": "npm run ios:sync && node scripts/package-ios.mjs"
   },
   "dependencies": {
+    "@capacitor-community/bluetooth-le": "8.3.0",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/ios": "8.5.2",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
+    "@capacitor/cli": "8.5.2",
     "@playwright/test": "1.63.0",
     "@stryker-mutator/core": "10.0.0",
     "@stryker-mutator/typescript-checker": "10.0.0",
@@ -54,6 +61,9 @@
   "overrides": {
     "typed-rest-client": {
       "qs": "6.16.0"
+    },
+    "xcode": {
+      "uuid": "11.1.1"
     }
   }
 }

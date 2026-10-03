@@ -107,6 +107,16 @@ test("mocked live brewing gates mapping and arming, survives loss and reports mi
     await page.clock.runFor(250);
     await emit(0);
   }
+  // Duplicate receipts at the same monotonic instant must not pollute display smoothing.
+  await page.evaluate(
+    (bytes) => {
+      window.brewMock.emit(bytes);
+      window.brewMock.emit(bytes);
+      window.brewMock.emit(bytes);
+    },
+    Array.from(syntheticFrame({ magnitude: 99900 })),
+  );
+  await expect(page.getByRole("status")).toContainText("0.0 g");
   await expect(
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();

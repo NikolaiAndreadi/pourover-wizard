@@ -12,7 +12,7 @@ import { expectedPoints, expectedWeight, stepAt } from "@/core/recipe";
 import { fakeSample } from "@/scale/fake";
 import {
   createLiveScale,
-  createWebTransport,
+  createScaleTransport,
   type LiveSnapshot,
   supportsScaleConnection,
 } from "./liveScale";
@@ -160,7 +160,7 @@ export function useBrew() {
         dispatch(type);
       };
       live.current = createLiveScale(
-        createWebTransport(),
+        createScaleTransport(),
         {
           gramsUnit: Number(mapping.gramsUnit),
           positiveSign: Number(mapping.positiveSign),
@@ -169,18 +169,19 @@ export function useBrew() {
         now,
         (sample) => {
           if (active.current?.mode !== "live") return;
-          smooth.current = [
-            ...smooth.current.filter(
-              (value) => sample.atMs - value.atMs <= 500,
-            ),
-            sample,
-          ].slice(-5);
           active.current = updateSession(active.current, {
             type: "sample",
             nowMs: now(),
             holdNowMs: performance.now(),
             sample,
           });
+          if (active.current.lastSample === sample)
+            smooth.current = [
+              ...smooth.current.filter(
+                (value) => sample.atMs - value.atMs <= 500,
+              ),
+              sample,
+            ].slice(-5);
           setSession(active.current);
         },
         () => event("signalLost"),

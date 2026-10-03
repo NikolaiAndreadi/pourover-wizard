@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canArmLive,
   createSession,
   type Event,
   MAX_SAMPLES,
@@ -260,6 +261,91 @@ describe("live stream readiness and loss", () => {
     expect(state.lastSample).toBeNull();
     expect(state.baselineVerified).toBe(false);
     expect(event(state, "start", 1101).baselineVerified).toBe(false);
+  });
+  it("stable zero readings cannot arm without an explicit successful tare", () => {
+    let state = createSession(15, "live");
+    for (const atMs of [100, 350, 600]) state = sample(state, atMs, 0);
+    expect(state.stable).toHaveLength(3);
+    expect(canArmLive(state)).toBe(false);
+    expect(event(state, "arm", 600).phase).toBe("preparation");
+    state = event(state, "tare", 600);
+    expect(state.phase).toBe("preparation");
+    expect(canArmLive(state)).toBe(false);
+    for (const atMs of [850, 1100, 1350]) state = sample(state, atMs, 0);
+    expect(event(state, "arm", 1350).phase).toBe("armed");
+  });
+  it("rejects oscillation near zero but accepts a stable one-gram range at the boundary", () => {
+    let unstable = event(createSession(15, "live"), "tare", 0);
+    for (const [atMs, grams] of [
+      [100, -0.75],
+      [350, 0.75],
+      [600, -0.75],
+    ])
+      unstable = sample(unstable, atMs ?? 0, grams ?? 0);
+    expect(canArmLive(unstable)).toBe(false);
+    expect(event(unstable, "arm", 600).phase).toBe("preparation");
+    let stable = event(createSession(15, "live"), "tare", 0);
+    for (const [atMs, grams] of [
+      [100, -0.5],
+      [350, 0.5],
+      [600, 0],
+    ])
+      stable = sample(stable, atMs ?? 0, grams ?? 0);
+    expect(canArmLive(stable)).toBe(true);
+    expect(event(stable, "arm", 600).phase).toBe("armed");
+  });
+  it("requires three zero readings spanning a full half-second and keeps readiness only while fresh", () => {
+    let short = event(createSession(15, "live"), "tare", 0);
+    for (const atMs of [100, 350, 599]) short = sample(short, atMs, 0);
+    expect(canArmLive(short)).toBe(false);
+    expect(event(short, "arm", 599).phase).toBe("preparation");
+    short = sample(short, 600, 0);
+    expect(canArmLive(short)).toBe(true);
+    let sparse = event(createSession(15, "live"), "tare", 0);
+    sparse = sample(sparse, 100, 0);
+    sparse = sample(sparse, 600, 0);
+    expect(canArmLive(sparse)).toBe(false);
+    sparse = sample(sparse, 700, 0);
+    expect(canArmLive(sparse)).toBe(true);
+    expect(event(ready(), "arm", 1100).phase).toBe("armed");
+    expect(event(ready(), "arm", 1101).phase).toBe("preparation");
+    expect(canArmLive(event(ready(), "tick", 1101))).toBe(false);
+  });
+  it("preserves the armed zero baseline through detected start and an uninterrupted measured brew", () => {
+    let state = event(ready(), "arm", 600);
+    expect(state.baselineVerified).toBe(true);
+    for (const [atMs, grams] of [
+      [750, 0],
+      [1000, 1.5],
+      [1250, 3.2],
+    ])
+      state = sample(state, atMs ?? 0, grams ?? 0);
+    expect(state.phase).toBe("brewing");
+    expect(state.originMs).toBe(750);
+    expect(state.baselineVerified).toBe(true);
+    for (let atMs = 1500; atMs <= 125750; atMs += 250)
+      state = sample(state, atMs, 250);
+    state = event(state, "done", 125750);
+    expect(state.phase).toBe("completed");
+    expect(state.pouredGrams).toBe(250);
+    expect(state.elapsedMs).toBe(125000);
+    expect(state.missingData).toBe(false);
+  });
+  it("manual start while armed keeps the verified zero baseline and wins over detection", () => {
+    let state = event(ready(), "arm", 600);
+    expect(state.baselineVerified).toBe(true);
+    state = sample(state, 750, 0);
+    state = sample(state, 1000, 1.5);
+    expect(state.phase).toBe("armed");
+    state = event(state, "start", 1100);
+    expect(state.originMs).toBe(1100);
+    expect(state.baselineVerified).toBe(true);
+    state = sample(state, 1250, 3.2);
+    expect(state.originMs).toBe(1100);
+    for (const atMs of [1500, 1750, 2000, 2250])
+      state = sample(state, atMs, 250);
+    expect(state.pouredGrams).toBe(250);
+    expect(state.missingData).toBe(false);
   });
   it("keeps timer through loss, separates chart segments and prevents settlement across gaps", () => {
     let state = event(ready(), "start", 600);

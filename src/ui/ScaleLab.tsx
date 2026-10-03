@@ -3,7 +3,7 @@ import {
   bookooUuids,
   type ConfirmedEncoding,
   createScaleLab,
-  createWebTransport,
+  createScaleTransport,
   type LabSnapshot,
   parseRecording,
   replayBookoo,
@@ -67,7 +67,7 @@ export function ScaleLab() {
       setEncoding(mapping);
       setMessage("");
       lab.current = createScaleLab(
-        createWebTransport(selection),
+        createScaleTransport(selection),
         {
           model: "BOOKOO Themis Mini",
           firmware,

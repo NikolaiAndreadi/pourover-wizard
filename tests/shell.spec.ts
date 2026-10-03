@@ -10,6 +10,10 @@ test("loads built assets under the project path and preserves hash navigation", 
       failures.push(`${response.status()} ${response.url()}`);
   });
   await page.goto("./");
+  await expect(page).toHaveTitle("Pourover Wizzard");
+  await expect(
+    page.getByRole("link", { name: "Pourover Wizzard V60 · one cup" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", {
       name: "Your daily pour-over, with room to focus.",

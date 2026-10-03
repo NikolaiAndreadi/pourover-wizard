@@ -149,6 +149,6 @@ export {
 export { parseRecording } from "@/scale/recording/session";
 export { replayBookoo } from "@/scale/replay/bookoo";
 export {
-  createWebTransport,
+  createScaleTransport,
   supportsScaleConnection,
-} from "@/scale/transport/web";
+} from "@/scale/transport";

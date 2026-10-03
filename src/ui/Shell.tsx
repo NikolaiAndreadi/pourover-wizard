@@ -17,7 +17,7 @@ export function Shell({ route, brew }: { route: Route; brew: BrewModel }) {
       </button>
       <header>
         <a className="brand" href={routeHrefs.home}>
-          Brew Guide<span>V60 · one cup</span>
+          Pourover Wizzard<span>V60 · one cup</span>
         </a>
         <nav aria-label="Main navigation">
           <a
@@ -53,15 +53,16 @@ export function Shell({ route, brew }: { route: Route; brew: BrewModel }) {
               <br />A clear routine.
             </h1>
             <p className="intro">
-              Brew Guide is being developed around James Hoffmann’s Better 1 Cup
-              V60 technique, using 15 g of coffee and 250 g of water.
+              Pourover Wizzard is being developed around James Hoffmann’s Better
+              1 Cup V60 technique, using 15 g of coffee and 250 g of water.
             </p>
             <section aria-labelledby="preview">
               <h2 id="preview">An early preview</h2>
               <p>
                 Follow the timed recipe with a timer alone or rehearse with a
-                simulated scale. Real Bluetooth and native iOS are still being
-                developed.
+                simulated scale, or connect your BOOKOO Themis Mini on Mac
+                Chrome or the iOS app. Physical scale and SideStore acceptance
+                are pending.
               </p>
               <a className="button" href={routeHrefs.home}>
                 Back to home <span aria-hidden="true">↗</span>
@@ -71,7 +72,7 @@ export function Shell({ route, brew }: { route: Route; brew: BrewModel }) {
         )}
       </main>
       <footer>
-        Brew Guide <span>Made for a quieter coffee ritual.</span>
+        Pourover Wizzard <span>Made for a quieter coffee ritual.</span>
       </footer>
     </div>
   );

@@ -116,6 +116,6 @@ export function createLiveScale(
 }
 export type { ConfirmedEncoding } from "@/scale/bookoo/codec";
 export {
-  createWebTransport,
+  createScaleTransport,
   supportsScaleConnection,
-} from "@/scale/transport/web";
+} from "@/scale/transport";

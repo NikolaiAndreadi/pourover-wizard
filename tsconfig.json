@@ -16,7 +16,9 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "verbatimModuleSyntax": true,
-    "paths": { "@/*": ["./src/*"] },
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "types": ["vite/client"]
   },
   "include": [
@@ -26,6 +28,7 @@
     "tests",
     "vite.config.ts",
     "vitest.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "capacitor.config.ts"
   ]
 }

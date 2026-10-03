@@ -1,0 +1,52 @@
+name: Private iOS artifact
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  package:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@12.2.0
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: npm run check
+      - name: Build unsigned device IPA
+        run: |
+          mkdir -p reports
+          set -o pipefail
+          npm run ios:package 2>&1 | tee reports/ios-package.log
+      - name: Retain private IPA for manual SideStore import
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-${{ github.sha }}
+          path: |
+            reports/ios/PouroverWizzard.ipa
+            reports/ios/PouroverWizzard.ipa.sha256
+          retention-days: 7
+          if-no-files-found: error
+      - name: Retain verification logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-verification-${{ github.sha }}
+          path: |
+            reports/ios-package.log
+            reports/unit.xml
+            reports/browser.xml
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: warn

@@ -78,22 +78,22 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await expect(page.getByLabel("Positive sign code")).toHaveCount(0);
   await expect(page.getByLabel("Negative sign code")).toHaveCount(0);
   await expect(page.getByRole("checkbox")).toHaveCount(0);
-  await page.getByRole("button", { name: "Prepare brew" }).click();
-  await page.getByRole("button", { name: "Connect BOOKOO scale" }).click();
+  await page.getByRole("button", { name: "Get ready" }).click();
+  await page.getByRole("button", { name: "Connect scale" }).click();
   await expect(page.getByRole("status")).toContainText("connected");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.evaluate(() => {
     window.brewMock.failTare = true;
   });
-  await page.getByRole("button", { name: "Tare live scale" }).click();
+  await page.getByRole("button", { name: "Tare", exact: true }).click();
   await expect(page.getByRole("alert")).toHaveText("Tare write failed");
   await expect(
-    page.getByRole("button", { name: "Arm auto-start" }),
+    page.getByRole("button", { name: "Start when I pour" }),
   ).toBeDisabled();
   await page.evaluate(() => {
     window.brewMock.failTare = false;
   });
-  await page.getByRole("button", { name: "Tare live scale" }).click();
+  await page.getByRole("button", { name: "Tare", exact: true }).click();
   const emit = async (grams: number) =>
     page.evaluate(
       (bytes) => window.brewMock.emit(bytes),
@@ -123,7 +123,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Arm auto-start" }).click();
+  await page.getByRole("button", { name: "Start when I pour" }).click();
   await page.evaluate(() => window.brewMock.drop());
   await expect(
     page.getByRole("dialog", { name: "scales disconnected!" }),
@@ -132,24 +132,27 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await expect(
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Connect BOOKOO scale" }).click();
+  await page.getByRole("button", { name: "Connect scale" }).click();
   await page.clock.runFor(600);
   await expect(
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Tare live scale" }).click();
+  await page.getByRole("button", { name: "Tare", exact: true }).click();
   for (let i = 0; i < 3; i++) {
     await page.clock.runFor(250);
     await emit(0);
   }
-  await page.getByRole("button", { name: "Arm auto-start" }).click();
+  await page.getByRole("button", { name: "Start when I pour" }).click();
   for (const grams of [0, 1.5, 3.2]) {
     await page.clock.runFor(250);
     await emit(grams);
   }
   await expect(
-    page.getByRole("heading", { name: "Bloom · pour gently" }),
+    page.getByRole("heading", { name: "Pour to 50 g" }),
   ).toBeVisible();
+  await expect(page.getByTestId("pour-zoom")).toBeVisible();
+  await expect(page.getByTestId("pour-zoom-expected")).toHaveCount(1);
+  await expect(page.getByTestId("pour-zoom-actual")).toHaveCount(1);
   for (let i = 0; i < 4; i++) {
     await page.clock.runFor(250);
     await emit(250);
@@ -173,9 +176,9 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     page.getByRole("button", { name: "Done", exact: true }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Prepare another brew" }).click();
-  await page.getByRole("button", { name: "Prepare brew" }).click();
+  await page.getByRole("button", { name: "Get ready" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Connect BOOKOO scale" }).click();
+  await page.getByRole("button", { name: "Connect scale" }).click();
   await page.getByRole("button", { name: "Pour now" }).click();
   await page.clock.runFor(1000);
   await expect(page.getByRole("timer")).toHaveText("0:01");
@@ -184,6 +187,23 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     await emit(-12.2);
   }
   await expect(page.getByRole("status")).toContainText("0.0 g");
+  await expect(page.getByTestId("pour-zoom")).toBeVisible();
+  for (const grams of [10, 20, 30]) {
+    await page.clock.runFor(250);
+    await emit(grams);
+  }
+  await expect(page.getByTestId("pour-zoom-actual")).toHaveCount(1);
+  await expect(page.getByTestId("pour-zoom-latest")).toBeVisible();
+  await expect(page.locator(".brew-chart")).toHaveCount(0);
+  await page.screenshot({
+    path: test.info().outputPath("live-pour-zoom.png"),
+    fullPage: true,
+  });
+  await page.clock.runFor(15000);
+  await expect(
+    page.getByRole("heading", { name: "Let it bloom", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByTestId("pour-zoom")).toHaveCount(0);
   await page.getByRole("button", { name: "Disconnect scale" }).click();
   await expect(
     page.getByRole("dialog", { name: "scales disconnected!" }),
@@ -208,27 +228,36 @@ test("live mode without Bluetooth remains a manual timer and never fabricates sa
   );
   await page.goto("./");
   await page.getByLabel("Guide mode").selectOption("live");
-  await page.getByRole("button", { name: "Prepare brew" }).click();
+  await page.getByRole("button", { name: "Get ready" }).click();
   await expect(
-    page.getByRole("button", { name: "Connect BOOKOO scale" }),
+    page.getByRole("button", { name: "Connect scale" }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "Pour now" }).click();
   await page.clock.runFor(1000);
   await expect(page.getByRole("timer")).toHaveText("0:01");
-  await expect(page.getByRole("status")).toContainText(
-    "Waiting for fresh readings",
-  );
+  await expect(page.getByRole("status")).toContainText("Waiting for the scale");
   await expect(page.getByTestId("actual-series")).toHaveCount(0);
   await page.clock.fastForward(130000);
   await page.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(page.locator(".brew-chart")).toBeVisible();
+  await expect(page.getByTestId("stage-boundary")).toHaveCount(12);
   await expect(
-    page.getByText("Measured settled water estimate: unavailable", {
-      exact: false,
-    }),
+    page.getByRole("term").filter({ hasText: "Water poured" }),
   ).toBeVisible();
   await expect(
-    page.getByText("Readings are missing from part of this brew.", {
-      exact: false,
-    }),
+    page.getByRole("definition").filter({ hasText: /^Not measured$/ }),
   ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Some scale readings are missing, so water poured may read low.",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "The scale wasn’t zeroed at the start, so water poured is unknown.",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("definition").filter({ hasText: /^1:/ }),
+  ).toHaveCount(0);
 });

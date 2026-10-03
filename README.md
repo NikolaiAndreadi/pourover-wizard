@@ -1,4 +1,4 @@
-# Pourover Wizzard
+# Pourover Wizard
 
 A small React and TypeScript V60 brewing SPA with a guided timer and step-by-step
 recipe preview. Live BOOKOO brewing uses a built-in Mini encoding confirmed at
@@ -73,7 +73,7 @@ visibility changes require separate authorization.
 connected scale. Choose BOOKOO live scale, prepare the brew, and connect. The built-in
 Mini profile handles signed grams without setup codes or a confirmation checkbox.
 Connect, explicitly tare, wait for at least 500 ms of fresh stable readings within
-1 g of zero, then explicitly **Arm auto-start** if desired. A completed tare write
+1 g of zero, then explicitly tap **Start when I pour** if desired. A completed tare write
 is not proof that the hardware tared; zero readings are also required. Tare never
 arms. Readings older than 500 ms clear readiness and detection; the timer continues
 while waiting for fresh readings. An actual Bluetooth disconnect stops a live
@@ -85,20 +85,39 @@ a short median; detection and settled estimation use unsmoothed decoded readings
 Completion, cancellation, interruption, restart and app teardown release the
 live connection.
 
-The chart appears immediately after **Prepare brew**. Before starting, use the
-previous/next buttons or Left/Right arrow keys to preview the
-recipe. Previewing a later stage hides start and arm controls; **Go to start** or
-returning to the first stage restores them. Previewing never starts a timer or
-produces scale measurements.
+**Get ready** opens the ready screen: in live mode **Tare** first, then **Pour
+now**, one short instruction, **Start when I pour** in live mode, and a
+secondary recipe preview. Use the previous/next buttons or
+Left/Right arrow keys to preview the recipe. Previewing a later stage hides start
+and arm controls; **Go to start** or returning to the first stage restores them.
+Previewing never starts a timer or produces scale measurements.
+
+While brewing, the screen shows the step headline (pours name their scaled
+target, such as "Pour to 100 g"), a pixel-art scene of the current action, time
+left in the step (the largest number during swirls and waits), Now and Next step
+cards (the Next card shows a still frame of its scene), the recipe progress, and
+the compact progress strip. The elapsed timer stays small in the top corner.
+During a session, **Hold to cancel** and, in live mode, the one-line scale status
+with **Connect scale**/**Disconnect scale** sit in the page header; **Tare** and
+**Start when I pour** stay on the ready screen. Both modes brew with a compact
+progress strip showing the recipe shape, step boundaries, swirl bands and the
+current guidance position. In live mode, each pour step adds a taller panel
+beneath the strip that zooms into that pour's time and gram range: the ideal
+ramp is dashed, measured weight is solid, and a dot marks the newest fresh
+reading; readings inside swirl intervals are not drawn. The summary and the
+stopped-brew screen show the full chart. Scenes are inline SVG frames; reduced motion shows
+a single still frame. Explanations of the guide's limits live in the About
+page's "How the guide works" section rather than on the brewing screen.
 
 Tare and opening the screen never arm or start a brew. Detection requires fresh
 consecutive rises totaling at least 3 g over at least 500 ms and backdates start
 to the rise baseline. The first manual or detected start wins. These thresholds
 need validation with the physical scale.
 
-Hold cancel, Space, or Enter for one physical second. Early release, pointer
-cancellation, lost focus, or page hiding resets the hold. Cancellation clears the
-session; **Done** manually ends drawdown.
+Hold **Hold to cancel**, Space, or Enter for one physical second. Early release,
+pointer cancellation, lost focus, or page hiding resets the hold. Cancellation
+clears the session. **Done** appears only once drawdown starts and manually ends
+the brew.
 About navigation preserves the in-memory brew; reload clears it. No history is saved.
 
 James Hoffmann's [A Better 1 Cup V60 Technique](https://www.youtube.com/watch?v=1oB1oDrDkHM)
@@ -110,8 +129,8 @@ swirl at 2:05; around 3:00 is guidance. Linear pour ramps are modeled approximat
 Doses of 10–25 g scale water while retaining timing; only the original recipe
 was source-verified, and scaled brewing results remain untested.
 
-Timer summaries show targets without fabricated measurements. Live measured estimates use the
-highest settled reading (at least 500 ms within 1 g), excluding brief spikes and
+Timer summaries show targets without fabricated measurements. Live summaries show
+**Water poured**, an estimate from the highest settled reading (at least 500 ms within 1 g), excluding brief spikes and
 dripper removal; sustained load disturbances may inflate it. Live water/ratio
 estimates require a verified tared stable zero baseline at manual start or
 explicit arming; starting without that baseline still provides the timer and
@@ -119,10 +138,10 @@ measured chart, but no net poured-water estimate. A stopped brew retains its
 original baseline and measurements. Live summaries identify missing readings
 and show an estimated ratio
 only when a settled measurement exists. Charts split across lost readings,
-retain at most 600 display samples, and are not raw recordings. The enlarged chart
-shows gram/time ticks, a grid, amber recommendation and teal actual weight, plus
-moving progress dots in timer and scale modes. The complete recommendation stays
-visible alongside animated previous/current/next step cards; reduced motion turns
+retain at most 600 display samples, and are not raw recordings. The full chart
+shows gram/time ticks, a grid, amber guidance and teal scale weight, plus
+moving progress dots; the timer-mode strip has its own moving guidance dot. The complete recommendation stays
+visible alongside animated now/next step cards; reduced motion turns
 off transitions. Purple bands mark the prescribed swirl intervals (0:10–0:15 and
 2:00–2:05). Movement readings are hidden from the actual trace and chart scale in
 those intervals, with no line bridging them; the purple dashed plateau is guidance,

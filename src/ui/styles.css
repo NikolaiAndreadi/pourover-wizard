@@ -260,11 +260,6 @@ figcaption,
 .source {
   font-size: 12px;
 }
-.cancel-control {
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--muted);
-}
 .cancel {
   user-select: none;
   touch-action: none;
@@ -276,25 +271,6 @@ progress {
   display: block;
   margin-top: 8px;
   accent-color: var(--accent);
-}
-.cancel-control p {
-  font-size: 12px;
-}
-.action-art {
-  border-radius: 50%;
-  background: #d9dbcf55;
-  width: 100px;
-  height: 100px;
-  position: relative;
-  display: grid;
-  place-content: center;
-  margin: 24px auto;
-  font-size: 60px;
-  line-height: 0.7;
-  text-align: center;
-}
-.action-art span:last-child {
-  font-size: 32px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -331,16 +307,6 @@ progress {
 .active-session .timer {
   margin: 14px 0;
 }
-.active-session .action-art {
-  width: 48px;
-  height: 48px;
-  margin: 12px 0;
-  font-size: 32px;
-  float: right;
-}
-.active-session .action-art span:last-child {
-  font-size: 20px;
-}
 .active-session .metrics {
   margin: 12px 0;
 }
@@ -349,7 +315,8 @@ progress {
 }
 @media (max-width: 600px) {
   .active-session header {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    row-gap: 10px;
   }
   .active-session .brand {
     font-size: 17px;
@@ -444,13 +411,9 @@ progress {
 .recommendation-key::before {
   border-top: 0.5px dashed var(--recommendation);
 }
-.chart-caption {
-  flex-basis: 100%;
-  opacity: 0.75;
-}
 .step-context {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   padding: 0;
   margin: 18px 0;
   list-style: none;
@@ -475,9 +438,6 @@ progress {
 .step-context .step-current {
   background: #d9dbcf99;
   box-shadow: inset 0 0 0 1px #68725155;
-}
-.step-previous {
-  opacity: 0.65;
 }
 @keyframes step-enter {
   from {
@@ -568,4 +528,472 @@ progress {
   margin: 1rem 0;
   color: var(--muted);
   font-size: 0.875rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Brewing screen: one instruction, one number, then context. */
+.brew-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.brew-top .eyebrow {
+  margin: 0;
+}
+.brew-top .timer,
+.active-session .brew-top .timer {
+  margin: 0;
+  font-size: 24px;
+  opacity: 0.85;
+}
+.brew-panel .step-title,
+.active-session .brew-panel .step-title {
+  font-size: clamp(40px, 11vw, 60px);
+  line-height: 1.05;
+  margin: 10px 0 14px;
+}
+.step-hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 8px 0 16px;
+}
+.hero-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+.hero-stats dt {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+.hero-stats dd {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.hero-stats .hero-number {
+  font-size: 60px;
+  line-height: 1;
+}
+.step-pour .hero-stats .hero-number {
+  font-size: 34px;
+}
+.drawdown-note {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.scale-setup .controls {
+  margin: 10px 0;
+}
+.note,
+.preview-caption {
+  font-size: 13px;
+}
+.pour-now {
+  width: 100%;
+  justify-content: center;
+  min-height: 64px;
+  margin: 8px 0 4px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 22px;
+  font-weight: 600;
+}
+.done {
+  width: 100%;
+  justify-content: center;
+  min-height: 56px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.ready-hint {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0;
+}
+.ready-hint p {
+  margin: 0 0 8px;
+}
+.recipe-preview {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #d9dbcf;
+}
+.recipe-preview .preview-caption {
+  margin: 0;
+  opacity: 0.8;
+}
+.recipe-preview .step-context {
+  margin: 10px 0;
+}
+.preview-nav {
+  margin: 8px 0;
+}
+.preview-nav button {
+  flex: 1;
+  font-size: 14px;
+}
+.home-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.home-head .action-scene,
+.ready-hint .action-scene {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+}
+.how ul {
+  padding-left: 1.2em;
+  margin: 12px 0 0;
+}
+.how li {
+  margin: 8px 0;
+}
+@media (prefers-color-scheme: dark) {
+  .recipe-preview {
+    border-color: #48503f;
+  }
+}
+
+/* Compact recipe progress for timer brewing. */
+.progress-strip {
+  --recommendation: #a65e10;
+  --swirl: #8d51b3;
+  margin: 12px 0;
+}
+.progress-plot {
+  position: relative;
+}
+.progress-plot svg {
+  height: 56px;
+  border-radius: 8px;
+  background: #e6e2d755;
+}
+.strip-shape {
+  fill: var(--recommendation);
+  opacity: 0.16;
+}
+.strip-done {
+  fill: var(--recommendation);
+  opacity: 0.5;
+}
+.strip-step {
+  fill: currentColor;
+  opacity: 0.07;
+}
+.strip-swirl {
+  fill: var(--swirl);
+  opacity: 0.2;
+}
+.strip-boundary {
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.22;
+}
+.strip-now {
+  stroke: var(--recommendation);
+  stroke-width: 1.5;
+}
+.strip-marker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--recommendation);
+  box-shadow: 0 0 0 2px #f6f3ed;
+  transform: translate(-50%, -50%);
+  transition:
+    left 100ms linear,
+    top 100ms linear;
+}
+.progress-strip figcaption {
+  margin-top: 3px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+@media (prefers-color-scheme: dark) {
+  .progress-strip {
+    --recommendation: #e9b665;
+    --swirl: #cd9ded;
+  }
+  .strip-marker {
+    box-shadow: 0 0 0 2px #20251f;
+  }
+}
+
+/* Pixel-art action scenes: frames sit side by side and step past a 32-cell window. */
+:root {
+  --scene-bg: #e9e5da;
+  --px-steel: #4e564b;
+  --px-shine: #b9c0b2;
+  --px-ceramic: #fdfaf3;
+  --px-grounds: #8c5a32;
+  --px-coffee: #5b3119;
+  --px-water: #2f9bbd;
+  --px-glass: #8eaeb4;
+  --px-accent: #c0701a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --scene-bg: #2b3229;
+    --px-steel: #c3cbbb;
+    --px-shine: #6f786b;
+    --px-ceramic: #ece6d8;
+    --px-grounds: #b07a48;
+    --px-coffee: #a0643a;
+    --px-water: #6fcfe3;
+    --px-glass: #7d9ca2;
+    --px-accent: #e9b665;
+  }
+}
+.action-scene {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  background: var(--scene-bg);
+  overflow: hidden;
+}
+.action-scene svg {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.px-steel {
+  fill: var(--px-steel);
+}
+.px-shine {
+  fill: var(--px-shine);
+}
+.px-ceramic {
+  fill: var(--px-ceramic);
+}
+.px-grounds {
+  fill: var(--px-grounds);
+}
+.px-coffee {
+  fill: var(--px-coffee);
+}
+.px-water {
+  fill: var(--px-water);
+}
+.px-glass {
+  fill: var(--px-glass);
+}
+.px-accent {
+  fill: var(--px-accent);
+}
+.scene-reel {
+  animation: scene-reel var(--scene-duration, 1600ms) steps(var(--frames), end)
+    infinite;
+}
+@keyframes scene-reel {
+  to {
+    transform: translateX(calc(var(--frames) * -32px));
+  }
+}
+@media (min-width: 601px) {
+  .step-hero .action-scene {
+    width: 128px;
+    height: 128px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-reel {
+    animation: none;
+  }
+  .strip-marker {
+    transition: none;
+  }
+}
+
+/* The next step previews its scene as a still frame. */
+.step-next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.step-next .action-scene {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+}
+.step-next > div {
+  min-width: 0;
+}
+@media (prefers-color-scheme: dark) {
+  .step-context li {
+    background: #d9dbcf14;
+  }
+  .step-context .step-current {
+    background: #d9dbcf2e;
+    box-shadow: inset 0 0 0 1px #b6c1a955;
+  }
+}
+
+/* Live pours: the current pour segment zoomed beneath the strip. */
+.progress-strip {
+  --actual: #007b88;
+}
+.strip-step.is-zoomed {
+  fill: var(--recommendation);
+  opacity: 0.18;
+}
+.zoom-funnel {
+  display: block;
+  height: 12px;
+  margin-top: 2px;
+}
+.zoom-funnel path {
+  fill: var(--recommendation);
+  opacity: 0.12;
+}
+.pour-zoom-plot {
+  position: relative;
+}
+.pour-zoom-plot svg {
+  height: 120px;
+  border-radius: 8px;
+  background: #e6e2d755;
+}
+.zoom-target {
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.2;
+}
+.zoom-now {
+  stroke: var(--recommendation);
+  stroke-width: 1;
+  opacity: 0.45;
+}
+.zoom-expected {
+  stroke: var(--recommendation);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+}
+.zoom-actual {
+  stroke: var(--actual);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.zoom-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--actual);
+  box-shadow: 0 0 0 2px #f6f3ed;
+  transform: translate(-50%, -50%);
+}
+.pour-zoom-key {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+.zoom-key-expected,
+.zoom-key-actual {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.zoom-key-expected::before,
+.zoom-key-actual::before {
+  content: "";
+  width: 16px;
+  border-top: 2px dashed var(--recommendation);
+}
+.zoom-key-actual::before {
+  border-top: 3px solid var(--actual);
+}
+@media (prefers-color-scheme: dark) {
+  .progress-strip {
+    --actual: #69d6df;
+  }
+  .zoom-dot {
+    box-shadow: 0 0 0 2px #20251f;
+  }
+}
+
+/* Session controls live in the header so the card holds only the brew. */
+.session-bar {
+  flex-basis: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px 10px;
+  align-items: start;
+}
+.session-bar.is-live {
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "status status"
+    "connect hold";
+}
+.session-scale {
+  display: contents;
+}
+.session-scale p {
+  grid-area: status;
+  margin: 0;
+  height: 20px;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+.session-scale button {
+  grid-area: connect;
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: 14px;
+}
+.hold-to-cancel {
+  min-width: 0;
+}
+.is-live .hold-to-cancel {
+  grid-area: hold;
+}
+.hold-to-cancel .cancel {
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: 15px;
+}
+.hold-to-cancel progress {
+  height: 4px;
+  margin-top: 4px;
+}
+@media (prefers-color-scheme: dark) {
+  .progress-plot svg,
+  .pour-zoom-plot svg {
+    background: #ffffff0d;
+  }
 }

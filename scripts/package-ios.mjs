@@ -6,9 +6,9 @@ import path from "node:path";
 if (process.platform !== "darwin")
   throw new Error("iOS packaging requires macOS and Xcode 26 or newer.");
 const output = path.resolve("reports/ios");
-const archive = path.join(output, "PouroverWizzard.xcarchive");
+const archive = path.join(output, "PouroverWizard.xcarchive");
 const staging = path.join(output, "staging");
-const ipa = path.join(output, "PouroverWizzard.ipa");
+const ipa = path.join(output, "PouroverWizard.ipa");
 await mkdir(output, { recursive: true });
 await rm(ipa, { force: true });
 await rm(`${ipa}.sha256`, { force: true });
@@ -54,7 +54,7 @@ execFileSync(
 const hash = createHash("sha256")
   .update(await readFile(ipa))
   .digest("hex");
-await writeFile(`${ipa}.sha256`, `${hash}  PouroverWizzard.ipa\n`);
+await writeFile(`${ipa}.sha256`, `${hash}  PouroverWizard.ipa\n`);
 await rm(staging, { recursive: true, force: true });
 console.log(
   `Unsigned device IPA: ${ipa}\nSideStore must sign it before device installation. Import and hardware acceptance remain unverified.`,

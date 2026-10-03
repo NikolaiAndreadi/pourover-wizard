@@ -33,8 +33,8 @@ jobs:
         with:
           name: ios-${{ github.sha }}
           path: |
-            reports/ios/PouroverWizzard.ipa
-            reports/ios/PouroverWizzard.ipa.sha256
+            reports/ios/PouroverWizard.ipa
+            reports/ios/PouroverWizard.ipa.sha256
           retention-days: 7
           if-no-files-found: error
       - name: Retain verification logs

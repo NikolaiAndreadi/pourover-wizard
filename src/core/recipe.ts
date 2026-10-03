@@ -1,8 +1,11 @@
 export interface RecipeStep {
   atMs: number;
   action: "pour" | "swirl" | "wait" | "drawdown";
+  /** What to do, as a short imperative phrase. Pour targets are added by the app. */
   label: string;
   targetFraction: number;
+  /** Named brewing stage shown alongside the step, such as the bloom. */
+  stage?: string;
 }
 export interface Recipe {
   id: string;
@@ -20,34 +23,38 @@ export const recipe: Recipe = {
     {
       atMs: 0,
       action: "pour",
-      label: "Bloom · pour gently",
+      label: "Pour",
       targetFraction: 0.2,
+      stage: "Bloom",
     },
     {
       atMs: 10000,
       action: "swirl",
-      label: "Gently swirl",
+      label: "Swirl gently",
       targetFraction: 0.2,
+      stage: "Bloom",
     },
     {
       atMs: 15000,
       action: "wait",
-      label: "Let the coffee bloom",
+      label: "Let it bloom",
       targetFraction: 0.2,
+      stage: "Bloom",
     },
-    { atMs: 45000, action: "pour", label: "Second pour", targetFraction: 0.4 },
-    { atMs: 60000, action: "wait", label: "Pause", targetFraction: 0.4 },
-    { atMs: 70000, action: "pour", label: "Third pour", targetFraction: 0.6 },
-    { atMs: 80000, action: "wait", label: "Pause", targetFraction: 0.6 },
-    { atMs: 90000, action: "pour", label: "Fourth pour", targetFraction: 0.8 },
-    { atMs: 100000, action: "wait", label: "Pause", targetFraction: 0.8 },
-    { atMs: 110000, action: "pour", label: "Final pour", targetFraction: 1 },
-    { atMs: 120000, action: "swirl", label: "Gently swirl", targetFraction: 1 },
+    { atMs: 45000, action: "pour", label: "Pour", targetFraction: 0.4 },
+    { atMs: 60000, action: "wait", label: "Wait", targetFraction: 0.4 },
+    { atMs: 70000, action: "pour", label: "Pour", targetFraction: 0.6 },
+    { atMs: 80000, action: "wait", label: "Wait", targetFraction: 0.6 },
+    { atMs: 90000, action: "pour", label: "Pour", targetFraction: 0.8 },
+    { atMs: 100000, action: "wait", label: "Wait", targetFraction: 0.8 },
+    { atMs: 110000, action: "pour", label: "Pour", targetFraction: 1 },
+    { atMs: 120000, action: "swirl", label: "Swirl gently", targetFraction: 1 },
     {
       atMs: 125000,
       action: "drawdown",
-      label: "Let the coffee drain",
+      label: "Let it drain",
       targetFraction: 1,
+      stage: "Drawdown",
     },
   ],
 };

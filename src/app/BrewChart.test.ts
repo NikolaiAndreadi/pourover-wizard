@@ -51,7 +51,7 @@ test("swirl movement is hidden from actual curves and scale without changing raw
   const markup = render(samples, 126000);
   expect(traces(markup)).toHaveLength(3);
   expect(markup.match(/data-testid="swirl-band"/g)).toHaveLength(2);
-  expect(markup).toContain("Swirl guidance · movement readings hidden");
+  expect(markup).toContain('class="chart-key swirl-key">Swirl</span>');
   expect(markup).not.toContain(">9000<");
   expect(markup).not.toContain(">-9000<");
   expect(markup).toContain('data-testid="actual-marker"');

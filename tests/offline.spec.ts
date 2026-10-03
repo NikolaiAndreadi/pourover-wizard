@@ -90,7 +90,7 @@ test("cached app cold-opens offline with hash navigation and brew controls", asy
   ).toBeVisible();
   await offline.reload();
   await offline.getByRole("link", { name: "Back to home" }).click();
-  await offline.getByRole("button", { name: "Prepare brew" }).click();
+  await offline.getByRole("button", { name: "Get ready" }).click();
   await offline.getByRole("button", { name: "Pour now" }).click();
   await expect(offline.getByRole("timer")).toBeVisible();
   const cached = await offline.evaluate(async () => {
@@ -113,7 +113,7 @@ test("failed update retains offline version; complete update waits for every tab
   ).toBeVisible();
   const second = await context.newPage();
   await second.goto(appUrl);
-  await page.getByRole("button", { name: "Prepare brew" }).click();
+  await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Pour now" }).click();
   await page.evaluate(() => {
     (window as Window & { brewMarker?: string }).brewMarker = "preserved";
@@ -135,7 +135,7 @@ test("failed update retains offline version; complete update waits for every tab
   await expect(page.getByRole("status")).toHaveCount(0);
   await context.setOffline(true);
   await second.reload();
-  await expect(second).toHaveTitle("Pourover Wizzard");
+  await expect(second).toHaveTitle("Pourover Wizard");
   await context.setOffline(false);
   failDownload = false;
   // Returning online invokes the app's own update check.
@@ -147,16 +147,16 @@ test("failed update retains offline version; complete update waits for every tab
       () => (window as Window & { brewMarker?: string }).brewMarker,
     ),
   ).toBe("preserved");
-  await expect(page).toHaveTitle("Pourover Wizzard");
+  await expect(page).toHaveTitle("Pourover Wizard");
   await page.close();
   await second.reload();
-  await expect(second).toHaveTitle("Pourover Wizzard");
+  await expect(second).toHaveTitle("Pourover Wizard");
   await expect(second.getByRole("status")).toContainText("Update ready");
   await context.setOffline(true);
   await second.close();
   const reopened = await context.newPage();
   await reopened.goto(appUrl);
-  await expect(reopened).toHaveTitle("Pourover Wizzard v2");
+  await expect(reopened).toHaveTitle("Pourover Wizard v2");
   await expect(
     reopened.getByText("Available offline", { exact: true }),
   ).toBeVisible();

@@ -1,6 +1,6 @@
 # iOS and SideStore
 
-The native app displays **Pourover Wizzard** and uses stable bundle identifier
+The native app displays **Pourover Wizard** and uses stable bundle identifier
 `com.nikolaiandreadi.pouroverwizard`. It wraps the same SPA in Capacitor, with
 native BLE selected for BOOKOO brewing. Browser builds retain
 `/pourover-wizard/`; native builds use root-relative assets in `dist-ios/`.
@@ -23,7 +23,7 @@ npm run ios:package
 
 `ios:sync` builds native web assets and synchronizes plugins. `ios:package` then
 archives the device Release target with signing disabled and packages
-`Payload/App.app` as `reports/ios/PouroverWizzard.ipa`, alongside a SHA-256 file.
+`Payload/App.app` as `reports/ios/PouroverWizard.ipa`, alongside a SHA-256 file.
 It clears previous artifacts before building, so a failed build leaves no stale
 IPA. Generated web files, archives, and derived data stay outside commits.
 The artifact is unsigned and cannot be directly installed through Apple's

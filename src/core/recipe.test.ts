@@ -36,7 +36,7 @@ describe("Hoffmann recipe guidance", () => {
       expect(expectedWeight(recipe, at ?? 0)).toBeCloseTo(grams ?? 0);
     }
     expect(stepAt(recipe, 44999).action).toBe("wait");
-    expect(stepAt(recipe, 45000).label).toBe("Second pour");
+    expect(stepAt(recipe, 45000)).toBe(recipe.steps[3]);
     expect(stepAt(recipe, 999999).action).toBe("drawdown");
     expect(expectedPoints(recipe, 200000).at(-1)).toEqual({
       atMs: 200000,

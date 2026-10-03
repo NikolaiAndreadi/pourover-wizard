@@ -1,6 +1,7 @@
 import { type Route, routeHrefs } from "@/app/routes";
 import type { BrewModel } from "@/app/useBrew";
 import { Brew } from "./Brew";
+import { SessionBar } from "./SessionBar";
 export function Shell({
   route,
   brew,
@@ -24,7 +25,7 @@ export function Shell({
       </button>
       <header>
         <a className="brand" href={routeHrefs.home}>
-          Pourover Wizzard<span>V60 · one cup</span>
+          Pourover Wizard<span>V60 · one cup</span>
         </a>
         <nav aria-label="Main navigation">
           <a
@@ -40,6 +41,7 @@ export function Shell({
             About
           </a>
         </nav>
+        <SessionBar model={brew} />
       </header>
       <main id="content" tabIndex={-1}>
         <p className="eyebrow">A little care, a better cup</p>
@@ -52,7 +54,7 @@ export function Shell({
               <br />A clear routine.
             </h1>
             <p className="intro">
-              Pourover Wizzard is being developed around James Hoffmann’s Better
+              Pourover Wizard is being developed around James Hoffmann’s Better
               1 Cup V60 technique, using 15 g of coffee and 250 g of water.
             </p>
             <section aria-labelledby="preview">
@@ -66,6 +68,47 @@ export function Shell({
                 Back to home <span aria-hidden="true">↗</span>
               </a>
             </section>
+            <section aria-labelledby="how" className="how">
+              <h2 id="how">How the guide works</h2>
+              <ul>
+                <li>
+                  Pour targets rise in a straight line between step times. That
+                  line is guidance, not a required pour rate.
+                </li>
+                <li>
+                  Drawdown time varies with grind and coffee, and a scale cannot
+                  tell when it ends. Around 3:00 is typical; tap{" "}
+                  <strong>Done</strong> when the coffee stops dripping.
+                </li>
+                <li>
+                  Moving the dripper shakes the scale, so readings during the
+                  two swirls are hidden from the chart. The purple dashed line
+                  there is guidance, not a measurement.
+                </li>
+                <li>
+                  <strong>Water poured</strong> is the highest settled reading:
+                  steady within 1 g for half a second, above a zeroed start.
+                  Brief spikes are ignored, but leaning on the scale or resting
+                  the kettle on it for a while can inflate it. Without a zeroed
+                  start, or with missing readings, it is unknown or may read
+                  low.
+                </li>
+                <li>
+                  <strong>Start when I pour</strong> needs a connected scale,
+                  tared and still at zero. The timer starts after the weight
+                  rises at least 3 g over half a second and counts from the
+                  start of that rise. <strong>Pour now</strong> works anytime.
+                </li>
+                <li>
+                  A live brew stops if the scale disconnects. Reconnect and tare
+                  before the next brew.
+                </li>
+                <li>
+                  To cancel, hold <strong>Hold to cancel</strong> for one
+                  second. With a keyboard, focus it and hold Space or Enter.
+                </li>
+              </ul>
+            </section>
           </>
         )}
       </main>
@@ -78,7 +121,7 @@ export function Shell({
         <p className="offline-status">Available offline</p>
       ) : null}
       <footer>
-        Pourover Wizzard <span>Made for a quieter coffee ritual.</span>
+        Pourover Wizard <span>Made for a quieter coffee ritual.</span>
       </footer>
     </div>
   );

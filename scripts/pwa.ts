@@ -19,7 +19,7 @@ export function offlinePwa(): Plugin {
       handler(_, bundle) {
         if (base !== "/pourover-wizard/") return;
         const manifest = {
-          name: "Pourover Wizzard",
+          name: "Pourover Wizard",
           short_name: "Pourover",
           id: base,
           start_url: base,

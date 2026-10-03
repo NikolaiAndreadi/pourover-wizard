@@ -1,4 +1,6 @@
+import { stepTitle } from "@/app/stepText";
 import type { BrewModel } from "@/app/useBrew";
+import { ActionScene } from "./ActionScene";
 
 export function chartTime(ms: number) {
   const seconds = Math.floor(ms / 1000);
@@ -165,7 +167,7 @@ export function BrewChart({
               y2="246"
               vectorEffect="non-scaling-stroke"
             >
-              <title>{`${chartTime(step.atMs)} · ${step.label}`}</title>
+              <title>{`${chartTime(step.atMs)} · ${stepTitle(step, session.recipe)}`}</title>
             </line>
           ))}
         </g>
@@ -245,19 +247,11 @@ export function BrewChart({
           )}
       </svg>
       <figcaption>
-        <span className="chart-key recommendation-key">Recommendation</span>
+        <span className="chart-key recommendation-key">Guide</span>
         {session.mode !== "timer" && (
-          <span className="chart-key actual-key">Actual weight</span>
+          <span className="chart-key actual-key">Scale</span>
         )}
-        <span className="chart-key swirl-key">
-          Swirl guidance · movement readings hidden
-        </span>
-        <span className="chart-caption">
-          Dot: current progress
-          {session.mode === "timer"
-            ? " · timer guidance only"
-            : " · actual dot follows recorded readings"}
-        </span>
+        <span className="chart-key swirl-key">Swirl</span>
       </figcaption>
     </figure>
   );
@@ -266,25 +260,24 @@ export function BrewChart({
 export function BrewSteps({ model }: { model: BrewModel }) {
   const { session, step, nextStep } = model;
   if (!session || !step) return null;
-  const index = session.recipe.steps.indexOf(step);
-  const previous = session.recipe.steps[index - 1];
   return (
     <ol className="step-context" aria-label="Brew steps" key={step.atMs}>
-      <li className="step-previous">
-        <span>Previous</span>
-        {previous?.label ?? "Preparation"}
-      </li>
       <li className="step-current" aria-current="step">
         <span>Now · {chartTime(step.atMs)}</span>
-        {step.label}
+        {stepTitle(step, session.recipe)}
       </li>
       <li className="step-next">
-        <span>
+        {nextStep && <ActionScene action={nextStep.action} still />}
+        <div>
+          <span>
+            {nextStep
+              ? `Next · in ${chartTime(nextStep.atMs - model.displayElapsedMs)}`
+              : "Next"}
+          </span>
           {nextStep
-            ? `Next · in ${chartTime(nextStep.atMs - model.displayElapsedMs)}`
-            : "Next"}
-        </span>
-        {nextStep?.label ?? "Finish when drained"}
+            ? stepTitle(nextStep, session.recipe)
+            : "Finish when it stops dripping"}
+        </div>
       </li>
     </ol>
   );

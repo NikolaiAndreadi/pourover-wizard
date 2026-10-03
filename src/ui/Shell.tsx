@@ -1,4 +1,4 @@
-import type { Route } from "../app/routes";
+import { type Route, routeHrefs } from "@/app/routes";
 export function Shell({ route }: { route: Route }) {
   return (
     <div className="shell">
@@ -13,15 +13,18 @@ export function Shell({ route }: { route: Route }) {
         Skip to content
       </button>
       <header>
-        <a className="brand" href="#/">
+        <a className="brand" href={routeHrefs.home}>
           Brew Guide<span>V60 · one cup</span>
         </a>
         <nav aria-label="Main navigation">
-          <a href="#/" aria-current={route === "home" ? "page" : undefined}>
+          <a
+            href={routeHrefs.home}
+            aria-current={route === "home" ? "page" : undefined}
+          >
             Home
           </a>
           <a
-            href="#/about"
+            href={routeHrefs.about}
             aria-current={route === "about" ? "page" : undefined}
           >
             About
@@ -44,7 +47,7 @@ export function Shell({ route }: { route: Route }) {
                 The brewing timer and scale connection are being built. This
                 preview establishes the app’s layout and navigation.
               </p>
-              <a className="button" href="#/about">
+              <a className="button" href={routeHrefs.about}>
                 About this guide <span aria-hidden="true">↗</span>
               </a>
             </section>
@@ -65,7 +68,7 @@ export function Shell({ route }: { route: Route }) {
                 Recipe guidance, a timer, and BOOKOO Themis Mini support will
                 follow. Brewing and Bluetooth are not available in this preview.
               </p>
-              <a className="button" href="#/">
+              <a className="button" href={routeHrefs.home}>
                 Back to home <span aria-hidden="true">↗</span>
               </a>
             </section>

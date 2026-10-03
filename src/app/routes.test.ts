@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { routeFromHash } from "./routes";
+import { routeFromHash } from "@/app/routes";
 
 describe("hash routes", () => {
   it("opens the about screen directly", () =>

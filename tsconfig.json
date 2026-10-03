@@ -6,6 +6,9 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "strict": true,
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "checkJs": true,
     "noEmit": true,
     "skipLibCheck": true,
     "noUnusedLocals": true,
@@ -20,6 +23,7 @@
   "include": [
     "src",
     "scripts/**/*.test.ts",
+    "scripts/check-bluetooth.mjs",
     "tests",
     "vite.config.ts",
     "vitest.config.ts",

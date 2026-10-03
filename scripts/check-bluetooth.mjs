@@ -6,6 +6,7 @@ import ts from "typescript";
 // Bluetooth ambient types and native plugin imports are restricted too.
 const restricted =
   /^(bluetooth|Bluetooth.*|BluetoothDevice|BluetoothRemoteGATT.*)$/i;
+/** @param {string} directory @returns {Promise<void>} */
 async function checkDirectory(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const file = path.posix.join(directory, entry.name);
@@ -13,10 +14,11 @@ async function checkDirectory(directory) {
     else if (/\.tsx?$/.test(file) && !file.startsWith("src/scale/transport/")) {
       const source = ts.createSourceFile(
         file,
-        await readFile(file, "utf8"),
+        (await readFile(file)).toString("utf8"),
         ts.ScriptTarget.Latest,
         true,
       );
+      /** @param {ts.Node} node */
       const visit = (node) => {
         if (!node.parent) {
           ts.forEachChild(node, visit);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Shell } from "../ui/Shell";
+import { Shell } from "@/ui/Shell";
 import { routeFromHash } from "./routes";
 export function App() {
   const [route, setRoute] = useState(() => routeFromHash(window.location.hash));

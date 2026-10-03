@@ -1,10 +1,15 @@
-import { defineConfig } from "vitest/config";
-export default defineConfig({
-  test: {
-    environment: "node",
-    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
-    maxWorkers: 2,
-    reporters: ["default", "junit"],
-    outputFile: { junit: "reports/unit.xml" },
-  },
-});
+import { defineConfig, mergeConfig } from "vitest/config";
+import viteConfig from "./vite.config.ts";
+
+export default mergeConfig(
+  viteConfig,
+  defineConfig({
+    test: {
+      environment: "node",
+      include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
+      maxWorkers: 2,
+      reporters: ["default", "junit"],
+      outputFile: { junit: "reports/unit.xml" },
+    },
+  }),
+);

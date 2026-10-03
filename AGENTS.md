@@ -1,41 +1,35 @@
 # Working agreement
 
-- The primary agent is the **overseer**, not an implementer. Delegate application
-  code, tests, tooling, CI, and fixes to **Sol agents**. The overseer may maintain
-  plans, assign work, inspect changes, run checks, and review results; it must
-  return implementation defects to a Sol agent rather than patch them itself.
-- Use parallel Sol agents only for independent tasks with explicit file ownership.
-  Serialize shared-interface, lockfile, and Git operations. Require a handoff
-  listing changed files, actual verification results, and unresolved issues.
-- Work directly on `main`; keep changes small. Do not discard unrelated work.
-- Keep the repository private through development, testing, and verification.
-  Passing checks must not automatically change visibility or publish artifacts.
-- Preserve the small-SPA architecture. Tests and metrics provide evidence, not a
-  guarantee of zero bugs. Record unverified hardware behavior explicitly.
-- Commit messages describe the actual work completed and resulting behavior.
-  Do not use local planning stages or task identifiers as commit descriptions.
-- Keep local planning and session timelines out of commits. Committed files and
-  commit messages must not reference uncommitted or ignored planning material.
-  Committed instructions and documentation must stand on their own in a fresh
-  checkout; references to repository files must resolve to committed files.
+- The primary agent oversees; delegate application code, tests, tooling, CI, and
+  fixes to **Sol agents**. Review changes, run checks, and return defects to their
+  implementer. Each handoff lists changed files, actual checks, and open issues.
+- Parallel tasks need independent file ownership. Serialize shared interfaces,
+  lockfiles, and Git operations.
+- Work on `main` in small changes; preserve unrelated work.
+- Keep the repository private during development and verification. Passing checks
+  does not authorize publication or a visibility change.
+- Keep the small SPA. Tests and metrics are evidence, not proof of zero bugs;
+  record unverified hardware behavior.
+- Keep local plans and session timelines out of commits. Committed documentation
+  must stand alone with references to committed files. Commit messages describe
+  completed work and resulting behavior, without local task or stage identifiers.
 
-Current scope: one Hoffmann Better 1 Cup V60 recipe for 15 g coffee, web plus
-SideStore, BOOKOO Themis Mini. Start manually with Pour now, or detect pouring
-only after explicit arming. Hold to cancel.
+Scope: Hoffmann Better 1 Cup V60, 15 g coffee; web and SideStore; BOOKOO Themis
+Mini. Start with **Pour now**, or detect pouring after explicit arming. Hold to cancel.
 
 ## Application conventions
 
-- Track the latest stable Node Current release, including non-LTS releases, and
-  the latest compatible npm. Currently pin Node 26.10.0 and npm 12.2.0; use
-  `npm ci` and the committed lockfile. Verify runtime and tooling compatibility
-  when updating these pins.
-- Run `npm run check` before committing application or tooling changes. See
-  `README.md` for focused commands and generated report locations.
-- Keep `core/` pure and DOM-free; `scale/` and `platform/` depend only on core
-  and themselves. `app/` composes adapters; `ui/` uses app and core types.
-- Restrict platform Bluetooth APIs to `src/scale/transport/`. Keep native plugin
-  imports there too. Avoid computed or indirect API tricks that hide access.
-- Add meaningful behavior tests as functionality arrives. Do not invent domain
-  code, coverage thresholds, or mutation targets for an empty domain.
-- Production browser checks must exercise the `/pourover-wizard/` asset base.
-  Never equate emulation or mocked Bluetooth with real-device acceptance.
+- Track the latest stable Node Current (including non-LTS) and latest compatible
+  npm; current pins
+  are Node **26.10.0** and npm **12.2.0**. Use `npm ci` and the committed lockfile;
+  verify compatibility when updating pins.
+- Run `npm run check` before committing application or tooling changes. Focused
+  commands and report locations are in `README.md`.
+- Keep `core/` pure and DOM-free. `scale/` and `platform/` depend only on core and
+  themselves; `app/` composes adapters; `ui/` uses app and type-only core imports.
+- Platform Bluetooth APIs and native plugin imports belong in
+  `src/scale/transport/`. Do not hide access with computed or indirect API tricks.
+- Add meaningful behavior tests as functionality arrives; do not invent domain
+  code, coverage thresholds, or mutation targets to fill an empty domain.
+- Production browser checks use `/pourover-wizard/`. Emulation and mocked
+  Bluetooth do not establish real-device acceptance.

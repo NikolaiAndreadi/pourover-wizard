@@ -70,18 +70,6 @@ const KETTLE = [
   ".kkksssssskkk.....",
   "...kkkkkkkk.......",
 ];
-/** Hourglass; `t` is sand in the top bulb, `u` in the bottom, `f` the falling grain. */
-const HOURGLASS = [
-  "kkkkkkk",
-  ".ktttk.",
-  ".ktttk.",
-  "..ktk..",
-  "...f...",
-  "..kuk..",
-  ".kuuuk.",
-  ".kuuuk.",
-  "kkkkkkk",
-];
 /** Teaspoon seen from the side: a slanted handle ending in its bowl. */
 const SPOON = [
   "......kk",
@@ -292,39 +280,6 @@ function wait(index: number): Frame {
       put(canvas, x, y, "p");
   });
   steam(canvas, index * 2, [12, 19]);
-  // Sand runs from the top bulb into the bottom one.
-  const drained = index * 2;
-  const top = [
-    [2, 1],
-    [3, 1],
-    [4, 1],
-    [2, 2],
-    [3, 2],
-    [4, 2],
-    [3, 3],
-  ];
-  const bottom = [
-    [2, 7],
-    [3, 7],
-    [4, 7],
-    [2, 6],
-    [3, 6],
-    [4, 6],
-    [3, 5],
-  ];
-  const filled = (
-    cells: number[][],
-    count: number,
-    column: number,
-    row: number,
-  ) => cells.slice(0, count).some(([x, y]) => x === column && y === row);
-  stamp(canvas, HOURGLASS, { x: 23, y: 2 }, (ink, column, row) => {
-    if (ink === "t") return filled(top, drained, column, row) ? "." : "h";
-    if (ink === "u")
-      return filled(bottom, drained + 1, column, row) ? "h" : ".";
-    if (ink === "f") return "h";
-    return ink;
-  });
   drips(canvas, index, 29);
   return frame(canvas);
 }

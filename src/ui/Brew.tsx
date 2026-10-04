@@ -61,66 +61,6 @@ function RecipePicker({ model }: { model: BrewModel }) {
     </fieldset>
   );
 }
-/** Limits of the guide, kept off the brewing screen. */
-function HowItWorks({ model }: { model: BrewModel }) {
-  return (
-    <details className="how">
-      <summary>How the guide works</summary>
-      <ul>
-        <li>
-          Pour targets rise in a straight line between step times. That line is
-          guidance, not a required pour rate.
-        </li>
-        <li>
-          Drawdown time varies with grind and coffee, and a scale cannot tell
-          when it ends. Each recipe shows a typical finish time; tap{" "}
-          <strong>Done</strong> when the coffee stops dripping, or when the
-          recipe says to remove the dripper.
-        </li>
-        <li>
-          Moving the dripper shakes the scale, so readings during swirls and
-          stirs are hidden from the chart. The purple dashed line there is
-          guidance, not a measurement.
-        </li>
-        <li>
-          <strong>Water poured</strong> is the highest settled reading: steady
-          within 1 g for half a second, above a zeroed start. Brief spikes are
-          ignored, but leaning on the scale or resting the kettle on it for a
-          while can inflate it. Without a zeroed start, or with missing
-          readings, it is unknown or may read low.
-        </li>
-        <li>
-          <strong>Start when I pour</strong> needs a connected scale, tared and
-          still at zero. The timer starts after the weight rises at least 3 g
-          over half a second and counts from the start of that rise.{" "}
-          <strong>Pour now</strong> works anytime.
-        </li>
-        <li>
-          A live brew stops if the scale disconnects. Reconnect and tare before
-          the next brew.
-        </li>
-        <li>
-          The device list is filtered to supported scales. If yours is missing,{" "}
-          <strong>Show all devices</strong> lists everything in range: the
-          browser’s own chooser on the web, or an in-app list sorted by signal
-          strength on iOS; a pick that isn’t a supported scale is released. The
-          app remembers the last scale you connected and, where the browser or
-          iOS allows, reconnects to it without the list. Forget it from the live
-          scale setup on the ready screen.
-        </li>
-        <li>
-          To cancel, hold <strong>Hold to cancel</strong> for one second. With a
-          keyboard, focus it and hold Space or Enter.
-        </li>
-      </ul>
-      {model.recipes.map((recipe) => (
-        <p key={recipe.id} className="source">
-          {recipe.name}: {recipe.summary}
-        </p>
-      ))}
-    </details>
-  );
-}
 /** Supported-scale registry, the all-devices fallback and the iOS scan list. */
 function ScaleSetup({ model }: { model: BrewModel }) {
   const live = model.liveState;
@@ -266,16 +206,9 @@ function Home({ model }: { model: BrewModel }) {
         <br />
         with room to focus.
       </h1>
-      <p className="intro">A simple guide for V60 coffee.</p>
       <section className="brew-panel">
         <div className="home-head">
-          <div>
-            <h2>Prepare your brew</h2>
-            <p>
-              {recipe.name} · {recipe.doseGrams} g coffee / {recipe.waterGrams}{" "}
-              g water
-            </p>
-          </div>
+          <h2>Prepare your brew</h2>
           <ActionScene action="prepare" />
         </div>
         <RecipePicker model={model} />
@@ -329,7 +262,6 @@ function Home({ model }: { model: BrewModel }) {
         </button>
         <Source recipe={recipe} />
       </section>
-      <HowItWorks model={model} />
     </>
   );
 }

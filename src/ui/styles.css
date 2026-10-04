@@ -48,7 +48,7 @@ header {
   letter-spacing: 0.05em;
 }
 main {
-  padding: 72px 0 80px;
+  padding: 48px 0 80px;
   min-height: 70vh;
 }
 .eyebrow {
@@ -64,10 +64,6 @@ h1 {
   letter-spacing: -0.04em;
   font-weight: 400;
   margin: 24px 0;
-}
-.intro {
-  font-size: 20px;
-  max-width: 600px;
 }
 section {
   margin-top: 48px;
@@ -127,10 +123,7 @@ footer a {
     padding: 24px 0;
   }
   main {
-    padding: 44px 0 56px;
-  }
-  .intro {
-    font-size: 18px;
+    padding: 28px 0 56px;
   }
   section {
     padding: 20px;
@@ -277,9 +270,6 @@ progress {
 }
 .active-session main {
   padding: 16px 0 32px;
-}
-.active-session main > .eyebrow {
-  display: none;
 }
 .active-session header {
   padding: 16px 0;
@@ -716,42 +706,9 @@ progress {
   padding: 4px 10px;
   font-size: 13px;
 }
-/* How the guide works: collapsed below the brew panel. */
-.how {
-  max-width: 600px;
-  margin-top: 24px;
-  padding: 0 26px;
-  border: 1px solid #d9dbcf;
-  border-radius: 12px;
-}
-.how summary {
-  padding: 16px 0;
-  min-height: 44px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.how summary:focus-visible {
-  outline: 3px solid var(--muted);
-  outline-offset: 3px;
-  border-radius: 6px;
-}
-.how ul {
-  padding-left: 1.2em;
-  margin: 0;
-}
-.how li {
-  margin: 8px 0;
-}
-.how .source {
-  margin: 12px 0;
-}
-.how > :last-child {
-  padding-bottom: 16px;
-}
 @media (prefers-color-scheme: dark) {
   .recipe-preview,
-  .recipe-card,
-  .how {
+  .recipe-card {
     border-color: #48503f;
   }
   .recipe-card.is-selected {
@@ -763,12 +720,6 @@ progress {
     color: #b6c1a9;
   }
 }
-@media (max-width: 600px) {
-  .how {
-    padding: 0 20px;
-  }
-}
-
 /* Compact recipe progress for timer brewing. */
 .progress-strip {
   --recommendation: #a65e10;

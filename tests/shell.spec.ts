@@ -31,10 +31,6 @@ test("loads built assets under the project path and ignores unknown hashes", asy
     "rel",
     "noreferrer",
   );
-  const how = page.locator("details.how");
-  await expect(how.getByText("Water poured is the highest")).toBeHidden();
-  await how.getByText("How the guide works").click();
-  await expect(how.getByText("Water poured is the highest")).toBeVisible();
   await page.screenshot({
     path: testInfo.outputPath("home.png"),
     fullPage: true,

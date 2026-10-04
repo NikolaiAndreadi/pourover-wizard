@@ -27,7 +27,6 @@ export function Shell({
         <SessionBar model={brew} />
       </header>
       <main id="content" tabIndex={-1}>
-        <p className="eyebrow">A little care, a better cup</p>
         <Brew model={brew} />
       </main>
       {offline.updateReady ? (

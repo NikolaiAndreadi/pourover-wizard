@@ -170,8 +170,8 @@ remembered in browser storage; blocked or cleared storage only means the
 defaults are shown.
 Beneath the brew panel, a credit line names the author and links to the
 original sources; the brew summary repeats it for the brewed recipe. Recipe
-names omit the author's name, so credits do not imply endorsement. Below the
-panel, a collapsed **How the guide works** section explains the guide's limits.
+names omit the author's name, so credits do not imply endorsement. The guide's
+limits are documented in this README only, not in the app.
 
 **Get ready** opens the ready screen: in live mode **Tare** first, then **Pour
 now**, one short instruction, **Start when I pour** in live mode, and a
@@ -194,8 +194,8 @@ beneath the strip that zooms into that pour's time and gram range: the ideal
 ramp is dashed, measured weight is solid, and a dot marks the newest fresh
 reading; readings inside swirl and stir intervals are not drawn. The summary and the
 stopped-brew screen show the full chart. Scenes are inline SVG frames; reduced motion shows
-a single still frame. Explanations of the guide's limits live in the home
-screen's "How the guide works" section rather than on the brewing screen.
+a single still frame. The brewing screen does not explain the guide's limits;
+they are documented in this README only.
 
 Tare and opening the screen never arm or start a brew. Detection requires fresh
 consecutive rises totaling at least 3 g over at least 500 ms and backdates start

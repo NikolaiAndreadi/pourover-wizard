@@ -19,7 +19,7 @@ export function DisconnectDialog({
       aria-labelledby="disconnect-title"
       onCancel={dismiss}
     >
-      <h2 id="disconnect-title">scales disconnected!</h2>
+      <h2 id="disconnect-title">Scales disconnected!</h2>
       <p>Reconnect your scale before starting a new brew.</p>
       <button type="button" onClick={dismiss}>
         OK

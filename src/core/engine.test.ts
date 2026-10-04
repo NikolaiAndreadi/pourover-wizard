@@ -229,6 +229,21 @@ describe("live stream readiness and loss", () => {
       expect(event(state, type, 130000)).toBe(state);
     expect(sample(state, 130000, 250)).toBe(state);
   });
+  it("disarm returns to preparation needing a fresh tare, and is ignored elsewhere", () => {
+    let state = event(armed(), "disarm", 700);
+    expect(state.phase).toBe("preparation");
+    expect(state.tared).toBe(false);
+    expect(state.armedAtMs).toBeNull();
+    expect(state.lastSample).toBeNull();
+    for (const time of [750, 1000, 1250]) state = sample(state, time, 0);
+    expect(event(state, "arm", 1250).phase).toBe("preparation");
+    state = event(state, "tare", 1250);
+    for (const time of [1500, 1750, 2000]) state = sample(state, time, 0);
+    expect(event(state, "arm", 2000).phase).toBe("armed");
+    expect(event(ready(), "disarm", 700).phase).toBe("preparation");
+    const brewing = event(armed(), "start", 700);
+    expect(event(brewing, "disarm", 800).phase).toBe("brewing");
+  });
   it("disarms on physical disconnect while leaving timer mode unaffected", () => {
     const state = event(event(ready(), "arm", 600), "disconnect", 700);
     expect(state.phase).toBe("preparation");

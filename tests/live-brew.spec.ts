@@ -120,8 +120,8 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await weight.click();
   await expect(page.getByRole("alert")).toHaveText("Tare write failed");
   await expect(
-    page.getByRole("button", { name: "Auto start on weight change" }),
-  ).toBeDisabled();
+    page.getByRole("button", { name: "Tare and auto start on weight change" }),
+  ).toBeEnabled();
   await page.evaluate(() => {
     window.brewMock.failTare = false;
   });
@@ -156,11 +156,11 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   ).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page
-    .getByRole("button", { name: "Auto start on weight change" })
+    .getByRole("button", { name: "Tare and auto start on weight change" })
     .click();
   await page.evaluate(() => window.brewMock.drop());
   await expect(
-    page.getByRole("dialog", { name: "scales disconnected!" }),
+    page.getByRole("dialog", { name: "Scales disconnected!" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "OK", exact: true }).click();
   await expect(
@@ -171,14 +171,39 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await expect(
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();
-  await weight.click();
+  const autoStart = page.getByRole("button", {
+    name: /auto start|Armed|zero/i,
+  });
+  await autoStart.click();
+  await expect(autoStart).toHaveText("Waiting for a steady zero…");
   for (let i = 0; i < 3; i++) {
     await page.clock.runFor(250);
     await emit(0);
   }
-  await page
-    .getByRole("button", { name: "Auto start on weight change" })
-    .click();
+  await expect(autoStart).toHaveText(
+    "Auto start on weight change armed Press to unarm",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Waiting for a pour" }),
+  ).toBeVisible();
+  await autoStart.click();
+  await expect(autoStart).toHaveText("Tare and auto start on weight change");
+  await expect(
+    page.getByRole("heading", { name: "Ready when you are" }),
+  ).toBeVisible();
+  const writes = await page.evaluate(() => window.brewMock.writes.length);
+  await autoStart.click();
+  await expect(autoStart).toHaveText("Waiting for a steady zero…");
+  expect(await page.evaluate(() => window.brewMock.writes.length)).toBe(
+    writes + 1,
+  );
+  for (let i = 0; i < 3; i++) {
+    await page.clock.runFor(250);
+    await emit(0);
+  }
+  await expect(autoStart).toHaveText(
+    "Auto start on weight change armed Press to unarm",
+  );
   for (const grams of [0, 1.5, 3.2]) {
     await page.clock.runFor(250);
     await emit(grams);
@@ -195,7 +220,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   }
   await page.evaluate(() => window.brewMock.drop());
   await expect(
-    page.getByRole("dialog", { name: "scales disconnected!" }),
+    page.getByRole("dialog", { name: "Scales disconnected!" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "OK", exact: true }).click();
   await expect(
@@ -259,10 +284,11 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await expect(page.getByTestId("pour-zoom")).toHaveCount(0);
   await holdToDisconnect(page);
   await expect(
-    page.getByRole("dialog", { name: "scales disconnected!" }),
+    page.getByRole("dialog", { name: "Scales disconnected!" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "OK", exact: true }).click();
   expect(await page.evaluate(() => window.brewMock.writes)).toEqual([
+    [3, 10, 1, 0, 0, 8],
     [3, 10, 1, 0, 0, 8],
     [3, 10, 1, 0, 0, 8],
   ]);
@@ -394,7 +420,7 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(page.getByText("Scale assist")).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Auto start on weight change" }),
+    page.getByRole("button", { name: "Tare and auto start on weight change" }),
   ).toBeVisible();
   expect(await page.evaluate(() => window.knownScale)).toMatchObject({
     requests: 1,
@@ -527,7 +553,7 @@ test("without Bluetooth the brew is timer only and never fabricates samples", as
     page.getByText("This browser can’t reach the scale."),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Auto start on weight change" }),
+    page.getByRole("button", { name: "Tare and auto start on weight change" }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.runFor(1000);

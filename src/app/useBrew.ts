@@ -227,6 +227,45 @@ export function useBrew(
     active.current = createSession(recipe, Number(dose), mode, now());
     setSession(active.current);
   }, [connected]);
+  const [armPending, setArmPending] = useState(false);
+  const toggleArm = () => {
+    const current = active.current;
+    if (!current || current.mode !== "live") return;
+    if (current.phase === "armed") {
+      dispatch("disarm");
+      return;
+    }
+    if (armPending) {
+      setArmPending(false);
+      return;
+    }
+    if (live.liveCanArm) {
+      dispatch("arm");
+      return;
+    }
+    setArmPending(true);
+    if (!current.tared) live.tareLive();
+  };
+  const { pendingTare } = live.liveState;
+  useEffect(() => {
+    if (!armPending) return;
+    const current = active.current;
+    const tareFailed = !current?.tared && !pendingTare;
+    if (!connected || current?.phase !== "preparation" || tareFailed) {
+      setArmPending(false);
+      return;
+    }
+    if (!live.liveCanArm || previewOpen.current) return;
+    dispatch("arm");
+    setArmPending(false);
+  }, [
+    armPending,
+    connected,
+    pendingTare,
+    live.liveCanArm,
+    session,
+    previewing,
+  ]);
   const restart = () => {
     resetLive();
     active.current = null;
@@ -332,6 +371,8 @@ export function useBrew(
     restart,
     dispatch,
     releaseHold: () => dispatch("release"),
+    toggleArm,
+    armPending,
     step,
     expected,
     curve,

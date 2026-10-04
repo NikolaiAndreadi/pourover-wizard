@@ -16,7 +16,7 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(page.getByRole("timer")).toHaveText("0:00");
   await expect(
-    page.getByRole("button", { name: "Auto start on weight change" }),
+    page.getByRole("button", { name: "Tare and auto start on weight change" }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.runFor(5000);
@@ -137,7 +137,7 @@ test("a prepared brew previews every stage without starting, then returns to sta
   await expect(page.locator(".step-next")).toContainText("Swirl gently");
   await expect(page.getByRole("button", { name: "Start now" })).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Auto start on weight change" }),
+    page.getByRole("button", { name: "Tare and auto start on weight change" }),
   ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Go to start" })).toBeVisible();
   await page.getByRole("button", { name: "Previous step" }).click();
@@ -167,7 +167,7 @@ test("a prepared brew previews every stage without starting, then returns to sta
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Auto start on weight change" }),
+    page.getByRole("button", { name: "Tare and auto start on weight change" }),
   ).toHaveCount(0);
   await page.keyboard.press("Shift+ArrowRight");
   await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();

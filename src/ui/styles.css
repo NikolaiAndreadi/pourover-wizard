@@ -38,8 +38,7 @@ header {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 32px 0;
-  border-bottom: 1px solid #d9dbcf;
+  padding: 32px 0 0;
   gap: 12px;
 }
 .brand {
@@ -164,10 +163,13 @@ footer a,
     padding: 0 22px;
   }
   header {
-    padding: 24px 0;
+    padding: 24px 0 0;
   }
   main {
     padding: 12px 0 56px;
+  }
+  .brew-panel {
+    padding-top: 10px;
   }
   section {
     padding: 20px;
@@ -182,7 +184,6 @@ footer a,
     color: #eeeee5;
     background: #20251f;
   }
-  :root:not([data-theme="light"]) header,
   :root:not([data-theme="light"]) section,
   :root:not([data-theme="light"]) footer {
     border-color: #48503f;
@@ -201,7 +202,6 @@ footer a,
   color: #eeeee5;
   background: #20251f;
 }
-:root[data-theme="dark"] header,
 :root[data-theme="dark"] section,
 :root[data-theme="dark"] footer {
   border-color: #48503f;
@@ -261,6 +261,7 @@ select {
 .brew-panel {
   max-width: 680px;
   margin-top: 24px;
+  padding-top: 13px;
 }
 .brew-panel h1 {
   font-size: clamp(30px, 5vw, 48px);
@@ -344,7 +345,7 @@ figcaption,
   padding: 16px 0 32px;
 }
 .active-session header {
-  padding: 16px 0;
+  padding: 16px 0 0;
 }
 .active-session .brew-panel {
   margin-top: 0;
@@ -373,20 +374,10 @@ figcaption,
   .active-session .brand span {
     display: none;
   }
-  html:has(.active-session) {
-    scroll-padding-bottom: 210px;
-  }
   .active-session .session-bar {
-    position: fixed;
-    inset: auto 0 0;
-    z-index: 2;
     flex-direction: column;
     align-items: stretch;
     gap: 6px;
-    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-    background: #f6f3ed;
-    border-top: 1px solid #d9dbcf;
-    box-shadow: 0 -6px 16px #292e2714;
   }
   .active-session .session-bar button {
     width: 100%;
@@ -395,19 +386,17 @@ figcaption,
     min-width: 0;
   }
 }
-@media (max-width: 600px) and (prefers-color-scheme: dark) {
+.active-session .session-bar {
+  padding: 16px 0 32px;
+  border-top: 1px solid #d9dbcf;
+}
+@media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .active-session .session-bar {
-    background: #20251f;
     border-color: #48503f;
-    box-shadow: 0 -6px 16px #00000066;
   }
 }
-@media (max-width: 600px) {
-  :root[data-theme="dark"] .active-session .session-bar {
-    background: #20251f;
-    border-color: #48503f;
-    box-shadow: 0 -6px 16px #00000066;
-  }
+:root[data-theme="dark"] .active-session .session-bar {
+  border-color: #48503f;
 }
 .brew-panel:has(.brew-chart) {
   max-width: 900px;
@@ -934,6 +923,8 @@ figcaption,
 }
 .start-row .auto-start {
   font-size: 17px;
+  line-height: 1.25;
+  text-align: center;
   background: #e4e7da;
   color: #1f2a1c;
 }

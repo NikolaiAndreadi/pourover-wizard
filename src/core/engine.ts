@@ -44,6 +44,7 @@ export type Event =
         | "tick"
         | "tare"
         | "arm"
+        | "disarm"
         | "start"
         | "done"
         | "hold"
@@ -277,6 +278,18 @@ function arm(next: Session, nowMs: number): Session {
     detector: IDLE_DETECTOR,
   };
 }
+function disarm(next: Session): Session {
+  if (next.phase !== "armed") return next;
+  return {
+    ...next,
+    phase: "preparation",
+    tared: false,
+    armedAtMs: null,
+    detector: IDLE_DETECTOR,
+    lastSample: null,
+    settled: EMPTY_SETTLED,
+  };
+}
 function start(next: Session, nowMs: number): Session {
   if (next.phase !== "preparation" && next.phase !== "armed") return next;
   return begin(next, nowMs);
@@ -293,6 +306,8 @@ function applyEvent(next: Session, event: Event, holdNowMs: number): Session {
       return tare(next);
     case "arm":
       return arm(next, event.nowMs);
+    case "disarm":
+      return disarm(next);
     case "start":
       return start(next, event.nowMs);
     case "done":

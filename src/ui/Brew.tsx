@@ -513,16 +513,18 @@ export function Brew({ model }: { model: BrewModel }) {
               <li>Rinse the paper and preheat the V60.</li>
               <li>Grind the coffee for the recipe; make a small well.</li>
               <li>Use soft, filtered water, heated for your roast.</li>
+              <li>
+                Preview the recipe with the step arrows or your arrow keys.
+              </li>
+              <li>Kettle ready? Let’s brew some coffee.</li>
             </ol>
-            <p>
-              <strong>
-                {armed
-                  ? "Waiting for your pour. Tap Start now anytime."
-                  : model.liveState.status === "connecting"
-                    ? "Connecting to the scale; Start now unlocks once it’s done."
-                    : "Kettle ready? Tap Start now as the water lands."}
-              </strong>
-            </p>
+            {model.liveState.status === "connecting" && (
+              <p>
+                <strong>
+                  Connecting to the scale; Start now unlocks once it’s done.
+                </strong>
+              </p>
+            )}
           </div>
         </div>
         <div className={`start-row${live ? " is-live" : ""}`}>
@@ -541,23 +543,30 @@ export function Brew({ model }: { model: BrewModel }) {
             <button
               type="button"
               className="button auto-start"
-              disabled={!session.tared || armed || !model.liveCanArm}
-              onClick={() => dispatch("arm")}
+              aria-pressed={armed || model.armPending}
+              disabled={model.liveState.status !== "connected"}
+              onClick={model.toggleArm}
             >
-              {armed ? "Waiting for weight…" : "Auto start on weight change"}
+              {armed ? (
+                <>
+                  Auto start on weight change armed <br />
+                  Press to unarm
+                </>
+              ) : model.armPending ? (
+                model.liveState.pendingTare ? (
+                  "Taring…"
+                ) : (
+                  "Waiting for a steady zero…"
+                )
+              ) : (
+                <>
+                  Tare and auto start <br />
+                  on weight change
+                </>
+              )}
             </button>
           )}
         </div>
-        {live &&
-          model.liveState.status === "connected" &&
-          !armed &&
-          !model.liveCanArm && (
-            <p className="note arm-hint">
-              {session.tared
-                ? "Waiting for a steady zero on the scale…"
-                : "Auto start needs a tared scale: tap the weight button to tare."}
-            </p>
-          )}
         <Preview model={model} />
       </section>
     );

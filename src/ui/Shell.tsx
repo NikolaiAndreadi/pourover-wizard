@@ -16,6 +16,8 @@ export function Shell({
   theme: ThemeModel;
 }) {
   const active = Boolean(brew.session);
+  const phase = brew.session?.phase;
+  const brewing = phase === "armed" || phase === "brewing";
   const home = !active && !brew.historyOpen && !brew.reviewing;
   useEffect(() => {
     if (!active || !window.matchMedia("(max-width: 600px)").matches) return;
@@ -36,25 +38,26 @@ export function Shell({
       >
         Skip to content
       </button>
-      <header>
-        <a
-          className="brand"
-          href="#/"
-          onClick={(event) => {
-            event.preventDefault();
-            const phase = brew.session?.phase;
-            if (brew.reviewing || brew.historyOpen) brew.closeHistory();
-            else if (phase === "preparation" || phase === "armed")
-              brew.restart();
-          }}
-        >
-          Pourover Wizard<span>V60 brew guide</span>
-        </a>
-        <SessionBar model={brew} />
-      </header>
+      {!brewing && (
+        <header>
+          <a
+            className="brand"
+            href="#/"
+            onClick={(event) => {
+              event.preventDefault();
+              if (brew.reviewing || brew.historyOpen) brew.closeHistory();
+              else if (phase === "preparation") brew.restart();
+            }}
+          >
+            Pourover Wizard<span>V60 brew guide</span>
+          </a>
+          {!active && <SessionBar model={brew} />}
+        </header>
+      )}
       <main id="content" tabIndex={-1}>
         <Brew model={brew} />
       </main>
+      {active && <SessionBar model={brew} />}
       {offline.updateReady ? (
         <p role="status" className="offline-status">
           Update ready. After brewing, close all app tabs and windows, then

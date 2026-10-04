@@ -1,3 +1,4 @@
+import { paceLabels } from "@/app/pace";
 import {
   formatRatio,
   formatTime,
@@ -173,20 +174,41 @@ function StepPanes({ model, brewing }: { model: BrewModel; brewing: boolean }) {
           </p>
         ) : (
           remaining && (
-            <dl className="hero-stats">
-              <div>
-                <dt>
-                  {pour ? "Pour for" : brewing ? "Next step in" : "Lasts"}
-                </dt>
-                <dd className="hero-number">{remaining}</dd>
-              </div>
-              {pour && (
+            <>
+              <dl className="hero-stats">
                 <div>
-                  <dt>Aim for now</dt>
-                  <dd>{Math.round(model.expected)} g</dd>
+                  <dt>
+                    {pour ? "Pour for" : brewing ? "Next step in" : "Lasts"}
+                  </dt>
+                  <dd className="hero-number">{remaining}</dd>
                 </div>
+              </dl>
+              {pour && (
+                <dl className="pour-stats" aria-label="Pour guidance">
+                  <div>
+                    <dt>Aim for</dt>
+                    <dd>{Math.round(model.expected)} g</dd>
+                  </div>
+                  {brewing && session.mode === "live" && (
+                    <div>
+                      <dt>Actual</dt>
+                      <dd>
+                        {model.liveWeight === null ||
+                        model.liveWeight === undefined
+                          ? "—"
+                          : `${model.liveWeight.toFixed(1)} g`}
+                      </dd>
+                    </div>
+                  )}
+                  {model.pace && (
+                    <div className={`pace pace-${model.pace}`}>
+                      <dt>Pace</dt>
+                      <dd>{paceLabels[model.pace]}</dd>
+                    </div>
+                  )}
+                </dl>
               )}
-            </dl>
+            </>
           )
         )}
         {!brewing && step.hint && <p className="step-hint">{step.hint}</p>}

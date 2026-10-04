@@ -19,6 +19,7 @@ import {
   type BrewMemory,
   createRememberedBrew,
 } from "@/platform/rememberedBrew";
+import { type Pace, paceHint } from "./pace";
 import { useLiveScale } from "./useLiveScale";
 export type BrewModel = ReturnType<typeof useBrew>;
 const defaultRecipe = recipeById(recipes[0]?.id ?? "");
@@ -189,6 +190,35 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
   const expected = session
     ? expectedWeight(session.recipe, displayElapsedMs)
     : 0;
+  // Hysteresis state for the pour pace hint; reset whenever the pour changes.
+  const paceState = useRef<{ pourAtMs: number | null; pace: Pace }>({
+    pourAtMs: null,
+    pace: "steady",
+  });
+  const pouring =
+    session?.phase === "brewing" &&
+    session.mode === "live" &&
+    step?.action === "pour" &&
+    nextStep !== null &&
+    live.liveWeight !== null;
+  if (!pouring) paceState.current = { pourAtMs: null, pace: "steady" };
+  else if (session && step && nextStep && live.liveWeight !== null) {
+    const index = session.recipe.steps.indexOf(step);
+    const from =
+      (session.recipe.steps[index - 1]?.targetFraction ?? 0) *
+      session.recipe.waterGrams;
+    const to = step.targetFraction * session.recipe.waterGrams;
+    const gramsPerSecond = ((to - from) * 1000) / (nextStep.atMs - step.atMs);
+    const previous =
+      paceState.current.pourAtMs === step.atMs
+        ? paceState.current.pace
+        : "steady";
+    paceState.current = {
+      pourAtMs: step.atMs,
+      pace: paceHint(previous, expected, live.liveWeight, gramsPerSecond),
+    };
+  }
+  const pace: Pace | null = pouring ? paceState.current.pace : null;
   const holdProgress =
     session?.holdAtMs === null || session?.holdAtMs === undefined
       ? 0
@@ -216,6 +246,8 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     expected,
     curve,
     nextStep,
+    /** Pour pace against the ideal ramp while pouring with a scale; otherwise null. */
+    pace,
     holdProgress,
     /** Done is available once brewing reaches the recipe's drawdown. */
     canFinish:

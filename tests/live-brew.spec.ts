@@ -220,6 +220,21 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   }
   await expect(page.getByTestId("pour-zoom-actual")).toHaveCount(1);
   await expect(page.getByTestId("pour-zoom-latest")).toBeVisible();
+  // At 2.75 s the ramp expects about 14 g; a 20 g median is within the dead band.
+  const guidance = page.locator(".pour-stats");
+  await expect(guidance).toContainText("Aim for14 g");
+  await expect(guidance).toContainText("Actual20.0 g");
+  await expect(guidance).toContainText("Pace– Keep pace");
+  for (let i = 0; i < 2; i++) {
+    await page.clock.runFor(250);
+    await emit(60);
+  }
+  await expect(guidance).toContainText("↓ Slow down");
+  for (let i = 0; i < 3; i++) {
+    await page.clock.runFor(250);
+    await emit(0);
+  }
+  await expect(guidance).toContainText("↑ Faster");
   await expect(page.locator(".brew-chart")).toHaveCount(0);
   await page.screenshot({
     path: test.info().outputPath("live-pour-zoom.png"),

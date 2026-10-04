@@ -187,7 +187,12 @@ Previewing never starts a timer or produces scale measurements.
 While brewing, the screen splits in two. The left pane is the current step: its
 headline (pours name their scaled target, such as "Pour to 100 g"), a pixel-art
 scene of the action, and the time left in the step (the largest number during
-swirls and waits). The right pane, muted, is the next step: its headline, a
+swirls and waits). During a pour it adds one row: **Aim for**, the ideal weight
+right now; with a scale, **Actual**, the smoothed reading; and **Pace**, which
+reads **↑ Faster**, **– Keep pace** or **↓ Slow down**. Pace compares the two
+in seconds along the pour's ramp, flips only when 1.5 s off and returns to
+keep pace only within 0.75 s, so it does not flicker; it resets with each pour.
+The right pane, muted, is the next step: its headline, a
 still frame of its scene, and the countdown to it; during drawdown it says to
 finish when dripping stops. The compact progress strip follows. The elapsed
 timer stays small in the top corner. While previewing, the left pane also shows

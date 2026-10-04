@@ -612,6 +612,60 @@ figcaption,
 .step-pour .hero-stats .hero-number {
   font-size: clamp(28px, 8vw, 34px);
 }
+/* Pour guidance: the target, the reading and the pace side by side. */
+.pour-stats {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  gap: 12px;
+  margin: 12px 0 0;
+}
+.pour-stats dt {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+.pour-stats dd {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .pour-stats {
+    gap: 10px;
+  }
+  .pour-stats dt {
+    font-size: 11px;
+  }
+  .pour-stats dd {
+    font-size: 16px;
+  }
+}
+.pour-stats .pace dd {
+  font-weight: 600;
+}
+.pace-faster dd {
+  color: #a65e10;
+}
+.pace-slower dd {
+  color: #9f4a3c;
+}
+.pace-steady dd {
+  color: #4f6a45;
+}
+@media (prefers-color-scheme: dark) {
+  .pace-faster dd {
+    color: #e9b665;
+  }
+  .pace-slower dd {
+    color: #e9a497;
+  }
+  .pace-steady dd {
+    color: #b9d4a4;
+  }
+}
 .drawdown-note {
   margin: 0;
   font-size: 18px;

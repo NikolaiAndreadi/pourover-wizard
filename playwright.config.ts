@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: false,
-  workers: 1,
+  workers: process.env.CI ? 4 : 2,
   reporter: [
     ["list"],
     ["html", { outputFolder: "playwright-report", open: "never" }],

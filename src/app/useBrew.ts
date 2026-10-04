@@ -125,7 +125,9 @@ export function useBrew(
     apply,
   });
   useWakeLock(
-    session?.phase === "preparation" || session?.phase === "armed" || session?.phase === "brewing",
+    session?.phase === "preparation" ||
+      session?.phase === "armed" ||
+      session?.phase === "brewing",
   );
   useEffect(() => {
     const timer = window.setInterval(

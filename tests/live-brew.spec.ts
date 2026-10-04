@@ -343,10 +343,18 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
   await expect(
     page.getByRole("button", { name: "Connecting to BOOKOO_SC 000000…" }),
   ).toBeDisabled();
+  // A connection in progress locks Start now so a tap cannot start a timer-only brew by mistake.
+  await expect(page.getByRole("button", { name: "Start now" })).toBeDisabled();
+  await expect(
+    page.getByText(
+      "Connecting to the scale; Start now unlocks once it’s done.",
+    ),
+  ).toBeVisible();
   await page.evaluate(() => window.knownScale.release());
   await expect(
     page.getByRole("button", { name: /^BOOKOO Themis Mini · / }),
   ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start now" })).toBeEnabled();
   expect(await page.evaluate(() => window.knownScale)).toMatchObject({
     requests: 1,
     lookups: 1,

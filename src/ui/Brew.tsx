@@ -331,11 +331,7 @@ function Summary({ model }: { model: BrewModel }) {
         </>
       )}
       <BrewChart model={model} />
-      <button
-        type="button"
-        className="button restart"
-        onClick={model.restart}
-      >
+      <button type="button" className="button restart" onClick={model.restart}>
         Prepare another brew
       </button>
       <Source recipe={session.recipe} />
@@ -351,10 +347,10 @@ export function Brew({ model }: { model: BrewModel }) {
         <h1>Brew cancelled</h1>
         <p>Nothing was saved. Start again whenever you’re ready.</p>
         <button
-        type="button"
-        className="button restart"
-        onClick={model.restart}
-      >
+          type="button"
+          className="button restart"
+          onClick={model.restart}
+        >
           Prepare another brew
         </button>
       </section>
@@ -369,10 +365,10 @@ export function Brew({ model }: { model: BrewModel }) {
         </p>
         <BrewChart model={model} />
         <button
-        type="button"
-        className="button restart"
-        onClick={model.restart}
-      >
+          type="button"
+          className="button restart"
+          onClick={model.restart}
+        >
           Prepare another brew
         </button>
       </section>
@@ -408,7 +404,9 @@ export function Brew({ model }: { model: BrewModel }) {
               <strong>
                 {armed
                   ? "Waiting for your pour. Tap Start now anytime."
-                  : "Kettle ready? Tap Start now as the water lands."}
+                  : model.liveState.status === "connecting"
+                    ? "Connecting to the scale; Start now unlocks once it’s done."
+                    : "Kettle ready? Tap Start now as the water lands."}
               </strong>
             </p>
           </div>
@@ -417,7 +415,10 @@ export function Brew({ model }: { model: BrewModel }) {
           <button
             type="button"
             className="button start-now"
-            disabled={live && model.liveState.pendingTare}
+            disabled={
+              model.liveState.status === "connecting" ||
+              (live && model.liveState.pendingTare)
+            }
             onClick={() => dispatch("start")}
           >
             Start now

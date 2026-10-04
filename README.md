@@ -89,7 +89,9 @@ visibility changes require separate authorization.
 
 ## Brewing behavior and source
 
-**Start now** starts at tap time in every mode. There is no mode switch: a
+**Start now** starts at tap time in every mode, except that it is disabled
+while a scale connection is in progress so a tap cannot begin a timer-only brew
+by mistake. There is no mode switch: a
 prepared brew is timer only until a scale connects from the header, which turns
 it into scale assist, and disconnecting before the start turns it back. The
 built-in Mini profile handles signed grams without setup codes or a

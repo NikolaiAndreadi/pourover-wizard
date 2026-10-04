@@ -22,7 +22,15 @@ export function Shell({
         Skip to content
       </button>
       <header>
-        <a className="brand" href="#/">
+        <a
+          className="brand"
+          href="#/"
+          onClick={(event) => {
+            event.preventDefault();
+            const phase = brew.session?.phase;
+            if (phase === "preparation" || phase === "armed") brew.restart();
+          }}
+        >
           Pourover Wizard<span>V60 brew guide</span>
         </a>
         <SessionBar model={brew} />

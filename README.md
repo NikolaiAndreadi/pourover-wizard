@@ -195,8 +195,9 @@ the step's one-line hint from the recipe data; hints are not shown while brewing
 The page header holds the session controls: in live mode **Connect scale**, or
 once connected **Disconnect** and a fixed-width weight button reading the
 identified model and the current weight, captioned **Press to tare**, which
-tares the scale when tapped (the caption reads **Taring…** meanwhile); then **Back** before
-the brew starts, or **Hold to cancel** once it is armed or brewing.
+tares the scale when tapped (the caption reads **Taring…** meanwhile); then
+**Hold to cancel** once the brew is armed or brewing. Before the start, tapping
+the **Pourover Wizard** brand returns to the home screen.
 **Auto start on weight change** stays on the ready screen. Both modes brew with a compact
 progress strip showing the recipe shape, step boundaries, swirl bands and the
 current guidance position. In live mode, each pour step adds a taller panel
@@ -215,8 +216,8 @@ need validation with the physical scale.
 Hold **Hold to cancel**, Space, or Enter for one physical second; the button
 fills from the bottom as the hold progresses. Early release, pointer
 cancellation, lost focus, or page hiding resets the hold. Cancelling a running
-brew shows the cancelled screen; **Back** before the start, or a completed hold
-while armed, returns to the home screen directly. **Done** appears only once drawdown starts and manually ends
+brew shows the cancelled screen; tapping the brand before the start, or a
+completed hold while armed, returns to the home screen directly. **Done** appears only once drawdown starts and manually ends
 the brew. Hash changes do not switch screens and leave the in-memory brew
 running; reload clears it. No history is saved.
 

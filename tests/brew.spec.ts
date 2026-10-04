@@ -97,6 +97,14 @@ test("a prepared brew previews every stage without starting, then returns to sta
   await page.goto("./");
   await expect(page.getByLabel("Guide mode")).toHaveCount(0);
   await page.getByRole("button", { name: "Get ready" }).click();
+  await expect(page.getByRole("button", { name: "Back" })).toHaveCount(0);
+  await page.getByRole("link", { name: /Pourover Wizard/ }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Your daily pour-over, with room to focus.",
+    }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Get ready" }).click();
   await expect(
     page.getByRole("img", { name: "Recipe progress" }),
   ).toBeVisible();

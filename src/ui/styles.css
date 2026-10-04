@@ -23,7 +23,7 @@ a:focus-visible {
   outline-offset: 5px;
 }
 .shell {
-  max-width: 1040px;
+  max-width: 760px;
   margin: auto;
   padding: 0 36px;
 }
@@ -1045,6 +1045,7 @@ figcaption,
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: flex-start;
   gap: 8px;
 }
 .session-bar button {

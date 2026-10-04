@@ -61,19 +61,14 @@ export function SessionBar({ model }: { model: BrewModel }) {
     session?.phase !== "brewing"
   )
     return null;
+  const scale =
+    model.liveSupported &&
+    (session.mode === "live" || session.phase === "preparation");
+  if (!scale && session.phase === "preparation") return null;
   return (
     <div className="session-bar">
-      {model.liveSupported &&
-        (session.mode === "live" || session.phase === "preparation") && (
-          <ScaleControls model={model} />
-        )}
-      {session.phase === "preparation" ? (
-        <button type="button" onClick={model.restart}>
-          Back
-        </button>
-      ) : (
-        <HoldToCancel model={model} />
-      )}
+      {scale && <ScaleControls model={model} />}
+      {session.phase !== "preparation" && <HoldToCancel model={model} />}
     </div>
   );
 }

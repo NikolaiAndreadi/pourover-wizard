@@ -884,7 +884,7 @@ figcaption,
   position: relative;
 }
 .progress-plot svg {
-  height: 56px;
+  height: 67px;
   border-radius: 8px;
   background: #e6e2d755;
 }
@@ -1064,7 +1064,7 @@ figcaption,
   position: relative;
 }
 .pour-zoom-plot svg {
-  height: 120px;
+  height: 144px;
   border-radius: 8px;
   background: #e6e2d755;
 }

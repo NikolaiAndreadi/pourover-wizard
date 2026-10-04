@@ -58,13 +58,18 @@ export const HOLD_MS = 1000;
 export const MAX_SAMPLES = 600;
 /** Readings older than this are stale; larger gaps break stream continuity. */
 const FRESH_MS = 500;
-export function createSession(dose: number, mode: Mode, nowMs = 0): Session {
+export function createSession(
+  recipe: Recipe,
+  dose: number,
+  mode: Mode,
+  nowMs = 0,
+): Session {
   if (!Number.isFinite(nowMs) || nowMs < 0)
     throw new Error("Clock must be finite and nonnegative.");
   return {
     phase: "preparation",
     mode,
-    recipe: scaleRecipe(dose),
+    recipe: scaleRecipe(dose, recipe),
     nowMs,
     originMs: null,
     elapsedMs: 0,
@@ -179,113 +184,148 @@ function receiveSample(state: Session, sample: ScaleSample): Session {
     }),
   };
 }
-export function updateSession(state: Session, event: Event): Session {
-  if (!Number.isFinite(event.nowMs) || event.nowMs < state.nowMs) return state;
-  if (
+function isFinal(state: Session): boolean {
+  return (
     state.phase === "completed" ||
     state.phase === "cancelled" ||
     state.phase === "interrupted"
+  );
+}
+/**
+ * A Bluetooth disconnect during brewing interrupts the brew and keeps its
+ * elapsed time and chart. Before brewing nothing is lost yet, so an armed or
+ * preparing session only loses its signal, which disarms rather than
+ * interrupts.
+ */
+function disconnect(state: Session, nowMs: number): Session {
+  if (state.phase !== "brewing") return loseSignal({ ...state, nowMs });
+  return {
+    ...state,
+    phase: "interrupted",
+    nowMs,
+    elapsedMs: nowMs - (state.originMs ?? nowMs),
+    missingData: true,
+    holdAtMs: null,
+    holdElapsedMs: 0,
+  };
+}
+/** Moves the clock forward; a live stream without a fresh reading is lost. */
+function advance(state: Session, nowMs: number): Session {
+  const next = {
+    ...state,
+    nowMs,
+    elapsedMs: state.originMs === null ? 0 : nowMs - state.originMs,
+  };
+  if (
+    next.mode === "live" &&
+    next.lastSample !== null &&
+    nowMs - next.lastSample.atMs > FRESH_MS
   )
-    return state;
+    return loseSignal(next);
+  return next;
+}
+/** Hold progress follows the physical hold clock, never the brew clock. */
+function holdProgress(next: Session, holdNowMs: number): Session {
+  return {
+    ...next,
+    holdElapsedMs:
+      next.holdAtMs === null ? 0 : Math.max(0, holdNowMs - next.holdAtMs),
+  };
+}
+/** Hold-to-cancel clears the session, including its tare and measurements. */
+function cancel(next: Session): Session {
+  return {
+    ...next,
+    phase: "cancelled",
+    originMs: null,
+    elapsedMs: 0,
+    armedAtMs: null,
+    detector: IDLE_DETECTOR,
+    holdAtMs: null,
+    holdElapsedMs: 0,
+    samples: [],
+    settled: EMPTY_SETTLED,
+    pouredGrams: null,
+    tared: false,
+  };
+}
+/** Tare restarts the settled-zero window; it never arms. */
+function tare(next: Session): Session {
+  if (next.phase !== "preparation") return next;
+  return {
+    ...next,
+    tared: true,
+    lastSample: null,
+    settled: EMPTY_SETTLED,
+    detector: IDLE_DETECTOR,
+  };
+}
+/** Arming requires a tared live scale that is freshly reading a settled zero. */
+function arm(next: Session, nowMs: number): Session {
+  if (
+    next.phase !== "preparation" ||
+    !next.tared ||
+    next.mode !== "live" ||
+    !canArmLive(next)
+  )
+    return next;
+  return {
+    ...next,
+    phase: "armed",
+    baselineVerified: canArmLive(next),
+    armedAtMs: nowMs,
+    detector: IDLE_DETECTOR,
+  };
+}
+function start(next: Session, nowMs: number): Session {
+  if (next.phase !== "preparation" && next.phase !== "armed") return next;
+  return begin(next, nowMs);
+}
+/** Done only ends a brew once drawdown has started. */
+function finish(next: Session): Session {
+  if (next.phase !== "brewing" || next.elapsedMs < drawdownStartMs(next.recipe))
+    return next;
+  return { ...next, phase: "completed", holdAtMs: null };
+}
+function applyEvent(next: Session, event: Event, holdNowMs: number): Session {
+  switch (event.type) {
+    case "tare":
+      return tare(next);
+    case "arm":
+      return arm(next, event.nowMs);
+    case "start":
+      return start(next, event.nowMs);
+    case "done":
+      return finish(next);
+    case "hold":
+      return next.holdAtMs === null ? { ...next, holdAtMs: holdNowMs } : next;
+    case "sample":
+      return receiveSample(next, event.sample);
+    case "release":
+      return { ...next, holdAtMs: null, holdElapsedMs: 0 };
+    case "signalLost":
+      return loseSignal(next);
+    case "tick":
+    // Disconnects are dispatched before the clock advances and never reach here.
+    case "disconnect":
+      return next;
+  }
+}
+export function updateSession(state: Session, event: Event): Session {
+  if (!Number.isFinite(event.nowMs) || event.nowMs < state.nowMs) return state;
+  if (isFinal(state)) return state;
   if (event.type === "disconnect") {
     if (state.mode !== "live") return state;
-    if (state.phase === "brewing")
-      return {
-        ...state,
-        phase: "interrupted",
-        nowMs: event.nowMs,
-        elapsedMs: event.nowMs - (state.originMs ?? event.nowMs),
-        missingData: true,
-        holdAtMs: null,
-        holdElapsedMs: 0,
-      };
-    return loseSignal({ ...state, nowMs: event.nowMs });
+    return disconnect(state, event.nowMs);
   }
   if (
     event.holdNowMs !== undefined &&
     (!Number.isFinite(event.holdNowMs) || event.holdNowMs < 0)
   )
     return state;
-  let next = {
-    ...state,
-    nowMs: event.nowMs,
-    elapsedMs: state.originMs === null ? 0 : event.nowMs - state.originMs,
-  };
-  if (
-    next.mode === "live" &&
-    next.lastSample !== null &&
-    event.nowMs - next.lastSample.atMs > FRESH_MS
-  )
-    next = loseSignal(next);
   const holdNowMs = event.holdNowMs ?? event.nowMs;
-  next.holdElapsedMs =
-    next.holdAtMs === null ? 0 : Math.max(0, holdNowMs - next.holdAtMs);
+  const next = holdProgress(advance(state, event.nowMs), holdNowMs);
   if (next.holdAtMs !== null && next.holdElapsedMs >= HOLD_MS)
-    return {
-      ...next,
-      phase: "cancelled",
-      originMs: null,
-      elapsedMs: 0,
-      armedAtMs: null,
-      detector: IDLE_DETECTOR,
-      holdAtMs: null,
-      holdElapsedMs: 0,
-      samples: [],
-      settled: EMPTY_SETTLED,
-      pouredGrams: null,
-      tared: false,
-    };
-  switch (event.type) {
-    case "tare":
-      if (next.phase === "preparation")
-        next = {
-          ...next,
-          tared: true,
-          lastSample: null,
-          settled: EMPTY_SETTLED,
-          detector: IDLE_DETECTOR,
-        };
-      break;
-    case "arm":
-      if (
-        next.phase === "preparation" &&
-        next.tared &&
-        next.mode === "live" &&
-        canArmLive(next)
-      )
-        next = {
-          ...next,
-          phase: "armed",
-          baselineVerified: canArmLive(next),
-          armedAtMs: event.nowMs,
-          detector: IDLE_DETECTOR,
-        };
-      break;
-    case "start":
-      if (next.phase === "preparation" || next.phase === "armed")
-        next = begin(next, event.nowMs);
-      break;
-    case "done":
-      if (
-        next.phase === "brewing" &&
-        next.elapsedMs >= drawdownStartMs(next.recipe)
-      )
-        next = { ...next, phase: "completed", holdAtMs: null };
-      break;
-    case "hold":
-      if (next.holdAtMs === null) next.holdAtMs = holdNowMs;
-      break;
-    case "sample":
-      next = receiveSample(next, event.sample);
-      break;
-    case "release":
-      next = { ...next, holdAtMs: null, holdElapsedMs: 0 };
-      break;
-    case "signalLost":
-      next = loseSignal(next);
-      break;
-    case "tick":
-      break;
-  }
-  return next;
+    return cancel(next);
+  return applyEvent(next, event, holdNowMs);
 }

@@ -5,7 +5,13 @@
  * characters. Parts are authored below as character sprites and composed into
  * frames once, at module load. `.` is transparent.
  */
-export type SceneName = "prepare" | "pour" | "swirl" | "wait" | "drawdown";
+export type SceneName =
+  | "prepare"
+  | "pour"
+  | "swirl"
+  | "stir"
+  | "wait"
+  | "drawdown";
 export type Frame = readonly string[];
 
 export const SCENE_SIZE = 32;
@@ -75,6 +81,18 @@ const HOURGLASS = [
   ".kuuuk.",
   ".kuuuk.",
   "kkkkkkk",
+];
+/** Teaspoon seen from the side: a slanted handle ending in its bowl. */
+const SPOON = [
+  "......kk",
+  ".....kk.",
+  "....kk..",
+  "....k...",
+  "...kk...",
+  "...k....",
+  "..sss...",
+  ".sssss..",
+  "..sss...",
 ];
 /** Kitchen scale with its display (`d`) and tare button (`t`). */
 const SCALE = [
@@ -234,6 +252,17 @@ function swirl(index: number): Frame {
   swirlArrow(canvas, index >= 2);
   return frame(canvas);
 }
+/** The spoon sweeps across the slurry: left, middle, right, middle. */
+function stir(index: number): Frame {
+  const canvas = blank();
+  brewer(canvas, 29);
+  const bowl = [11, 15, 19, 15][index] ?? 15;
+  // Water trails the spoon, so the wake shows beside the bowl.
+  const wake = [-3, 0, 3, 0][index] ?? 0;
+  bed(canvas, "w", (x) => Math.abs(x - bowl + wake) <= 3);
+  stamp(canvas, SPOON, { x: bowl - 3, y: BREWER.y - 6 });
+  return frame(canvas);
+}
 function steam(canvas: Canvas, index: number, columns: readonly number[]) {
   columns.forEach((column, wisp) => {
     for (let step = 0; step < 3; step++) {
@@ -329,6 +358,7 @@ export const scenes: Record<SceneName, readonly Frame[]> = {
   prepare: frames(2, prepare),
   pour: frames(4, pour),
   swirl: frames(4, swirl),
+  stir: frames(4, stir),
   wait: frames(4, wait),
   drawdown: frames(4, drawdown),
 };

@@ -47,17 +47,6 @@ header {
   font-weight: 400;
   letter-spacing: 0.05em;
 }
-nav {
-  display: flex;
-  gap: 24px;
-}
-nav a {
-  text-decoration: none;
-  padding: 8px 0;
-}
-nav a[aria-current] {
-  border-bottom: 2px solid;
-}
 main {
   padding: 72px 0 80px;
   min-height: 70vh;
@@ -108,12 +97,17 @@ section p {
 }
 footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   border-top: 1px solid #d9dbcf;
   padding: 24px 0;
   color: #596052;
   font-size: 12px;
   gap: 16px;
+}
+footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 .skip {
   position: absolute;
@@ -132,9 +126,6 @@ footer {
   header {
     padding: 24px 0;
   }
-  nav {
-    gap: 18px;
-  }
   main {
     padding: 44px 0 56px;
   }
@@ -146,8 +137,8 @@ footer {
     margin-top: 32px;
   }
   footer {
-    flex-direction: column;
-    gap: 4px;
+    justify-content: flex-start;
+    gap: 24px;
   }
 }
 @media (prefers-color-scheme: dark) {
@@ -283,10 +274,6 @@ progress {
     flex-wrap: wrap;
     gap: 12px;
   }
-  nav {
-    width: 100%;
-    gap: 24px;
-  }
 }
 .active-session main {
   padding: 16px 0 32px;
@@ -323,11 +310,6 @@ progress {
   }
   .active-session .brand span {
     display: none;
-  }
-  .active-session nav {
-    width: auto;
-    gap: 12px;
-    font-size: 13px;
   }
 }
 .brew-panel:has(.brew-chart) {
@@ -663,16 +645,127 @@ progress {
   height: 64px;
   border-radius: 12px;
 }
+/* Recipe cards: one radio per recipe, each a comfortable tap target. */
+.recipes {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.recipes legend {
+  padding: 0;
+  margin-bottom: 8px;
+}
+.recipe-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "radio name"
+    "radio author"
+    "radio meta";
+  column-gap: 12px;
+  row-gap: 2px;
+  align-items: start;
+  margin: 0;
+  padding: 12px 14px;
+  min-height: 44px;
+  border: 1px solid #d9dbcf;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.recipe-card.is-selected {
+  border-color: var(--muted);
+  background: #d9dbcf33;
+}
+.recipe-card:has(input:focus-visible) {
+  outline: 3px solid var(--muted);
+  outline-offset: 3px;
+}
+.recipe-card input {
+  grid-area: radio;
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  accent-color: var(--accent);
+}
+.recipe-card input:focus-visible {
+  outline: none;
+}
+.recipe-name {
+  grid-area: name;
+  font-weight: 600;
+}
+.recipe-author {
+  grid-area: author;
+  font-size: 14px;
+  color: #596052;
+}
+.recipe-meta {
+  grid-area: meta;
+  font-size: 13px;
+  color: #596052;
+  font-variant-numeric: tabular-nums;
+}
+.remembered-scale button {
+  min-height: 36px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+/* How the guide works: collapsed below the brew panel. */
+.how {
+  max-width: 600px;
+  margin-top: 24px;
+  padding: 0 26px;
+  border: 1px solid #d9dbcf;
+  border-radius: 12px;
+}
+.how summary {
+  padding: 16px 0;
+  min-height: 44px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.how summary:focus-visible {
+  outline: 3px solid var(--muted);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
 .how ul {
   padding-left: 1.2em;
-  margin: 12px 0 0;
+  margin: 0;
 }
 .how li {
   margin: 8px 0;
 }
+.how .source {
+  margin: 12px 0;
+}
+.how > :last-child {
+  padding-bottom: 16px;
+}
 @media (prefers-color-scheme: dark) {
-  .recipe-preview {
+  .recipe-preview,
+  .recipe-card,
+  .how {
     border-color: #48503f;
+  }
+  .recipe-card.is-selected {
+    border-color: var(--muted);
+    background: #d9dbcf1a;
+  }
+  .recipe-author,
+  .recipe-meta {
+    color: #b6c1a9;
+  }
+}
+@media (max-width: 600px) {
+  .how {
+    padding: 0 20px;
   }
 }
 
@@ -999,4 +1092,24 @@ progress {
   .pour-zoom-plot svg {
     background: #ffffff0d;
   }
+}
+/* Live scale setup: all-devices fallback and the iOS scan list. */
+.all-devices button,
+.scan-status button {
+  min-height: 36px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+.candidates {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+}
+.candidates button {
+  width: 100%;
+  justify-content: space-between;
+  min-height: 44px;
+  font-variant-numeric: tabular-nums;
 }

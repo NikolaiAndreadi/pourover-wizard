@@ -1,47 +1,187 @@
+import { modelName } from "@/app/liveScale";
 import {
-  DRAWDOWN_GUIDE_MS,
+  formatRatio,
   formatTime,
   stepEyebrow,
   stepTitle,
+  waterForDose,
 } from "@/app/stepText";
 import type { BrewModel } from "@/app/useBrew";
+import type { Recipe } from "@/core/recipe";
 import { ActionScene } from "./ActionScene";
 import { BrewChart, BrewSteps } from "./BrewChart";
 import { ProgressStrip } from "./ProgressStrip";
 
-const DRAWDOWN_GUIDE = formatTime(DRAWDOWN_GUIDE_MS);
-
-function Source() {
+/** Credits the recipe's author and links to the originals. */
+function Source({ recipe }: { recipe: Recipe }) {
   return (
     <p className="source">
-      Recipe by James Hoffmann ·{" "}
-      <a
-        href="https://www.youtube.com/watch?v=1oB1oDrDkHM"
-        target="_blank"
-        rel="noreferrer"
-      >
-        Watch the original
-      </a>{" "}
-      ·{" "}
-      <a
-        href="https://www.hario-usa.com/blogs/recipes-and-more-from-friends/james-hoffmann-1-cup-v60-technique"
-        target="_blank"
-        rel="noreferrer"
-      >
-        Hario’s guide
-      </a>
+      Recipe by {recipe.author}
+      {recipe.sources.map((source) => (
+        <span key={source.url}>
+          {" "}
+          ·{" "}
+          <a href={source.url} target="_blank" rel="noreferrer">
+            {source.label}
+          </a>
+        </span>
+      ))}
     </p>
   );
 }
+/** Recipe choice; picking one resets the dose to that recipe's own. */
+function RecipePicker({ model }: { model: BrewModel }) {
+  return (
+    <fieldset className="recipes">
+      <legend>Recipe</legend>
+      {model.recipes.map((recipe) => (
+        <label
+          key={recipe.id}
+          className={
+            recipe.id === model.recipe.id
+              ? "recipe-card is-selected"
+              : "recipe-card"
+          }
+        >
+          <input
+            type="radio"
+            name="recipe"
+            value={recipe.id}
+            checked={recipe.id === model.recipe.id}
+            onChange={() => model.setRecipe(recipe.id)}
+          />
+          <span className="recipe-name">{recipe.name}</span>
+          <span className="recipe-author">by {recipe.author}</span>
+          <span className="recipe-meta">
+            {recipe.doseGrams} g coffee / {recipe.waterGrams} g water · Done
+            around {formatTime(recipe.finishGuideMs)}
+          </span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+/** Limits of the guide, kept off the brewing screen. */
+function HowItWorks({ model }: { model: BrewModel }) {
+  return (
+    <details className="how">
+      <summary>How the guide works</summary>
+      <ul>
+        <li>
+          Pour targets rise in a straight line between step times. That line is
+          guidance, not a required pour rate.
+        </li>
+        <li>
+          Drawdown time varies with grind and coffee, and a scale cannot tell
+          when it ends. Each recipe shows a typical finish time; tap{" "}
+          <strong>Done</strong> when the coffee stops dripping, or when the
+          recipe says to remove the dripper.
+        </li>
+        <li>
+          Moving the dripper shakes the scale, so readings during swirls and
+          stirs are hidden from the chart. The purple dashed line there is
+          guidance, not a measurement.
+        </li>
+        <li>
+          <strong>Water poured</strong> is the highest settled reading: steady
+          within 1 g for half a second, above a zeroed start. Brief spikes are
+          ignored, but leaning on the scale or resting the kettle on it for a
+          while can inflate it. Without a zeroed start, or with missing
+          readings, it is unknown or may read low.
+        </li>
+        <li>
+          <strong>Start when I pour</strong> needs a connected scale, tared and
+          still at zero. The timer starts after the weight rises at least 3 g
+          over half a second and counts from the start of that rise.{" "}
+          <strong>Pour now</strong> works anytime.
+        </li>
+        <li>
+          A live brew stops if the scale disconnects. Reconnect and tare before
+          the next brew.
+        </li>
+        <li>
+          The device list is filtered to supported scales. If yours is missing,{" "}
+          <strong>Show all devices</strong> lists everything in range: the
+          browser’s own chooser on the web, or an in-app list sorted by signal
+          strength on iOS; a pick that isn’t a supported scale is released. The
+          app remembers the last scale you connected and, where the browser or
+          iOS allows, reconnects to it without the list. Forget it from the live
+          scale setup on the ready screen.
+        </li>
+        <li>
+          To cancel, hold <strong>Hold to cancel</strong> for one second. With a
+          keyboard, focus it and hold Space or Enter.
+        </li>
+      </ul>
+      {model.recipes.map((recipe) => (
+        <p key={recipe.id} className="source">
+          {recipe.name}: {recipe.summary}
+        </p>
+      ))}
+    </details>
+  );
+}
+/** Supported-scale registry, the all-devices fallback and the iOS scan list. */
 function ScaleSetup({ model }: { model: BrewModel }) {
+  const live = model.liveState;
+  const idle = live.status === "disconnected" && !live.scanning;
   return (
     <aside className="scale-setup" aria-label="Live scale setup">
-      {model.liveState.error && <p role="alert">{model.liveState.error}</p>}
+      {live.error && <p role="alert">{live.error}</p>}
       {!model.liveSupported && (
         <p className="note">
           This browser can’t reach the scale. Use Chrome on a Mac or the iOS
           app.
         </p>
+      )}
+      <p className="note supported-scales">
+        Supported scales:{" "}
+        {model.supportedScales.map((scale, index) => (
+          <span key={scale.id}>
+            {index > 0 && ", "}
+            {modelName(scale)} · {scale.verified ? "verified" : "untested"}
+          </span>
+        ))}
+      </p>
+      {model.rememberedScale && (
+        <p className="note remembered-scale">
+          Remembers {model.rememberedScale.name ?? "your scale"}.{" "}
+          <button type="button" onClick={model.forgetScale}>
+            Forget scale
+          </button>
+        </p>
+      )}
+      {model.liveSupported && live.offerAllDevices && idle && (
+        <p className="note all-devices">
+          Scale not listed?{" "}
+          <button type="button" onClick={model.connectAllLive}>
+            Show all devices
+          </button>
+        </p>
+      )}
+      {live.scanning && (
+        <p className="note scan-status" aria-live="polite">
+          Scanning…{" "}
+          <button type="button" onClick={model.stopScanLive}>
+            Stop
+          </button>
+        </p>
+      )}
+      {live.candidates.length > 0 && (
+        <ul className="candidates" aria-label="Devices in range">
+          {live.candidates.map((candidate) => (
+            <li key={candidate.id}>
+              <button
+                type="button"
+                disabled={live.status === "connecting"}
+                onClick={() => model.pickCandidate(candidate.id)}
+              >
+                {candidate.name ?? candidate.id}
+                {candidate.rssi !== undefined && ` — ${candidate.rssi} dBm`}
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </aside>
   );
@@ -90,7 +230,7 @@ function StepHero({ model, brewing }: { model: BrewModel; brewing: boolean }) {
       />
       {step.action === "drawdown" ? (
         <p className="drawdown-note">
-          Done around {DRAWDOWN_GUIDE}.{" "}
+          Done around {formatTime(model.session?.recipe.finishGuideMs ?? 0)}.{" "}
           {brewing
             ? "Tap Done when it stops dripping."
             : "Finish when it stops dripping."}
@@ -117,6 +257,8 @@ function StepHero({ model, brewing }: { model: BrewModel; brewing: boolean }) {
   );
 }
 function Home({ model }: { model: BrewModel }) {
+  const { recipe } = model;
+  const dose = Number(model.dose);
   return (
     <>
       <h1>
@@ -124,21 +266,25 @@ function Home({ model }: { model: BrewModel }) {
         <br />
         with room to focus.
       </h1>
-      <p className="intro">A simple guide for one cup of V60 coffee.</p>
+      <p className="intro">A simple guide for V60 coffee.</p>
       <section className="brew-panel">
         <div className="home-head">
           <div>
-            <h2>Prepare your cup</h2>
-            <p>Better 1 Cup V60 · 15 g coffee / 250 g water</p>
+            <h2>Prepare your brew</h2>
+            <p>
+              {recipe.name} · {recipe.doseGrams} g coffee / {recipe.waterGrams}{" "}
+              g water
+            </p>
           </div>
           <ActionScene action="prepare" />
         </div>
+        <RecipePicker model={model} />
         <label>
           Coffee dose (g)
           <input
             type="number"
-            min="10"
-            max="25"
+            min={recipe.minDoseGrams}
+            max={recipe.maxDoseGrams}
             step="0.1"
             value={model.dose}
             onChange={(event) => model.setDose(event.target.value)}
@@ -146,12 +292,15 @@ function Home({ model }: { model: BrewModel }) {
           />
         </label>
         {!model.doseValid && (
-          <p role="alert">Choose a coffee dose from 10 to 25 g.</p>
+          <p role="alert">
+            Choose a coffee dose from {recipe.minDoseGrams} to{" "}
+            {recipe.maxDoseGrams} g.
+          </p>
         )}
         <p>
-          {model.doseValid ? Math.round((Number(model.dose) * 250) / 15) : "—"}{" "}
-          g water · 1:16.67. Timings stay the same at any dose; the original
-          uses 15 g.
+          {model.doseValid ? waterForDose(recipe, dose) : "—"} g water ·{" "}
+          {formatRatio(recipe)}. Timings stay the same at any dose; the original
+          uses {recipe.doseGrams} g.
         </p>
         <label>
           Guide mode
@@ -167,8 +316,8 @@ function Home({ model }: { model: BrewModel }) {
         </label>
         <ol>
           <li>Rinse the paper and preheat the V60.</li>
-          <li>Add medium-fine coffee; make a small well.</li>
-          <li>Use soft, filtered water, freshly boiled for lighter roasts.</li>
+          <li>Grind the coffee for the recipe; make a small well.</li>
+          <li>Use soft, filtered water, heated for your roast.</li>
         </ol>
         <button
           type="button"
@@ -178,8 +327,9 @@ function Home({ model }: { model: BrewModel }) {
         >
           Get ready
         </button>
-        <Source />
+        <Source recipe={recipe} />
       </section>
+      <HowItWorks model={model} />
     </>
   );
 }
@@ -239,7 +389,7 @@ function Summary({ model }: { model: BrewModel }) {
       <button type="button" className="button" onClick={model.restart}>
         Prepare another brew
       </button>
-      <Source />
+      <Source recipe={session.recipe} />
     </section>
   );
 }

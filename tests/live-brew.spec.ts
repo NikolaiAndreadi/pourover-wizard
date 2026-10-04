@@ -16,6 +16,9 @@ declare global {
       hold(): void;
       release(): void;
     };
+    allDevices: {
+      requests: unknown[];
+    };
   }
 }
 test("mocked live brewing uses the Mini profile, gates arming and stops on disconnection", async ({
@@ -304,7 +307,9 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
   await page.getByLabel("Guide mode").selectOption("live");
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Connect scale" }).click();
-  await expect(page.getByRole("status")).toContainText("Scale connected");
+  await expect(page.getByRole("status")).toContainText(
+    "BOOKOO Themis Mini connected",
+  );
   expect(await page.evaluate(() => window.knownScale)).toMatchObject({
     requests: 1,
     lookups: 0,
@@ -317,22 +322,119 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
     "Connecting to BOOKOO_SC 000000…",
   );
   await page.evaluate(() => window.knownScale.release());
-  await expect(page.getByRole("status")).toContainText("Scale connected");
+  await expect(page.getByRole("status")).toContainText(
+    "BOOKOO Themis Mini connected",
+  );
   expect(await page.evaluate(() => window.knownScale)).toMatchObject({
     requests: 1,
     lookups: 1,
   });
-  await page
-    .getByRole("navigation")
-    .getByRole("link", { name: "About" })
-    .click();
-  await page.getByRole("button", { name: "Forget scale" }).click();
+  const setup = page.getByRole("complementary", { name: "Live scale setup" });
+  await expect(setup).toContainText("Remembers BOOKOO_SC 000000.");
+  await setup.getByRole("button", { name: "Forget scale" }).click();
   await expect(page.getByRole("button", { name: "Forget scale" })).toHaveCount(
     0,
   );
   expect(
     await page.evaluate(() => localStorage.getItem("pourover-wizard.scale")),
   ).toBeNull();
+});
+
+test("a cancelled filtered chooser offers Show all devices, which requests every device and identifies the pick", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const notify = Object.assign(new EventTarget(), {
+      value: new DataView(new ArrayBuffer(0)),
+      properties: { write: true, writeWithoutResponse: false },
+      async startNotifications() {
+        return this;
+      },
+      async stopNotifications() {
+        return this;
+      },
+      async writeValueWithResponse() {},
+      async writeValueWithoutResponse() {},
+    });
+    const server = {
+      connected: false,
+      async connect() {
+        this.connected = true;
+        return this;
+      },
+      disconnect() {
+        this.connected = false;
+      },
+      async getPrimaryService(uuid: string) {
+        if (uuid !== "00000ffe-0000-1000-8000-00805f9b34fb")
+          throw new DOMException("No Services matching UUID", "NotFoundError");
+        return {
+          async getCharacteristic() {
+            return notify;
+          },
+        };
+      },
+    };
+    const device = Object.assign(new EventTarget(), {
+      id: "mock-scale",
+      name: "Unnamed scale",
+      gatt: server,
+    });
+    window.allDevices = { requests: [] };
+    Object.defineProperty(navigator, "bluetooth", {
+      configurable: true,
+      value: {
+        async requestDevice(options: unknown) {
+          window.allDevices.requests.push(options);
+          // The filtered chooser finds nothing or is dismissed; Chrome reports NotFoundError.
+          if (window.allDevices.requests.length === 1)
+            throw new DOMException(
+              "User cancelled the requestDevice() chooser.",
+              "NotFoundError",
+            );
+          return device;
+        },
+      },
+    });
+  });
+  await page.goto("./");
+  await page.getByLabel("Guide mode").selectOption("live");
+  await page.getByRole("button", { name: "Get ready" }).click();
+  const setup = page.getByRole("complementary", { name: "Live scale setup" });
+  await expect(setup).toContainText("BOOKOO Themis Mini · verified");
+  await expect(setup).toContainText("BOOKOO Ultra Scale · untested");
+  await expect(
+    setup.getByRole("button", { name: "Show all devices" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Connect scale" }).click();
+  await expect(page.getByRole("alert")).toContainText("User cancelled");
+  await expect(page.getByRole("status")).toContainText("Scale disconnected");
+  await setup.getByRole("button", { name: "Show all devices" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "BOOKOO Themis Mini connected",
+  );
+  await expect(
+    setup.getByRole("button", { name: "Show all devices" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("list", { name: "Devices in range" }),
+  ).toHaveCount(0);
+  expect(await page.evaluate(() => window.allDevices.requests)).toEqual([
+    {
+      filters: [
+        { services: ["00000ffe-0000-1000-8000-00805f9b34fb"] },
+        { namePrefix: "BOOKOO_SC" },
+      ],
+      optionalServices: ["00000ffe-0000-1000-8000-00805f9b34fb"],
+    },
+    {
+      acceptAllDevices: true,
+      optionalServices: ["00000ffe-0000-1000-8000-00805f9b34fb"],
+    },
+  ]);
+  expect(
+    await page.evaluate(() => localStorage.getItem("pourover-wizard.scale")),
+  ).toBe(JSON.stringify({ id: "mock-scale", name: "Unnamed scale" }));
 });
 
 test("live mode without Bluetooth remains a manual timer and never fabricates samples", async ({

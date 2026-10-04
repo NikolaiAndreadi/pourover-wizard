@@ -1,12 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
 import { syntheticFrame } from "@/scale/bookoo/synthetic.fixture";
-import type { TransportObservers } from "@/scale/contracts";
+import type {
+  ScanCandidate,
+  ScanObservers,
+  ScanSupport,
+  TransportObservers,
+} from "@/scale/contracts";
+import { supportedScales } from "@/scale/supported";
 import { createLiveScale } from "./liveScale";
 
-function setup() {
+function setup(scan?: ScanSupport) {
   let observers: TransportObservers | null = null;
   const transport = {
+    ...(scan ? { scan } : {}),
     connect: vi.fn(async (value: TransportObservers) => {
+      observers = value;
+    }),
+    connectAll: vi.fn(async (value: TransportObservers) => {
       observers = value;
     }),
     write: vi.fn(async (_bytes: Uint8Array) => {}),
@@ -143,6 +153,154 @@ describe("live brewing adapter", () => {
     await pending;
     expect(s.changed).toHaveBeenLastCalledWith(
       expect.objectContaining({ status: "connected", progress: null }),
+    );
+  });
+});
+describe("show all devices", () => {
+  const mini = supportedScales[0]!;
+  it("offers all devices after a failed filtered attempt, then connects through the unfiltered chooser and names the model", async () => {
+    const s = setup();
+    s.transport.connect.mockRejectedValueOnce(
+      Object.assign(new Error("User cancelled"), { name: "NotFoundError" }),
+    );
+    await s.live.connect();
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        status: "disconnected",
+        offerAllDevices: true,
+        error: "User cancelled",
+      }),
+    );
+    s.transport.connectAll.mockImplementationOnce(
+      async (value: TransportObservers) => {
+        value.onIdentified?.(mini);
+      },
+    );
+    await s.live.connectAll();
+    expect(s.transport.connectAll).toHaveBeenCalledOnce();
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        status: "connected",
+        model: mini,
+        offerAllDevices: false,
+        scanning: false,
+      }),
+    );
+    s.live.disconnect();
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({ status: "disconnected", model: null }),
+    );
+  });
+  it("refuses a model with another protocol instead of decoding it", async () => {
+    const s = setup();
+    s.transport.connect.mockImplementationOnce(
+      async (value: TransportObservers) => {
+        value.onIdentified?.({
+          ...mini,
+          id: "other",
+          model: "Other",
+          protocol: "other-protocol" as typeof mini.protocol,
+        });
+      },
+    );
+    await s.live.connect();
+    expect(s.transport.disconnect).toHaveBeenCalled();
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        status: "disconnected",
+        model: null,
+        offerAllDevices: true,
+        error: 'Unsupported scale protocol "other-protocol" on BOOKOO Other.',
+      }),
+    );
+  });
+  it("scans in-app where supported, lists sorted candidates, and connects the pick", async () => {
+    let scan: ScanObservers | null = null;
+    let finish = () => {};
+    const start = vi.fn(
+      (value: ScanObservers) =>
+        new Promise<void>((resolve) => {
+          scan = value;
+          finish = resolve;
+        }),
+    );
+    const connect = vi.fn(
+      async (_candidate: ScanCandidate, value: TransportObservers) => {
+        value.onIdentified?.(mini);
+      },
+    );
+    const s = setup({ start, connect });
+    const pending = s.live.connectAll();
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        status: "disconnected",
+        scanning: true,
+        candidates: [],
+      }),
+    );
+    const list = [
+      { id: "near", name: "BOOKOO_SC 1", rssi: -60 },
+      { id: "far" },
+    ];
+    scan!.onCandidates(list);
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({ scanning: true, candidates: list }),
+    );
+    finish();
+    await pending;
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({ scanning: false, candidates: list }),
+    );
+    expect(s.transport.connectAll).not.toHaveBeenCalled();
+    await s.live.pickCandidate("missing");
+    expect(connect).not.toHaveBeenCalled();
+    await s.live.pickCandidate("near");
+    expect(connect).toHaveBeenCalledWith(list[0], expect.any(Object));
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        status: "connected",
+        model: mini,
+        candidates: [],
+      }),
+    );
+  });
+  it("stops a scan early, keeping found devices, and ignores the cancelled scan's outcome", async () => {
+    let scan: ScanObservers | null = null;
+    let reject = (_reason: Error) => {};
+    const s = setup({
+      start: vi.fn(
+        (value: ScanObservers) =>
+          new Promise<void>((_, fail) => {
+            scan = value;
+            reject = fail;
+          }),
+      ),
+      connect: vi.fn(async () => {}),
+    });
+    const pending = s.live.connectAll();
+    scan!.onCandidates([{ id: "a" }]);
+    s.live.stopScan();
+    expect(s.transport.disconnect).toHaveBeenCalled();
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({ scanning: false, candidates: [{ id: "a" }] }),
+    );
+    const calls = s.changed.mock.calls.length;
+    reject(new Error("Connection cancelled."));
+    await pending;
+    expect(s.changed).toHaveBeenCalledTimes(calls);
+    s.live.stopScan();
+    expect(s.changed).toHaveBeenCalledTimes(calls);
+  });
+  it("reports a scan that fails to start", async () => {
+    const s = setup({
+      start: vi.fn(async () => {
+        throw new Error("Bluetooth is off");
+      }),
+      connect: vi.fn(async () => {}),
+    });
+    await s.live.connectAll();
+    expect(s.changed).toHaveBeenLastCalledWith(
+      expect.objectContaining({ scanning: false, error: "Bluetooth is off" }),
     );
   });
 });

@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { recipe, scaleRecipe } from "@/core/recipe";
-import { formatTime, stepEyebrow, stepTitle } from "./stepText";
+import { scaleRecipe } from "@/core/recipe";
+import { recipe, recipeById } from "@/core/recipes";
+import {
+  formatRatio,
+  formatTime,
+  movesDripper,
+  stepEyebrow,
+  stepTitle,
+  waterForDose,
+} from "./stepText";
 
 describe("step instructions", () => {
   it("names every original step by what to do, with pour targets in grams", () => {
@@ -20,7 +28,7 @@ describe("step instructions", () => {
     ]);
   });
   it("scales pour targets with the dose", () => {
-    const scaled = scaleRecipe(18);
+    const scaled = scaleRecipe(18, recipe);
     expect(
       scaled.steps
         .filter((step) => step.action === "pour")
@@ -45,5 +53,29 @@ describe("step instructions", () => {
     expect(formatTime(7999)).toBe("0:07");
     expect(formatTime(125000)).toBe("2:05");
     expect(formatTime(-500)).toBe("0:00");
+  });
+  it("names stirs by their label and numbers them within the recipe", () => {
+    const ultimate = recipeById("hoffmann-ultimate");
+    const stir = ultimate.steps.find((step) => step.action === "stir");
+    expect(stir && stepTitle(stir, ultimate)).toBe("Stir once each way");
+    expect(stir && stepEyebrow(stir, ultimate)).toBe("Step 6 of 9");
+    expect(ultimate.steps.map(movesDripper)).toEqual([
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+    ]);
+  });
+  it("derives home-screen water and ratio text from the recipe", () => {
+    expect(waterForDose(recipe, 15)).toBe(250);
+    expect(waterForDose(recipe, 18)).toBe(300);
+    expect(waterForDose(recipeById("kasuya-four-six"), 15)).toBe(225);
+    expect(formatRatio(recipe)).toBe("1:16.67");
+    expect(formatRatio(recipeById("kasuya-four-six"))).toBe("1:15");
   });
 });

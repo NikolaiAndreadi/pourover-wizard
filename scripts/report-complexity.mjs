@@ -4,7 +4,7 @@ import parser from "@typescript-eslint/parser";
 import { ESLint } from "eslint";
 
 // ESLint's classic cyclomatic complexity; warnings are diagnostics, not gates.
-// No coverage-to-complexity mapping or CRAP score is inferred.
+// scripts/report-crap.mjs joins this report with coverage to gate CRAP scores.
 const eslint = new ESLint({
   overrideConfigFile: true,
   overrideConfig: [

@@ -45,6 +45,8 @@ function fixture(
       deviceId: "scale",
       name: "BOOKOO_SC 000000",
     })),
+    requestLEScan: vi.fn(async () => {}),
+    stopLEScan: vi.fn(async () => {}),
     getDevices: vi.fn(async () => []),
     connect: vi.fn(async (id, callback) => {
       lost = callback && (() => callback(id));
@@ -365,5 +367,182 @@ describe("native scale chooser and remembered scale", () => {
     await rejected;
     expect(f.radio.connect).not.toHaveBeenCalled();
     expect(f.radio.requestDevice).not.toHaveBeenCalled();
+  });
+});
+describe("native in-app scan (mocked plugin; iOS behavior is unverified)", () => {
+  type Result = Parameters<Parameters<NativeRadio["requestLEScan"]>[1]>[0];
+  function scanning(remembered?: RememberedDevice) {
+    let emit: ((result: Result) => void) | undefined;
+    const started = deferred();
+    const f = fixture(true, false, remembered);
+    vi.mocked(f.radio.requestLEScan).mockImplementation(
+      async (_options, callback) => {
+        emit = callback;
+        started.resolve();
+      },
+    );
+    const lists: unknown[] = [];
+    return {
+      ...f,
+      transport: createNativeTransport(f.radio, remembered, { scanMs: 30 }),
+      lists,
+      started: started.promise,
+      emit: (result: Result) => emit?.(result),
+      onCandidates: (list: unknown) => lists.push(list),
+    };
+  }
+  it("collects devices by id with the latest signal, sorted strongest first, and stops after the bound", async () => {
+    const s = scanning();
+    const pending = s.transport.scan!.start({
+      onCandidates: s.onCandidates,
+    });
+    await s.started;
+    expect(s.radio.requestLEScan).toHaveBeenCalledWith(
+      { allowDuplicates: true },
+      expect.any(Function),
+    );
+    s.emit({ device: { deviceId: "far", name: "Kettle" }, rssi: -80 });
+    s.emit({
+      device: { deviceId: "near" },
+      localName: "BOOKOO_SC 1",
+      rssi: -60,
+    });
+    s.emit({ device: { deviceId: "far", name: "Kettle" }, rssi: -50 });
+    s.emit({ device: { deviceId: "quiet" } });
+    await pending;
+    expect(s.lists).toEqual([
+      [{ id: "far", name: "Kettle", rssi: -80 }],
+      [
+        { id: "near", name: "BOOKOO_SC 1", rssi: -60 },
+        { id: "far", name: "Kettle", rssi: -80 },
+      ],
+      [
+        { id: "far", name: "Kettle", rssi: -50 },
+        { id: "near", name: "BOOKOO_SC 1", rssi: -60 },
+      ],
+      [
+        { id: "far", name: "Kettle", rssi: -50 },
+        { id: "near", name: "BOOKOO_SC 1", rssi: -60 },
+        { id: "quiet" },
+      ],
+    ]);
+    expect(s.radio.stopLEScan).toHaveBeenCalledOnce();
+    expect(s.radio.connect).not.toHaveBeenCalled();
+    // Late results after the bound change nothing.
+    s.emit({ device: { deviceId: "late" }, rssi: -10 });
+    expect(s.lists).toHaveLength(4);
+  });
+  it("stops a pending scan on disconnect and rejects it as cancelled", async () => {
+    const s = scanning();
+    s.transport = createNativeTransport(s.radio, undefined, { scanMs: 60000 });
+    const pending = s.transport.scan!.start({ onCandidates: s.onCandidates });
+    await s.started;
+    s.transport.disconnect();
+    await expect(pending).rejects.toThrow("cancelled");
+    expect(s.radio.stopLEScan).toHaveBeenCalledOnce();
+    s.emit({ device: { deviceId: "late" }, rssi: -10 });
+    expect(s.lists).toEqual([]);
+  });
+  it("lets a filtered connect supersede a scan and waits for the scan to stop first", async () => {
+    const s = scanning();
+    s.transport = createNativeTransport(s.radio, undefined, { scanMs: 60000 });
+    const pending = s.transport.scan!.start({ onCandidates: s.onCandidates });
+    await s.started;
+    const next = s.transport.connect(s.observers);
+    await expect(pending).rejects.toThrow("cancelled");
+    await next;
+    const stopOrder = vi.mocked(s.radio.stopLEScan).mock
+      .invocationCallOrder[0]!;
+    const requestOrder = vi.mocked(s.radio.requestDevice).mock
+      .invocationCallOrder[0]!;
+    expect(stopOrder).toBeLessThan(requestOrder);
+  });
+  it("surfaces a scan that cannot start and still stops scanning", async () => {
+    const s = scanning();
+    vi.mocked(s.radio.requestLEScan).mockRejectedValue(
+      new Error("Bluetooth is off"),
+    );
+    await expect(
+      s.transport.scan!.start({ onCandidates: s.onCandidates }),
+    ).rejects.toThrow("Bluetooth is off");
+    expect(s.radio.stopLEScan).toHaveBeenCalledOnce();
+  });
+  it("connects a picked candidate, identifies it by services and remembers it", async () => {
+    const saved = memory();
+    const s = scanning(saved);
+    const steps: unknown[] = [];
+    const identified: string[] = [];
+    await s.transport.scan!.connect(
+      { id: "near", name: "BOOKOO_SC 1", rssi: -60 },
+      {
+        ...s.observers,
+        onProgress: (step) => steps.push(step),
+        onIdentified: (model) => identified.push(model.id),
+      },
+    );
+    expect(s.radio.requestDevice).not.toHaveBeenCalled();
+    expect(s.radio.connect).toHaveBeenCalledWith(
+      "near",
+      expect.any(Function),
+      undefined,
+    );
+    expect(steps).toEqual([{ kind: "device", name: "BOOKOO_SC 1" }]);
+    expect(identified).toEqual(["bookoo-themis-mini"]);
+    expect(saved.save).toHaveBeenCalledWith({
+      id: "near",
+      name: "BOOKOO_SC 1",
+    });
+    await s.transport.write(new Uint8Array([1]));
+    expect(s.radio.write).toHaveBeenCalledWith(
+      "near",
+      bookooUuids.service,
+      bookooUuids.command,
+      expect.any(DataView),
+    );
+  });
+  it("releases a picked device that exposes no supported service", async () => {
+    const s = scanning();
+    vi.mocked(s.radio.getServices).mockResolvedValue([
+      { uuid: "0000180a-0000-1000-8000-00805f9b34fb", characteristics: [] },
+    ]);
+    await expect(
+      s.transport.scan!.connect({ id: "kettle" }, s.observers),
+    ).rejects.toThrow("not a supported scale");
+    expect(s.radio.disconnect).toHaveBeenCalledWith("kettle");
+    expect(s.radio.startNotifications).not.toHaveBeenCalled();
+    expect(s.radio.stopNotifications).not.toHaveBeenCalled();
+  });
+  it("identifies short-form service UUIDs reported by the plugin", async () => {
+    const s = scanning();
+    const original = await s.radio.getServices("scale");
+    vi.mocked(s.radio.getServices).mockResolvedValue([
+      {
+        uuid: "0FFE",
+        characteristics: original[0]!.characteristics.map((value) => ({
+          ...value,
+          uuid: value.uuid.slice(4, 8).toUpperCase(),
+        })),
+      },
+    ]);
+    const identified: string[] = [];
+    await s.transport.connect({
+      ...s.observers,
+      onIdentified: (model) => identified.push(model.id),
+    });
+    expect(identified).toEqual(["bookoo-themis-mini"]);
+    expect(s.radio.startNotifications).toHaveBeenCalledWith(
+      "scale",
+      bookooUuids.service,
+      bookooUuids.notify,
+      expect.any(Function),
+    );
+  });
+  it("opens the plugin chooser without filters for connectAll", async () => {
+    const s = scanning();
+    await s.transport.connectAll(s.observers);
+    expect(s.radio.requestDevice).toHaveBeenCalledWith({
+      optionalServices: [bookooUuids.service],
+    });
+    expect(s.radio.requestLEScan).not.toHaveBeenCalled();
   });
 });

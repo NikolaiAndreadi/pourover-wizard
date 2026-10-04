@@ -7,6 +7,7 @@ import {
   type Session,
   updateSession,
 } from "./engine";
+import { recipe } from "./recipes";
 
 function event(
   state: Session,
@@ -28,7 +29,11 @@ function sample(state: Session, atMs: number, grams: number, nowMs = atMs) {
   });
 }
 function ready(atMs = 600) {
-  let state = event(createSession(15, "live", atMs - 600), "tare", atMs - 600);
+  let state = event(
+    createSession(recipe, 15, "live", atMs - 600),
+    "tare",
+    atMs - 600,
+  );
   for (const time of [atMs - 500, atMs - 250, atMs])
     state = sample(state, time, 0);
   return state;
@@ -38,15 +43,15 @@ function armed(atMs = 600) {
 }
 describe("brew state and clock", () => {
   it("manual starts once, jumps to elapsed time and rejects invalid clocks", () => {
-    let state = event(createSession(15, "timer"), "start", 500);
+    let state = event(createSession(recipe, 15, "timer"), "start", 500);
     state = event(state, "start", 1000);
     expect(state.originMs).toBe(500);
     state = event(state, "tick", 120500);
     expect(state.elapsedMs).toBe(120000);
     expect(event(state, "tick", 1)).toBe(state);
     expect(event(state, "tick", NaN)).toBe(state);
-    expect(() => createSession(15, "timer", -1)).toThrow();
-    expect(() => createSession(15, "timer", Infinity)).toThrow();
+    expect(() => createSession(recipe, 15, "timer", -1)).toThrow();
+    expect(() => createSession(recipe, 15, "timer", Infinity)).toThrow();
     expect(event(state, "done", 124999).phase).toBe("brewing");
     state = event(state, "done", 125500);
     expect(state.phase).toBe("completed");
@@ -56,16 +61,18 @@ describe("brew state and clock", () => {
     expect(state.samples).toEqual([]);
   });
   it("does not detect preparation pours or accept timer measurements", () => {
-    let state = createSession(15, "live");
+    let state = createSession(recipe, 15, "live");
     state = sample(state, 100, 20);
     state = sample(state, 600, 30);
     expect(state.phase).toBe("preparation");
     expect(event(state, "arm", 600).phase).toBe("preparation");
     expect(
-      event(event(createSession(15, "timer"), "tare", 0), "arm", 0).phase,
+      event(event(createSession(recipe, 15, "timer"), "tare", 0), "arm", 0)
+        .phase,
     ).toBe("preparation");
     expect(
-      sample(event(createSession(15, "timer"), "start", 0), 100, 90).lastSample,
+      sample(event(createSession(recipe, 15, "timer"), "start", 0), 100, 90)
+        .lastSample,
     ).toBeNull();
   });
   it("backdates sustained rise after idle and keeps the first accepted start", () => {
@@ -91,7 +98,7 @@ describe("brew state and clock", () => {
     expect(state.originMs).toBe(1500);
   });
   it("holds cancel for exactly one real second and release/repeats preserve safety", () => {
-    let state = event(createSession(15, "timer", 1000), "start", 1000);
+    let state = event(createSession(recipe, 15, "timer", 1000), "start", 1000);
     state = event(state, "hold", 2000, 5000);
     state = event(state, "hold", 4000, 5500);
     state = event(state, "tick", 5996, 5999);
@@ -133,7 +140,7 @@ describe("brew state and clock", () => {
     ]);
   });
   it("rejects malformed, stale, duplicate and out-of-order samples", () => {
-    let state = event(createSession(15, "live"), "start", 0);
+    let state = event(createSession(recipe, 15, "live"), "start", 0);
     state = sample(state, 100, 10, 600);
     state = sample(state, 200, 20, 600);
     for (const [atMs, grams, delivered] of [
@@ -204,7 +211,7 @@ describe("brew state and clock", () => {
 
 describe("live stream readiness and loss", () => {
   function ready() {
-    let state = event(createSession(15, "live"), "tare", 0);
+    let state = event(createSession(recipe, 15, "live"), "tare", 0);
     for (const atMs of [100, 350, 600]) state = sample(state, atMs, 0);
     return state;
   }
@@ -227,12 +234,12 @@ describe("live stream readiness and loss", () => {
     expect(state.phase).toBe("preparation");
     expect(state.tared).toBe(false);
     expect(state.lastSample).toBeNull();
-    const timer = event(createSession(15, "timer"), "start", 0);
+    const timer = event(createSession(recipe, 15, "timer"), "start", 0);
     expect(event(timer, "disconnect", 100)).toBe(timer);
     expect(event(timer, "tick", 1000).elapsedMs).toBe(1000);
   });
   it("requires fresh stable zero after tare and disarms on silence immediately after arming", () => {
-    let state = event(createSession(15, "live"), "tare", 0);
+    let state = event(createSession(recipe, 15, "live"), "tare", 0);
     expect(event(state, "arm", 0).phase).toBe("preparation");
     for (const atMs of [100, 350, 600]) state = sample(state, atMs, 4);
     expect(event(state, "arm", 600).phase).toBe("preparation");
@@ -247,7 +254,7 @@ describe("live stream readiness and loss", () => {
     expect(event(state, "start", 1101).baselineVerified).toBe(false);
   });
   it("stable zero readings cannot arm without an explicit successful tare", () => {
-    let state = createSession(15, "live");
+    let state = createSession(recipe, 15, "live");
     for (const atMs of [100, 350, 600]) state = sample(state, atMs, 0);
     expect(state.settled.readings).toHaveLength(3);
     expect(canArmLive(state)).toBe(false);
@@ -259,7 +266,7 @@ describe("live stream readiness and loss", () => {
     expect(event(state, "arm", 1350).phase).toBe("armed");
   });
   it("rejects oscillation near zero but accepts a stable one-gram range at the boundary", () => {
-    let unstable = event(createSession(15, "live"), "tare", 0);
+    let unstable = event(createSession(recipe, 15, "live"), "tare", 0);
     for (const [atMs, grams] of [
       [100, -0.75],
       [350, 0.75],
@@ -268,7 +275,7 @@ describe("live stream readiness and loss", () => {
       unstable = sample(unstable, atMs ?? 0, grams ?? 0);
     expect(canArmLive(unstable)).toBe(false);
     expect(event(unstable, "arm", 600).phase).toBe("preparation");
-    let stable = event(createSession(15, "live"), "tare", 0);
+    let stable = event(createSession(recipe, 15, "live"), "tare", 0);
     for (const [atMs, grams] of [
       [100, -0.5],
       [350, 0.5],
@@ -279,13 +286,13 @@ describe("live stream readiness and loss", () => {
     expect(event(stable, "arm", 600).phase).toBe("armed");
   });
   it("requires three zero readings spanning a full half-second and keeps readiness only while fresh", () => {
-    let short = event(createSession(15, "live"), "tare", 0);
+    let short = event(createSession(recipe, 15, "live"), "tare", 0);
     for (const atMs of [100, 350, 599]) short = sample(short, atMs, 0);
     expect(canArmLive(short)).toBe(false);
     expect(event(short, "arm", 599).phase).toBe("preparation");
     short = sample(short, 600, 0);
     expect(canArmLive(short)).toBe(true);
-    let sparse = event(createSession(15, "live"), "tare", 0);
+    let sparse = event(createSession(recipe, 15, "live"), "tare", 0);
     sparse = sample(sparse, 100, 0);
     sparse = sample(sparse, 600, 0);
     expect(canArmLive(sparse)).toBe(false);
@@ -348,16 +355,33 @@ describe("live stream readiness and loss", () => {
     expect(state.samples[0]?.segment).not.toBe(state.samples.at(-1)?.segment);
   });
   it("marks manual start without any received stream as missing and still permits timer completion", () => {
-    let state = event(createSession(15, "live"), "start", 0);
+    let state = event(createSession(recipe, 15, "live"), "start", 0);
     expect(state.missingData).toBe(true);
     state = event(state, "done", 125000);
     expect(state.phase).toBe("completed");
     expect(state.pouredGrams).toBeNull();
   });
+  it("ignores tare and arm outside preparation and rejects negative hold clocks", () => {
+    const armed = event(ready(), "arm", 600);
+    const retared = event(armed, "tare", 700);
+    expect(retared.phase).toBe("armed");
+    expect(retared.lastSample).toEqual({ atMs: 600, grams: 0 });
+    expect(retared.settled).toBe(armed.settled);
+    expect(event(armed, "arm", 700).armedAtMs).toBe(600);
+    const brewing = event(armed, "start", 700);
+    expect(canArmLive(brewing)).toBe(true);
+    expect(event(brewing, "arm", 800).phase).toBe("brewing");
+    expect(event(brewing, "tare", 800).lastSample).toEqual({
+      atMs: 600,
+      grams: 0,
+    });
+    expect(event(brewing, "hold", 800, -1)).toBe(brewing);
+    expect(event(brewing, "hold", 800, 0).holdAtMs).toBe(0);
+  });
 });
 
 it("live manual readings without a verified zero baseline cannot become poured-water estimates", () => {
-  let state = event(createSession(15, "live"), "start", 0);
+  let state = event(createSession(recipe, 15, "live"), "start", 0);
   for (const atMs of [100, 350, 600, 850]) state = sample(state, atMs, 500);
   expect(state.baselineVerified).toBe(false);
   expect(state.pouredGrams).toBeNull();

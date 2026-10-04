@@ -1,4 +1,4 @@
-import { stepTitle } from "@/app/stepText";
+import { movesDripper, stepTitle } from "@/app/stepText";
 import type { BrewModel } from "@/app/useBrew";
 import { ActionScene } from "./ActionScene";
 
@@ -18,20 +18,23 @@ export function BrewChart({
   const session = model.session;
   if (!session) return null;
   const duration = Math.max(
-    180000,
+    session.recipe.finishGuideMs,
     Math.ceil(session.elapsedMs / 60000) * 60000,
   );
+  // Swirls and stirs: readings while the dripper moves are hidden.
   const swirls = session.recipe.steps.flatMap((step, index) =>
-    step.action === "swirl"
+    movesDripper(step)
       ? [
           {
             start: step.atMs,
             end: session.recipe.steps[index + 1]?.atMs ?? duration,
             grams: step.targetFraction * session.recipe.waterGrams,
+            title: step.action === "stir" ? "Stir" : "Swirl",
           },
         ]
       : [],
   );
+  const stirs = swirls.some((swirl) => swirl.title === "Stir");
   const moving = (atMs: number) =>
     swirls.some((swirl) => atMs >= swirl.start && atMs < swirl.end);
   const traces: { atMs: number; grams: number }[][] = [];
@@ -72,7 +75,7 @@ export function BrewChart({
     246 - ((Math.max(0, grams) - minimum) / (maximum - minimum)) * 220;
   const point = (atMs: number, grams: number) => `${x(atMs)},${y(grams)}`;
   const timeIncrement =
-    duration <= 180000 ? 30000 : Math.ceil(duration / 6 / 60000) * 60000;
+    duration <= 240000 ? 30000 : Math.ceil(duration / 6 / 60000) * 60000;
   const times = Array.from(
     { length: Math.floor(duration / timeIncrement) + 1 },
     (_, index) => index * timeIncrement,
@@ -115,7 +118,7 @@ export function BrewChart({
         )}
         {swirls.map((swirl) => (
           <g key={swirl.start} className="chart-swirl" data-testid="swirl-band">
-            <title>Swirl · readings hidden while moving</title>
+            <title>{`${swirl.title} · readings hidden while moving`}</title>
             <rect
               x={x(swirl.start)}
               y="26"
@@ -158,9 +161,7 @@ export function BrewChart({
             <line
               key={step.atMs}
               data-testid="stage-boundary"
-              className={
-                step.action === "swirl" ? "chart-stage-swirl" : undefined
-              }
+              className={movesDripper(step) ? "chart-stage-swirl" : undefined}
               x1={x(step.atMs)}
               x2={x(step.atMs)}
               y1="26"
@@ -251,7 +252,9 @@ export function BrewChart({
         {session.mode !== "timer" && (
           <span className="chart-key actual-key">Scale</span>
         )}
-        <span className="chart-key swirl-key">Swirl</span>
+        <span className="chart-key swirl-key">
+          {stirs ? "Swirl or stir" : "Swirl"}
+        </span>
       </figcaption>
     </figure>
   );

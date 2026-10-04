@@ -43,6 +43,7 @@ const TITLES: Record<SceneName, string> = {
   prepare: "Get ready: kettle, rinsed cone on the server, scale tared",
   pour: "Pour water in small circles over the coffee",
   swirl: "Swirl the cone gently",
+  stir: "Stir the coffee once each way with a spoon",
   wait: "Wait while the coffee steeps",
   drawdown: "Let the coffee drain into the server",
 };

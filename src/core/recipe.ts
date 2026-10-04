@@ -1,63 +1,35 @@
 export interface RecipeStep {
   atMs: number;
-  action: "pour" | "swirl" | "wait" | "drawdown";
+  /** Swirls and spoon stirs move the dripper, so readings during them are unreliable. */
+  action: "pour" | "swirl" | "stir" | "wait" | "drawdown";
   /** What to do, as a short imperative phrase. Pour targets are added by the app. */
   label: string;
   targetFraction: number;
   /** Named brewing stage shown alongside the step, such as the bloom. */
   stage?: string;
 }
+export interface RecipeSource {
+  label: string;
+  url: string;
+}
 export interface Recipe {
   id: string;
+  /** Recipe name, without the author: attribution without implied endorsement. */
   name: string;
+  /** Person credited for the recipe. */
+  author: string;
+  /** Links to the original recipe. */
+  sources: readonly RecipeSource[];
+  /** One line about the recipe, such as temperature and grind hints. */
+  summary: string;
   doseGrams: number;
   waterGrams: number;
+  minDoseGrams: number;
+  maxDoseGrams: number;
+  /** When the brew typically finishes; guidance for tapping Done, never detected. */
+  finishGuideMs: number;
   steps: readonly RecipeStep[];
 }
-export const recipe: Recipe = {
-  id: "hoffmann-better-one-cup",
-  name: "Better 1 Cup V60",
-  doseGrams: 15,
-  waterGrams: 250,
-  steps: [
-    {
-      atMs: 0,
-      action: "pour",
-      label: "Pour",
-      targetFraction: 0.2,
-      stage: "Bloom",
-    },
-    {
-      atMs: 10000,
-      action: "swirl",
-      label: "Swirl gently",
-      targetFraction: 0.2,
-      stage: "Bloom",
-    },
-    {
-      atMs: 15000,
-      action: "wait",
-      label: "Let it bloom",
-      targetFraction: 0.2,
-      stage: "Bloom",
-    },
-    { atMs: 45000, action: "pour", label: "Pour", targetFraction: 0.4 },
-    { atMs: 60000, action: "wait", label: "Wait", targetFraction: 0.4 },
-    { atMs: 70000, action: "pour", label: "Pour", targetFraction: 0.6 },
-    { atMs: 80000, action: "wait", label: "Wait", targetFraction: 0.6 },
-    { atMs: 90000, action: "pour", label: "Pour", targetFraction: 0.8 },
-    { atMs: 100000, action: "wait", label: "Wait", targetFraction: 0.8 },
-    { atMs: 110000, action: "pour", label: "Pour", targetFraction: 1 },
-    { atMs: 120000, action: "swirl", label: "Swirl gently", targetFraction: 1 },
-    {
-      atMs: 125000,
-      action: "drawdown",
-      label: "Let it drain",
-      targetFraction: 1,
-      stage: "Drawdown",
-    },
-  ],
-};
 export function validateRecipe(value: Recipe): void {
   if (
     !Number.isFinite(value.doseGrams) ||
@@ -69,6 +41,24 @@ export function validateRecipe(value: Recipe): void {
     throw new Error(
       "Recipe needs positive finite coffee and water amounts and steps.",
     );
+  if (
+    !Number.isFinite(value.minDoseGrams) ||
+    !Number.isFinite(value.maxDoseGrams) ||
+    value.minDoseGrams <= 0 ||
+    value.minDoseGrams > value.doseGrams ||
+    value.maxDoseGrams < value.doseGrams
+  )
+    throw new Error(
+      "Recipe needs a positive finite dose range that contains its dose.",
+    );
+  if (
+    value.author.trim() === "" ||
+    !value.sources.length ||
+    value.sources.some(
+      (source) => source.label.trim() === "" || source.url.trim() === "",
+    )
+  )
+    throw new Error("Recipe needs an author and at least one source link.");
   let previousTime = -1;
   let previousFraction = 0;
   for (const step of value.steps) {
@@ -91,7 +81,11 @@ export function validateRecipe(value: Recipe): void {
     throw new Error(
       "Recipe must begin at zero and reach its full water target.",
     );
-  drawdownStartMs(value);
+  if (
+    !Number.isFinite(value.finishGuideMs) ||
+    value.finishGuideMs <= drawdownStartMs(value)
+  )
+    throw new Error("Recipe finish guide must come after drawdown starts.");
 }
 /** Brewing can be finished once its single, final drawdown step begins. */
 export function drawdownStartMs(value: Recipe): number {
@@ -103,10 +97,17 @@ export function drawdownStartMs(value: Recipe): number {
     throw new Error("Recipe must end with its only drawdown step.");
   return last.atMs;
 }
-export function scaleRecipe(dose: number, source: Recipe = recipe): Recipe {
+/** Water for a dose at the recipe's ratio; timings never change. */
+export function scaleRecipe(dose: number, source: Recipe): Recipe {
   validateRecipe(source);
-  if (!Number.isFinite(dose) || dose < 10 || dose > 25)
-    throw new Error("Choose a coffee dose from 10 to 25 g.");
+  if (
+    !Number.isFinite(dose) ||
+    dose < source.minDoseGrams ||
+    dose > source.maxDoseGrams
+  )
+    throw new Error(
+      `Choose a coffee dose from ${source.minDoseGrams} to ${source.maxDoseGrams} g.`,
+    );
   return {
     ...source,
     doseGrams: dose,
@@ -146,7 +147,7 @@ export function expectedPoints(value: Recipe, endMs: number) {
   const times = new Set([
     0,
     ...value.steps.map((step) => step.atMs),
-    Math.max(180000, endMs),
+    Math.max(value.finishGuideMs, endMs),
   ]);
   return [...times]
     .toSorted((a, b) => a - b)

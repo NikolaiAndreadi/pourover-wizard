@@ -27,13 +27,11 @@ jobs:
       - run: npm install --global npm@12.2.0
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Verify production app and boundaries
+      - name: Verify production app, boundaries, and core CRAP gate
         run: |
           mkdir -p reports
           set -o pipefail
           npm run check 2>&1 | tee reports/check.log
-      - name: Report core and codec coverage and complexity
-        run: npm run quality:report
       - name: Retain private verification evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

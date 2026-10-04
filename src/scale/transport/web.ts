@@ -1,4 +1,3 @@
-import { bookooMatch, bookooUuids } from "@/scale/bookoo/codec";
 import {
   guardedMemory,
   type RememberedDevice,
@@ -6,6 +5,12 @@ import {
   type ScaleTransport,
   type TransportObservers,
 } from "@/scale/contracts";
+import {
+  identify,
+  optionalServices,
+  type RequestFilter,
+  requestFilters,
+} from "@/scale/supported";
 
 interface Characteristic extends EventTarget {
   value?: DataView;
@@ -30,10 +35,10 @@ interface Device extends EventTarget {
   gatt?: Server;
   watchAdvertisements?(options?: { signal?: AbortSignal }): Promise<void>;
 }
-export interface RequestOptions {
-  filters: ({ services: string[] } | { namePrefix: string })[];
-  optionalServices: string[];
-}
+/** `acceptAllDevices` and `filters` are mutually exclusive in Web Bluetooth. */
+export type RequestOptions =
+  | { filters: RequestFilter[]; optionalServices: string[] }
+  | { acceptAllDevices: true; optionalServices: string[] };
 export interface Radio {
   requestDevice(options: RequestOptions): Promise<Device>;
   /** Permitted devices; absent unless the browser enables persistent permissions. */
@@ -49,13 +54,15 @@ const defaultTiming: WebTiming = {
   advertisementMs: 4000,
   rememberedConnectMs: 10000,
 };
-// Filters are ORed: either the advertised service or the name prefix matches.
-const requestOptions = (): RequestOptions => ({
-  filters: [
-    { services: [bookooMatch.service] },
-    { namePrefix: bookooMatch.namePrefix },
-  ],
-  optionalServices: [bookooUuids.service],
+// Filters are ORed: any supported service, or any documented name prefix.
+const filteredOptions = (): RequestOptions => ({
+  filters: requestFilters(),
+  optionalServices: optionalServices(),
+});
+// The browser's chooser lists everything in range; the pick is identified after connecting.
+const allDevicesOptions = (): RequestOptions => ({
+  acceptAllDevices: true,
+  optionalServices: optionalServices(),
 });
 
 export function supportsScaleConnection(): boolean {
@@ -99,6 +106,19 @@ async function findPermitted(radio: Radio, id: string) {
     return null;
   }
 }
+/** Looks up every supported service the device exposes; absent ones are skipped. */
+async function exposedServices(server: Server, check: () => void) {
+  const found = new Map<string, Service>();
+  for (const uuid of optionalServices()) {
+    try {
+      found.set(uuid, await server.getPrimaryService(uuid));
+    } catch {
+      // Not exposed by this device.
+    }
+    check();
+  }
+  return found;
+}
 export function createWebTransport(
   radio?: Radio,
   remembered?: RememberedDevice,
@@ -140,7 +160,7 @@ export function createWebTransport(
   const cancelled = (mine: number) => {
     if (mine !== generation) throw new Error("Connection cancelled.");
   };
-  /** Opens GATT and subscribes; on failure releases only its own binding. */
+  /** Opens GATT, identifies the model and subscribes; on failure releases only its own binding. */
   const link = async (
     device: Device,
     mine: number,
@@ -197,11 +217,15 @@ export function createWebTransport(
             );
           }));
       current();
-      const service = await server.getPrimaryService(bookooUuids.service);
+      const services = await exposedServices(server, current);
+      const model = identify([...services.keys()], device.name);
+      const service = model ? services.get(model.service) : undefined;
+      if (!model || !service)
+        throw new Error("This device is not a supported scale.");
+      observers.onIdentified?.(model);
+      binding.notify = await service.getCharacteristic(model.notify);
       current();
-      binding.notify = await service.getCharacteristic(bookooUuids.notify);
-      current();
-      binding.command = await service.getCharacteristic(bookooUuids.command);
+      binding.command = await service.getCharacteristic(model.command);
       current();
       binding.notify.addEventListener(
         "characteristicvaluechanged",
@@ -239,30 +263,58 @@ export function createWebTransport(
       return "failed";
     }
   };
+  /** Opens the chooser with the given options, links the pick and remembers it. */
+  const choose = async (
+    radio: Radio,
+    options: RequestOptions,
+    mine: number,
+    observers: TransportObservers,
+  ) => {
+    observers.onProgress?.({ kind: "chooser" });
+    const device = await radio.requestDevice(options);
+    cancelled(mine);
+    observers.onProgress?.({ kind: "device", name: device.name });
+    await link(device, mine, observers);
+    if (device.id) memory.save(device.id, device.name);
+  };
+  /** Shared setup and teardown for every connection attempt. */
+  const attempt = async (
+    run: (radio: Radio, mine: number, cancel: AbortSignal) => Promise<void>,
+  ) => {
+    const mine = ++generation;
+    waiting?.abort();
+    release();
+    if (!adapter)
+      throw new Error(
+        "Scale connection requires Chrome with Web Bluetooth support.",
+      );
+    const wait = new AbortController();
+    waiting = wait;
+    try {
+      await run(adapter, mine, wait.signal);
+    } catch (error) {
+      if (mine === generation) {
+        generation++;
+        release();
+      }
+      throw error;
+    } finally {
+      if (waiting === wait) waiting = null;
+    }
+  };
   return {
-    async connect(observers) {
-      const mine = ++generation;
-      waiting?.abort();
-      release();
-      if (!adapter)
-        throw new Error(
-          "Scale connection requires Chrome with Web Bluetooth support.",
-        );
-      const wait = new AbortController();
-      waiting = wait;
-      try {
+    connect(observers) {
+      return attempt(async (radio, mine, cancel) => {
         const saved = chooseNext ? null : memory.load();
         chooseNext = false;
         // Without a remembered scale the chooser opens synchronously in the tap.
         const outcome =
-          saved && typeof adapter.getDevices === "function"
-            ? await reconnect(adapter, saved, mine, observers, wait.signal)
+          saved && typeof radio.getDevices === "function"
+            ? await reconnect(radio, saved, mine, observers, cancel)
             : "unavailable";
         if (outcome === "connected") return;
-        observers.onProgress?.({ kind: "chooser" });
-        let device: Device;
         try {
-          device = await adapter.requestDevice(requestOptions());
+          await choose(radio, filteredOptions(), mine, observers);
         } catch (error) {
           if (outcome !== "failed") throw error;
           // The remembered attempt may outlast the tap that allows the chooser,
@@ -274,19 +326,12 @@ export function createWebTransport(
             );
           throw error;
         }
-        cancelled(mine);
-        observers.onProgress?.({ kind: "device", name: device.name });
-        await link(device, mine, observers);
-        if (device.id) memory.save(device.id, device.name);
-      } catch (error) {
-        if (mine === generation) {
-          generation++;
-          release();
-        }
-        throw error;
-      } finally {
-        if (waiting === wait) waiting = null;
-      }
+      });
+    },
+    connectAll(observers) {
+      return attempt((radio, mine) =>
+        choose(radio, allDevicesOptions(), mine, observers),
+      );
     },
     async write(bytes) {
       const binding = active;

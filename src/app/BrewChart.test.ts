@@ -4,11 +4,12 @@ import { expect, test } from "vitest";
 import type { BrewModel } from "@/app/useBrew";
 import { createSession } from "@/core/engine";
 import { expectedPoints, expectedWeight, stepAt } from "@/core/recipe";
+import { recipe } from "@/core/recipes";
 import { BrewChart } from "@/ui/BrewChart";
 
 function render(samples: { atMs: number; grams: number }[], elapsedMs: number) {
   const session = {
-    ...createSession(15, "live"),
+    ...createSession(recipe, 15, "live"),
     phase: "brewing" as const,
     elapsedMs,
     samples,

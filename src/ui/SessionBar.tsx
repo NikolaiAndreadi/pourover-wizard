@@ -1,4 +1,4 @@
-import type { LiveSnapshot } from "@/app/liveScale";
+import { type LiveSnapshot, modelName } from "@/app/liveScale";
 import type { BrewModel } from "@/app/useBrew";
 import { HoldToCancel } from "./HoldToCancel";
 
@@ -7,7 +7,9 @@ const SCALE_STATUS = {
   connecting: "Connecting to scale",
   disconnected: "Scale disconnected",
 } as const;
-function scaleStatus({ status, progress }: LiveSnapshot): string {
+/** Names the identified model once connected, such as "BOOKOO Themis Mini connected". */
+function scaleStatus({ status, progress, model }: LiveSnapshot): string {
+  if (status === "connected" && model) return `${modelName(model)} connected`;
   if (status !== "connecting" || !progress) return SCALE_STATUS[status];
   return progress.kind === "chooser"
     ? "Choose your scale"

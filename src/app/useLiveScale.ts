@@ -9,6 +9,7 @@ import {
   type LiveSnapshot,
   type RememberedDevice,
   type RememberedScale,
+  supportedScales,
   supportsScaleConnection,
 } from "./liveScale";
 
@@ -16,8 +17,12 @@ const scaleMemory = createRememberedDevice();
 const disconnected: LiveSnapshot = {
   status: "disconnected",
   progress: null,
+  model: null,
   pendingTare: false,
   error: "",
+  offerAllDevices: false,
+  scanning: false,
+  candidates: [],
 };
 /** Display-only median buffer: readings from the last half-second, at most five. */
 export function pushDisplayReading(
@@ -140,6 +145,12 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
     rememberedScale,
     forgetScale: () => memory.clear(),
     connectLive: () => live.current?.connect(),
+    /** Everything in range: the browser's chooser, or the in-app list on iOS. */
+    connectAllLive: () => live.current?.connectAll(),
+    pickCandidate: (id: string) => live.current?.pickCandidate(id),
+    stopScanLive: () => live.current?.stopScan(),
+    /** Registry entries shown on the ready screen; only verified ones were seen on hardware. */
+    supportedScales,
     disconnectLive: () => live.current?.disconnect(),
     tareLive: () => live.current?.tare(),
     liveCanArm:

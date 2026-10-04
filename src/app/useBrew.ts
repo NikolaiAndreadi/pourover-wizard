@@ -11,13 +11,48 @@ import {
   drawdownStartMs,
   expectedPoints,
   expectedWeight,
+  type Recipe,
   stepAt,
 } from "@/core/recipe";
-import { routeFromHash } from "./routes";
+import { recipeById, recipes } from "@/core/recipes";
+import {
+  type BrewMemory,
+  createRememberedBrew,
+} from "@/platform/rememberedBrew";
 import { useLiveScale } from "./useLiveScale";
 export type BrewModel = ReturnType<typeof useBrew>;
-export function useBrew() {
-  const [dose, setDose] = useState("15");
+const defaultRecipe = recipeById(recipes[0]?.id ?? "");
+const isValidDose = (value: string, recipe: Recipe) =>
+  value.trim() !== "" &&
+  Number.isFinite(Number(value)) &&
+  Number(value) >= recipe.minDoseGrams &&
+  Number(value) <= recipe.maxDoseGrams;
+/** The remembered recipe, or the first recipe when none or an unknown one. */
+const rememberedRecipe = (memory: BrewMemory): Recipe =>
+  recipes.find((value) => value.id === memory.load().recipeId) ?? defaultRecipe;
+/** The recipe's remembered dose, or its own when missing or out of range. */
+const rememberedDose = (memory: BrewMemory, recipe: Recipe) => {
+  const grams = memory.load().doses[recipe.id];
+  return grams !== undefined && isValidDose(String(grams), recipe)
+    ? String(grams)
+    : String(recipe.doseGrams);
+};
+export function useBrew(memory: BrewMemory = createRememberedBrew()) {
+  const [recipeId, setRecipeId] = useState(() => rememberedRecipe(memory).id);
+  const recipe = recipeById(recipeId);
+  const [dose, setDoseInput] = useState(() => rememberedDose(memory, recipe));
+  /** Chooses a recipe and shows its remembered or default dose. */
+  const setRecipe = (id: string) => {
+    const chosen = recipeById(id);
+    memory.saveRecipe(chosen.id);
+    setRecipeId(chosen.id);
+    setDoseInput(rememberedDose(memory, chosen));
+  };
+  /** Edits the dose; a value valid for this recipe is remembered for it. */
+  const setDose = (value: string) => {
+    setDoseInput(value);
+    if (isValidDose(value, recipe)) memory.saveDose(recipe.id, Number(value));
+  };
   const [mode, setMode] = useState<Mode>("timer");
   const [previewIndex, setPreviewIndex] = useState(0);
   const preview = useRef(0);
@@ -89,7 +124,6 @@ export function useBrew() {
         return;
       if (
         active.current?.phase !== "preparation" ||
-        routeFromHash(window.location.hash) !== "home" ||
         document.querySelector("[role=dialog], dialog[open]")
       )
         return;
@@ -100,16 +134,12 @@ export function useBrew() {
     window.addEventListener("keydown", browse);
     return () => window.removeEventListener("keydown", browse);
   }, []);
-  const doseValid =
-    dose.trim() !== "" &&
-    Number.isFinite(Number(dose)) &&
-    Number(dose) >= 10 &&
-    Number(dose) <= 25;
+  const doseValid = isValidDose(dose, recipe);
   const prepare = () => {
     if (!doseValid) return;
     clock.current = performance.now();
     goToStart();
-    active.current = createSession(Number(dose), mode);
+    active.current = createSession(recipe, Number(dose), mode);
     setSession(active.current);
     prepareLive(mode);
   };
@@ -137,6 +167,9 @@ export function useBrew() {
       : Math.min(1, session.holdElapsedMs / HOLD_MS);
   return {
     ...live,
+    recipes,
+    recipe,
+    setRecipe,
     dose,
     setDose,
     mode,

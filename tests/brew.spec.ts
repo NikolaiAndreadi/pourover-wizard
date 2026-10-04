@@ -160,19 +160,18 @@ for (const mode of ["timer", "live"] as const) {
     ).toHaveCount(0);
     await page.clock.runFor(1000);
     await expect(page.getByRole("timer")).toHaveText("0:01");
-    await page
-      .getByRole("navigation")
-      .getByRole("link", { name: "About" })
-      .click();
+    // Hash changes have no routes to switch, so the in-memory brew keeps running.
+    await page.evaluate(() => {
+      window.location.hash = "#/missing";
+    });
     await page.clock.runFor(1000);
-    await page
-      .getByRole("navigation")
-      .getByRole("link", { name: "Home" })
-      .click();
+    await page.evaluate(() => {
+      window.location.hash = "#/";
+    });
     await expect(page.getByRole("timer")).toHaveText("0:02");
   });
 }
-test("pointer cancellation, focus loss and navigation release incomplete holds", async ({
+test("pointer cancellation, focus loss and page hiding release incomplete holds", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -204,24 +203,11 @@ test("pointer cancellation, focus loss and navigation release incomplete holds",
   await cancel.focus();
   await page.keyboard.down(" ");
   await page.clock.runFor(500);
-  await page.evaluate(() => {
-    window.location.hash = "#/about";
-  });
-  await page.clock.runFor(1500);
-  await page.keyboard.up(" ");
-  await page
-    .getByRole("navigation")
-    .getByRole("link", { name: "Home" })
-    .click();
-  await expect(page.getByRole("timer")).toHaveText("0:06");
-  await cancel.focus();
-  await page.keyboard.down(" ");
-  await page.clock.runFor(500);
   await page.evaluate(() =>
     document.dispatchEvent(new Event("visibilitychange")),
   );
   await page.clock.runFor(1500);
   await page.keyboard.up(" ");
-  await expect(page.getByRole("timer")).toHaveText("0:08");
+  await expect(page.getByRole("timer")).toHaveText("0:06");
   expect(errors).toEqual([]);
 });

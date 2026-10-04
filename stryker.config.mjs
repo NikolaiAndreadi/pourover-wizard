@@ -1,20 +1,11 @@
-import { readFileSync } from "node:fs";
-
-// Mutate recipe behavior after its source-verified data/prose declaration.
-// Derive the range so formatting changes cannot silently move the boundary.
-const recipeSource = readFileSync("src/core/recipe.ts", "utf8");
-const recipeStart = recipeSource.indexOf("export function validateRecipe");
-if (recipeStart < 0) throw new Error("Recipe mutation boundary not found.");
-const startLine = recipeSource.slice(0, recipeStart).split("\n").length;
-const endLine = recipeSource.split("\n").length;
-
 /** Diagnostics only: surviving mutants require review, not a percentage gate. */
 export default {
   mutate: [
     "src/core/engine.ts",
     "src/core/detector.ts",
     "src/core/settled.ts",
-    `src/core/recipe.ts:${startLine}-${endLine}`,
+    // Recipe functions only; the source-verified data in recipes.ts is not mutated.
+    "src/core/recipe.ts",
     "src/scale/bookoo/codec.ts",
   ],
   // Native projects and browser artifacts are not inputs to Vitest mutation checks.

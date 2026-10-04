@@ -62,7 +62,7 @@ test.afterEach(async () => {
   );
 });
 
-test("cached app cold-opens offline with hash navigation and brew controls", async ({
+test("cached app cold-opens offline, survives a hash-route reload and brews", async ({
   context,
   page,
 }) => {
@@ -84,12 +84,18 @@ test("cached app cold-opens offline with hash navigation and brew controls", asy
   await context.setOffline(true);
   await page.close();
   const offline = await context.newPage();
-  await offline.goto(`${appUrl}#/about`);
+  await offline.goto(`${appUrl}#/`);
   await expect(
-    offline.getByRole("heading", { name: "One cup. A clear routine." }),
+    offline.getByRole("heading", {
+      name: "Your daily pour-over, with room to focus.",
+    }),
   ).toBeVisible();
   await offline.reload();
-  await offline.getByRole("link", { name: "Back to home" }).click();
+  await expect(
+    offline.getByRole("heading", {
+      name: "Your daily pour-over, with room to focus.",
+    }),
+  ).toBeVisible();
   await offline.getByRole("button", { name: "Get ready" }).click();
   await offline.getByRole("button", { name: "Pour now" }).click();
   await expect(offline.getByRole("timer")).toBeVisible();

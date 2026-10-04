@@ -381,3 +381,84 @@ describe("remembered scale (mocked radio; real Chrome support is flag-dependent)
     expect(f.server.connected).toBe(true);
   });
 });
+describe("show all devices (mocked radio; the browser's chooser lists and ranks devices)", () => {
+  const allDevices = {
+    acceptAllDevices: true,
+    optionalServices: [bookooUuids.service],
+  };
+  it("requests every device without filters, identifies the pick by its service and remembers it", async () => {
+    const f = fixture();
+    const saved = memory();
+    const steps: unknown[] = [];
+    const identified: string[] = [];
+    const transport = createWebTransport(f.radio, saved, quick);
+    await transport.connectAll({
+      ...observers(),
+      onProgress: (step) => steps.push(step),
+      onIdentified: (model) => identified.push(model.id),
+    });
+    expect(f.options).toEqual([allDevices]);
+    expect(f.options[0]).not.toHaveProperty("filters");
+    expect(identified).toEqual(["bookoo-themis-mini"]);
+    expect(steps).toEqual([
+      { kind: "chooser" },
+      { kind: "device", name: "BOOKOO_SC 000000" },
+    ]);
+    expect(saved.save).toHaveBeenCalledWith({
+      id: "picked",
+      name: "BOOKOO_SC 000000",
+    });
+    expect(saved.load).not.toHaveBeenCalled();
+    await transport.write(Uint8Array.of(5));
+    expect(f.command.writes).toEqual([[5]]);
+  });
+  it("releases the GATT connection when the pick exposes no supported service", async () => {
+    const f = fixture();
+    f.server.getPrimaryService = async () => {
+      throw Object.assign(new Error("No Services matching UUID"), {
+        name: "NotFoundError",
+      });
+    };
+    const identified = vi.fn();
+    await expect(
+      createWebTransport(f.radio).connectAll({
+        ...observers(),
+        onIdentified: identified,
+      }),
+    ).rejects.toThrow("not a supported scale");
+    expect(f.server.connected).toBe(false);
+    expect(f.disconnects()).toBe(1);
+    expect(f.notify.starts).toBe(0);
+    expect(identified).not.toHaveBeenCalled();
+  });
+  it("identifies the filtered pick too and surfaces a cancelled chooser", async () => {
+    const f = fixture();
+    const identified: string[] = [];
+    const transport = createWebTransport(f.radio);
+    await transport.connect({
+      ...observers(),
+      onIdentified: (model) => identified.push(model.id),
+    });
+    expect(identified).toEqual(["bookoo-themis-mini"]);
+    transport.disconnect();
+    const cancelled = createWebTransport({
+      async requestDevice() {
+        throw Object.assign(
+          new Error("User cancelled the requestDevice() chooser."),
+          {
+            name: "NotFoundError",
+          },
+        );
+      },
+    });
+    await expect(cancelled.connect(observers())).rejects.toThrow(
+      "User cancelled",
+    );
+    await expect(cancelled.connectAll(observers())).rejects.toThrow(
+      "User cancelled",
+    );
+  });
+  it("offers no in-app scan", () => {
+    expect(createWebTransport(fixture().radio).scan).toBeUndefined();
+  });
+});

@@ -14,8 +14,9 @@
   must stand alone with references to committed files. Commit messages describe
   completed work and resulting behavior, without local task or stage identifiers.
 
-Scope: Hoffmann Better 1 Cup V60, 15 g coffee; web and SideStore; BOOKOO Themis
-Mini. Start with **Pour now**, or detect pouring after explicit arming. Hold to cancel.
+Scope: time-locked V60 recipes stored as data with in-app author credits
+(Better 1 Cup, Ultimate V60, 4:6 Method); web and SideStore; BOOKOO Themis Mini.
+Start with **Pour now**, or detect pouring after explicit arming. Hold to cancel.
 
 ## Application conventions
 
@@ -29,7 +30,8 @@ Mini. Start with **Pour now**, or detect pouring after explicit arming. Hold to 
   themselves; `app/` composes adapters; `ui/` uses app and type-only core imports.
 - Platform Bluetooth APIs and native plugin imports belong in
   `src/scale/transport/`. Do not hide access with computed or indirect API tricks.
-- Add meaningful behavior tests as functionality arrives; do not invent domain
-  code, coverage thresholds, or mutation targets to fill an empty domain.
+- Add meaningful behavior tests as functionality arrives. Core and codec
+  functions must stay at or below CRAP 30 (`npm run report:crap`); do not invent
+  domain code or mutation targets to fill an empty domain.
 - Production browser checks use `/pourover-wizard/`. Emulation and mocked
   Bluetooth do not establish real-device acceptance.

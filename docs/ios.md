@@ -78,8 +78,13 @@ Unsigned artifact import, installation, launch, and refresh must be verified on
 the actual phone; a successful archive does not establish these behaviors.
 
 Connections are explicit and foreground only. Bluetooth permission is requested
-when connecting, using the purpose text in `ios/App/App/Info.plist`. The app
-does not enable Bluetooth background mode. Keep it visible and the phone awake
+when connecting, using the purpose text in `ios/App/App/Info.plist`. The
+in-app **Show all devices** scan (`requestLEScan`/`stopLEScan`, about 6 s,
+sorted by signal strength) uses the same Core Bluetooth central role and the
+same `NSBluetoothAlwaysUsageDescription` key already present in that file;
+iOS 13 and later require no separate scan or location entry, so the native
+project was not changed. The scan has only been exercised against a mocked
+plugin. The app does not enable Bluetooth background mode. Keep it visible and the phone awake
 for brewing; background suspension may interrupt notifications and JavaScript
 timing. There is no accepted background brewing behavior. Cancelling a pending
 connection ignores its result; the system chooser may still need to be dismissed
@@ -88,7 +93,10 @@ before the next connection begins. The
 states that BLE is unavailable in the iOS simulator.
 
 Before accepting the native app, record exact phone/iOS, SideStore, scale firmware,
-and app build versions. Verify permission denial and retry; chooser cancellation;
+and app build versions. Verify permission denial and retry; chooser cancellation; the
+**Show all devices** scan listing nearby devices strongest first, stopping
+after about 6 s or on **Stop**, and connecting a picked scale; that a picked
+non-scale is released with "This device is not a supported scale";
 positive, zero, and negative weight readings against the scale display; tare;
 both manual start and explicitly armed detection; hold cancellation;
 disconnect/reconnect while brewing; notch and home indicator layout in

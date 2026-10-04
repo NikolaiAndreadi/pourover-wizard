@@ -3,11 +3,11 @@ import {
   drawdownStartMs,
   expectedPoints,
   expectedWeight,
-  recipe,
   scaleRecipe,
   stepAt,
   validateRecipe,
 } from "./recipe";
+import { recipe, recipeById, recipes } from "./recipes";
 
 describe("Hoffmann recipe guidance", () => {
   it("matches independent source timing and target checkpoints", () => {
@@ -44,16 +44,16 @@ describe("Hoffmann recipe guidance", () => {
     });
   });
   it("scales amounts precisely while preserving timings", () => {
-    const scaled = scaleRecipe(18);
+    const scaled = scaleRecipe(18, recipe);
     expect(scaled.waterGrams).toBe(300);
     expect(expectedWeight(scaled, 75000)).toBe(150);
     expect(scaled.steps).toBe(recipe.steps);
-    expect(scaleRecipe(10).waterGrams).toBeCloseTo(500 / 3);
-    expect(scaleRecipe(25).waterGrams).toBeCloseTo(1250 / 3);
+    expect(scaleRecipe(10, recipe).waterGrams).toBeCloseTo(500 / 3);
+    expect(scaleRecipe(25, recipe).waterGrams).toBeCloseTo(1250 / 3);
   });
   it.each([NaN, Infinity, -Infinity, 0, -1, 9.99, 25.01])(
     "rejects invalid dose %s",
-    (dose) => expect(() => scaleRecipe(dose)).toThrow(),
+    (dose) => expect(() => scaleRecipe(dose, recipe)).toThrow(),
   );
   it("rejects malformed recipes", () => {
     for (const patch of [
@@ -157,7 +157,7 @@ describe("independent recipe validation failures", () => {
 describe("drawdown start", () => {
   it("is the final drawdown step time for original and scaled recipes", () => {
     expect(drawdownStartMs(recipe)).toBe(125000);
-    expect(drawdownStartMs(scaleRecipe(20))).toBe(125000);
+    expect(drawdownStartMs(scaleRecipe(20, recipe))).toBe(125000);
     const later = recipe.steps.map((step, index, all) =>
       index === all.length - 1 ? { ...step, atMs: 130000 } : step,
     );
@@ -184,5 +184,139 @@ describe("drawdown start", () => {
   ])("rejects a recipe with %s", (_, steps) => {
     expect(() => drawdownStartMs({ ...recipe, steps })).toThrow(/drawdown/);
     expect(() => validateRecipe({ ...recipe, steps })).toThrow(/drawdown/);
+  });
+});
+describe("recipe catalogue", () => {
+  const ultimate = recipeById("hoffmann-ultimate");
+  const fourSix = recipeById("kasuya-four-six");
+  it("lists valid recipes with unique ids and names free of author names", () => {
+    expect(recipes.map((value) => value.id)).toEqual([
+      "hoffmann-better-one-cup",
+      "hoffmann-ultimate",
+      "kasuya-four-six",
+    ]);
+    expect(recipes[0]).toBe(recipe);
+    for (const value of recipes) {
+      expect(() => validateRecipe(value)).not.toThrow();
+      for (const part of value.author.split(" "))
+        expect(value.name).not.toContain(part);
+      expect(value.sources.length).toBeGreaterThan(0);
+      expect(value.summary.trim()).not.toBe("");
+    }
+  });
+  it("finds recipes by id and rejects unknown ids", () => {
+    expect(recipeById("hoffmann-better-one-cup")).toBe(recipe);
+    expect(ultimate.name).toBe("Ultimate V60");
+    expect(fourSix.author).toBe("Tetsu Kasuya");
+    expect(() => recipeById("rao")).toThrow(/Unknown recipe: rao/);
+  });
+  it("matches the Ultimate V60 source: 60 g bloom, 300 g by 1:15, 500 g by 1:45, finish by 3:30", () => {
+    expect(ultimate.doseGrams).toBe(30);
+    expect(ultimate.waterGrams).toBe(500);
+    expect(ultimate.steps.map((step) => step.atMs)).toEqual([
+      0, 10000, 15000, 45000, 75000, 105000, 110000, 120000, 125000,
+    ]);
+    expect(ultimate.steps.map((step) => step.action)).toEqual([
+      "pour",
+      "swirl",
+      "wait",
+      "pour",
+      "pour",
+      "stir",
+      "wait",
+      "swirl",
+      "drawdown",
+    ]);
+    for (const [at, grams] of [
+      [0, 0],
+      [5000, 30],
+      [10000, 60],
+      [44999, 60],
+      [60000, 180],
+      [75000, 300],
+      [90000, 400],
+      [105000, 500],
+      [999999, 500],
+    ])
+      expect(expectedWeight(ultimate, at ?? 0)).toBeCloseTo(grams ?? 0);
+    expect(drawdownStartMs(ultimate)).toBe(125000);
+    expect(ultimate.finishGuideMs).toBe(210000);
+    expect(expectedPoints(ultimate, 100000).at(-1)).toEqual({
+      atMs: 210000,
+      grams: 500,
+    });
+  });
+  it("matches the 4:6 source: five 60 g pours at 0:00, 0:45, 1:30, 2:15 and 2:45, dripper off at 3:30", () => {
+    expect(fourSix.doseGrams).toBe(20);
+    expect(fourSix.waterGrams).toBe(300);
+    expect(
+      fourSix.steps
+        .filter((step) => step.action === "pour")
+        .map((step) => [step.atMs, step.targetFraction * fourSix.waterGrams]),
+    ).toEqual([
+      [0, 60],
+      [45000, 120],
+      [90000, 180],
+      [135000, 240],
+      [165000, 300],
+    ]);
+    for (const [at, grams] of [
+      [5000, 30],
+      [10000, 60],
+      [44999, 60],
+      [50000, 90],
+      [55000, 120],
+      [95000, 150],
+      [100000, 180],
+      [140000, 210],
+      [145000, 240],
+      [170000, 270],
+      [175000, 300],
+      [999999, 300],
+    ])
+      expect(expectedWeight(fourSix, at ?? 0)).toBeCloseTo(grams ?? 0);
+    expect(stepAt(fourSix, 44999).stage).toBe("Sweetness");
+    expect(stepAt(fourSix, 90000).stage).toBe("Strength");
+    expect(drawdownStartMs(fourSix)).toBe(175000);
+    expect(fourSix.finishGuideMs).toBe(210000);
+  });
+  it.each(recipes)("scales $name only within its own dose range", (value) => {
+    const range = new RegExp(
+      `from ${value.minDoseGrams} to ${value.maxDoseGrams} g`,
+    );
+    expect(scaleRecipe(value.minDoseGrams, value).waterGrams).toBeCloseTo(
+      (value.waterGrams * value.minDoseGrams) / value.doseGrams,
+    );
+    expect(scaleRecipe(value.maxDoseGrams, value).steps).toBe(value.steps);
+    expect(() => scaleRecipe(value.minDoseGrams - 0.01, value)).toThrow(range);
+    expect(() => scaleRecipe(value.maxDoseGrams + 0.01, value)).toThrow(range);
+  });
+  it("rejects malformed dose ranges, credits and finish guides", () => {
+    for (const patch of [
+      { minDoseGrams: 0 },
+      { minDoseGrams: NaN },
+      { minDoseGrams: 15.01 },
+      { maxDoseGrams: 14.99 },
+      { maxDoseGrams: Infinity },
+    ])
+      expect(() => validateRecipe({ ...recipe, ...patch })).toThrow(
+        /dose range/,
+      );
+    for (const patch of [
+      { author: " " },
+      { sources: [] },
+      { sources: [{ label: "", url: "https://example.test" }] },
+      { sources: [{ label: "Source", url: " " }] },
+    ])
+      expect(() => validateRecipe({ ...recipe, ...patch })).toThrow(
+        /author and at least one source/,
+      );
+    for (const finishGuideMs of [NaN, Infinity, 125000, 0])
+      expect(() => validateRecipe({ ...recipe, finishGuideMs })).toThrow(
+        /finish guide/,
+      );
+    expect(
+      expectedPoints({ ...recipe, finishGuideMs: 200000 }, 0).at(-1),
+    ).toEqual({ atMs: 200000, grams: 250 });
   });
 });

@@ -1,5 +1,5 @@
 import { type CSSProperties, useId } from "react";
-import { DRAWDOWN_GUIDE_MS, formatTime, stepTitle } from "@/app/stepText";
+import { formatTime, movesDripper, stepTitle } from "@/app/stepText";
 import type { BrewModel } from "@/app/useBrew";
 import type { ScaleSample } from "@/core/scale";
 
@@ -18,7 +18,8 @@ const ZOOM_HEIGHT = 160;
 
 /**
  * Live pours only: zooms into the current pour's time and gram range, with the
- * ideal ramp dashed and measured weight solid. Readings during swirls are hidden.
+ * ideal ramp dashed and measured weight solid. Readings during swirls and
+ * stirs are hidden.
  */
 function PourZoom({ model }: { model: StripModel }) {
   const { session, step, nextStep } = model;
@@ -33,7 +34,7 @@ function PourZoom({ model }: { model: StripModel }) {
   const swirling = (atMs: number) =>
     recipe.steps.some(
       (item, position) =>
-        item.action === "swirl" &&
+        movesDripper(item) &&
         atMs >= item.atMs &&
         atMs < (recipe.steps[position + 1]?.atMs ?? Infinity),
     );
@@ -143,7 +144,7 @@ export function ProgressStrip({ model }: { model: StripModel }) {
   if (!session) return null;
   const { recipe } = session;
   const duration = Math.max(
-    DRAWDOWN_GUIDE_MS,
+    recipe.finishGuideMs,
     Math.ceil(session.elapsedMs / 60000) * 60000,
   );
   const x = (atMs: number) =>
@@ -194,7 +195,7 @@ export function ProgressStrip({ model }: { model: StripModel }) {
             />
           )}
           {recipe.steps.map((item, index) =>
-            item.action === "swirl" ? (
+            movesDripper(item) ? (
               <rect
                 key={item.atMs}
                 className="strip-swirl"

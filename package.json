@@ -29,6 +29,7 @@
     "report:complexity": "node scripts/report-complexity.mjs",
     "report:crap": "node scripts/report-crap.mjs",
     "quality:report": "run-s test:coverage report:complexity report:crap",
+    "icons": "node scripts/icons.ts",
     "build:ios": "vite build --base / --outDir dist-ios",
     "ios:sync": "npm run build:ios && cap sync ios",
     "ios:package": "npm run ios:sync && node scripts/package-ios.mjs"

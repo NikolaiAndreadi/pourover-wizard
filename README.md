@@ -89,9 +89,11 @@ visibility changes require separate authorization.
 
 ## Brewing behavior and source
 
-**Start now** starts at tap time in every mode, including live brewing without a
-connected scale. Choose BOOKOO live scale, prepare the brew, and connect. The built-in
-Mini profile handles signed grams without setup codes or a confirmation checkbox.
+**Start now** starts at tap time in every mode. There is no mode switch: a
+prepared brew is timer only until a scale connects from the header, which turns
+it into scale assist, and disconnecting before the start turns it back. The
+built-in Mini profile handles signed grams without setup codes or a
+confirmation checkbox.
 Connect, explicitly tare, wait for at least 500 ms of fresh stable readings within
 1 g of zero, then explicitly tap **Auto start on weight change** if desired. A completed tare write
 is not proof that the hardware tared; zero readings are also required. Tare never

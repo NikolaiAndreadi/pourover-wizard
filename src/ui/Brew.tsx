@@ -74,15 +74,17 @@ function ScaleSetup({ model }: { model: BrewModel }) {
           app.
         </p>
       )}
-      <p className="note supported-scales">
-        Supported scales:{" "}
-        {model.supportedScales.map((scale, index) => (
-          <span key={scale.id}>
-            {index > 0 && ", "}
-            {modelName(scale)} · {scale.verified ? "verified" : "untested"}
-          </span>
-        ))}
-      </p>
+      {model.liveSupported && (
+        <p className="note supported-scales">
+          Supported scales:{" "}
+          {model.supportedScales.map((scale, index) => (
+            <span key={scale.id}>
+              {index > 0 && ", "}
+              {modelName(scale)} · {scale.verified ? "verified" : "untested"}
+            </span>
+          ))}
+        </p>
+      )}
       {model.liveSupported && live.offerAllDevices && idle && (
         <p className="note all-devices">
           Scale not listed?{" "}
@@ -258,18 +260,6 @@ function Home({ model }: { model: BrewModel }) {
           {formatRatio(recipe)}. Timings stay the same at any dose; the original
           uses {recipe.doseGrams} g.
         </p>
-        <label>
-          Guide mode
-          <select
-            value={model.mode}
-            onChange={(event) =>
-              model.setMode(event.target.value as BrewModel["mode"])
-            }
-          >
-            <option value="timer">Timer only</option>
-            <option value="live">BOOKOO live scale</option>
-          </select>
-        </label>
         <button
           type="button"
           className="button"
@@ -384,11 +374,11 @@ export function Brew({ model }: { model: BrewModel }) {
     return (
       <section className="brew-panel brew-ready">
         <div className="brew-top">
-          <p className="eyebrow">{live ? "BOOKOO live scale" : "Timer only"}</p>
+          <p className="eyebrow">{live ? "Scale assist" : "Timer only"}</p>
           {timer}
         </div>
         <h1>{armed ? "Waiting for a pour" : "Ready when you are"}</h1>
-        {live && <ScaleSetup model={model} />}
+        <ScaleSetup model={model} />
         <div className="ready-hint">
           <ActionScene action="prepare" />
           <div>

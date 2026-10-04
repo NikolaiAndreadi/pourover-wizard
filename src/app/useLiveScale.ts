@@ -1,5 +1,5 @@
 import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
-import { canArmLive, type Event, type Mode, type Session } from "@/core/engine";
+import { canArmLive, type Event, type Session } from "@/core/engine";
 import type { ScaleSample } from "@/core/scale";
 import { createRememberedDevice } from "@/platform/rememberedDevice";
 import {
@@ -87,11 +87,10 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
     )
       release();
   }, [session?.phase]);
-  /** Resets display state for a newly prepared brew and, in live mode, a fresh connection. */
-  const prepareLive = (mode: Mode) => {
+  /** Resets display state for a newly prepared brew and offers a fresh connection. */
+  const prepareLive = () => {
     setDisconnectNotice(false);
     smooth.current = [];
-    if (mode !== "live") return;
     live.current?.dispose();
     setLiveState(disconnected);
     const event = (type: "signalLost" | "tare") => {

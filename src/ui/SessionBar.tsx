@@ -61,7 +61,10 @@ export function SessionBar({ model }: { model: BrewModel }) {
     return null;
   return (
     <div className="session-bar">
-      {session.mode === "live" && <ScaleControls model={model} />}
+      {model.liveSupported &&
+        (session.mode === "live" || session.phase === "preparation") && (
+          <ScaleControls model={model} />
+        )}
       {session.phase === "preparation" ? (
         <button type="button" onClick={model.restart}>
           Back

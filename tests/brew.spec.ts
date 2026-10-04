@@ -89,107 +89,94 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(page.getByRole("timer")).toHaveText("0:00");
 });
-for (const mode of ["timer", "live"] as const) {
-  test(`${mode} prepared brew previews every stage without starting, then returns to start`, async ({
-    page,
-  }) => {
-    await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
-    await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
-    await page.goto("./");
-    await expect(page.getByLabel("Guide mode").locator("option")).toHaveText([
-      "Timer only",
-      "BOOKOO live scale",
-    ]);
-    await page.getByLabel("Guide mode").selectOption(mode);
-    await page.getByRole("button", { name: "Get ready" }).click();
-    await expect(
-      page.getByRole("img", { name: "Recipe progress" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("img", { name: "Expected and measured water curves" }),
-    ).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: "Previous step" }),
-    ).toBeDisabled();
+test("a prepared brew previews every stage without starting, then returns to start", async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
+  await page.goto("./");
+  await expect(page.getByLabel("Guide mode")).toHaveCount(0);
+  await page.getByRole("button", { name: "Get ready" }).click();
+  await expect(
+    page.getByRole("img", { name: "Recipe progress" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "Expected and measured water curves" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Previous step" }),
+  ).toBeDisabled();
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    page.getByRole("heading", { name: "Pour to 50 g", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Step 1 of 12 · 0:00")).toBeVisible();
+  await expect(
+    page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
+  ).toBeVisible();
+  await expect(page.locator(".step-next")).toContainText("Swirl gently");
+  await expect(page.getByRole("button", { name: "Start now" })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Auto start on weight change" }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Go to start" })).toBeVisible();
+  await page.getByRole("button", { name: "Previous step" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Ready when you are" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Next step" }).click();
+  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Swirl gently", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Step 2 of 12 · 0:10")).toBeVisible();
+  await page.clock.runFor(30000);
+  await expect(page.getByRole("timer")).toHaveText("0:00");
+  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Let it bloom", exact: true }),
+  ).toBeVisible();
+  for (let index = 2; index < 11; index++)
     await page.keyboard.press("ArrowRight");
-    await expect(
-      page.getByRole("heading", { name: "Pour to 50 g", exact: true }),
-    ).toBeVisible();
-    await expect(page.getByText("Step 1 of 12 · 0:00")).toBeVisible();
-    await expect(
-      page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
-    ).toBeVisible();
-    await expect(page.locator(".step-next")).toContainText("Swirl gently");
-    await expect(page.getByRole("button", { name: "Start now" })).toHaveCount(
-      0,
-    );
-    await expect(
-      page.getByRole("button", { name: "Auto start on weight change" }),
-    ).toHaveCount(0);
-    await expect(
-      page.getByRole("button", { name: "Go to start" }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Previous step" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Ready when you are" }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Next step" }).click();
-    await page.getByRole("button", { name: "Next step" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Swirl gently", exact: true }),
-    ).toBeVisible();
-    await expect(page.getByText("Step 2 of 12 · 0:10")).toBeVisible();
-    await page.clock.runFor(30000);
-    await expect(page.getByRole("timer")).toHaveText("0:00");
-    await page.getByRole("button", { name: "Next step" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Let it bloom", exact: true }),
-    ).toBeVisible();
-    for (let index = 2; index < 11; index++)
-      await page.keyboard.press("ArrowRight");
-    await expect(
-      page.getByRole("heading", { name: "Let it drain", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Next step" }),
-    ).toBeDisabled();
-    await page.getByRole("button", { name: "Go to start" }).click();
-    await expect(
-      page.getByRole("heading", { name: "Ready when you are" }),
-    ).toBeVisible();
-    if (mode === "live")
-      await expect(
-        page.getByRole("button", { name: "Auto start on weight change" }),
-      ).toBeVisible();
-    await page.keyboard.press("Shift+ArrowRight");
-    await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
-    await page.keyboard.press("ArrowRight");
-    await page.keyboard.press("ArrowLeft");
-    await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
-    await page.getByRole("button", { name: "Start now" }).click();
-    await expect(
-      page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
-    ).toHaveCount(0);
-    await page.keyboard.press("ArrowRight");
-    await expect(page.getByRole("button", { name: "Go to start" })).toHaveCount(
-      0,
-    );
-    await expect(
-      page.getByRole("navigation", { name: "Preview brew steps" }),
-    ).toHaveCount(0);
-    await page.clock.runFor(1000);
-    await expect(page.getByRole("timer")).toHaveText("0:01");
-    // Hash changes have no routes to switch, so the in-memory brew keeps running.
-    await page.evaluate(() => {
-      window.location.hash = "#/missing";
-    });
-    await page.clock.runFor(1000);
-    await page.evaluate(() => {
-      window.location.hash = "#/";
-    });
-    await expect(page.getByRole("timer")).toHaveText("0:02");
+  await expect(
+    page.getByRole("heading", { name: "Let it drain", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next step" })).toBeDisabled();
+  await page.getByRole("button", { name: "Go to start" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Ready when you are" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Auto start on weight change" }),
+  ).toHaveCount(0);
+  await page.keyboard.press("Shift+ArrowRight");
+  await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
+  await page.getByRole("button", { name: "Start now" }).click();
+  await expect(
+    page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
+  ).toHaveCount(0);
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("button", { name: "Go to start" })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole("navigation", { name: "Preview brew steps" }),
+  ).toHaveCount(0);
+  await page.clock.runFor(1000);
+  await expect(page.getByRole("timer")).toHaveText("0:01");
+  // Hash changes have no routes to switch, so the in-memory brew keeps running.
+  await page.evaluate(() => {
+    window.location.hash = "#/missing";
   });
-}
+  await page.clock.runFor(1000);
+  await page.evaluate(() => {
+    window.location.hash = "#/";
+  });
+  await expect(page.getByRole("timer")).toHaveText("0:02");
+});
 test("pointer cancellation, focus loss and page hiding release incomplete holds", async ({
   page,
 }) => {

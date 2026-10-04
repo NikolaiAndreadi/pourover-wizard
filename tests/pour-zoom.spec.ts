@@ -1,64 +1,9 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { syntheticFrame } from "../src/scale/bookoo/synthetic.fixture";
-
-declare global {
-  interface Window {
-    pourZoomMock: { emit(bytes: number[]): void };
-  }
-}
+import { mockScale } from "./mockScale";
 
 const PLOT_HEIGHT = 160;
 const PLOT_WIDTH = 400;
-
-async function mockScale(page: Page) {
-  await page.addInitScript(() => {
-    const characteristic = new EventTarget();
-    const notify = Object.assign(characteristic, {
-      value: new DataView(new ArrayBuffer(0)),
-      properties: { write: true, writeWithoutResponse: false },
-      async startNotifications() {
-        return this;
-      },
-      async stopNotifications() {
-        return this;
-      },
-      async writeValueWithResponse() {},
-      async writeValueWithoutResponse() {},
-    });
-    const server = {
-      connected: false,
-      async connect() {
-        this.connected = true;
-        return this;
-      },
-      disconnect() {
-        this.connected = false;
-      },
-      async getPrimaryService() {
-        return {
-          async getCharacteristic() {
-            return notify;
-          },
-        };
-      },
-    };
-    const device = Object.assign(new EventTarget(), { gatt: server });
-    Object.defineProperty(navigator, "bluetooth", {
-      configurable: true,
-      value: {
-        async requestDevice() {
-          return device;
-        },
-      },
-    });
-    window.pourZoomMock = {
-      emit(bytes) {
-        notify.value = new DataView(Uint8Array.from(bytes).buffer);
-        characteristic.dispatchEvent(new Event("characteristicvaluechanged"));
-      },
-    };
-  });
-}
 
 function points(value: string | null): [number, number][] {
   return (value ?? "")
@@ -77,7 +22,6 @@ test("the pour zoom stays pinned to the pour's range when readings stray far out
   await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
   await mockScale(page);
   await page.goto("./");
-  await page.getByLabel("Guide mode").selectOption("live");
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Connect scale" }).click();
   await expect(

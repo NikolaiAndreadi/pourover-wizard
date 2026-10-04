@@ -1,13 +1,18 @@
 import { expect, test } from "@playwright/test";
+import { mockScale } from "./mockScale";
 
 test("live brewing uses the compact strip, zooms into pours, and the summary shows the full chart", async ({
   page,
 }, info) => {
   await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
   await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
+  await mockScale(page);
   await page.goto("./");
-  await page.getByLabel("Guide mode").selectOption("live");
   await page.getByRole("button", { name: "Get ready" }).click();
+  await page.getByRole("button", { name: "Connect scale" }).click();
+  await expect(
+    page.getByRole("button", { name: /^BOOKOO Themis Mini · / }),
+  ).toBeVisible();
   await expect(page.getByTestId("progress-strip")).toBeVisible();
   await expect(page.locator(".brew-chart")).toHaveCount(0);
   await expect(page.getByTestId("pour-zoom")).toHaveCount(0);
@@ -97,7 +102,6 @@ test("timer brewing shows a compact progress strip instead of the full chart", a
   await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
   await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
   await page.goto("./");
-  await page.getByLabel("Guide mode").selectOption("timer");
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Start now" }).click();
   const strip = page.getByTestId("progress-strip");
@@ -153,7 +157,6 @@ test("preparation shows the progress strip and browsing moves its guidance marke
   page,
 }, info) => {
   await page.goto("./");
-  await page.getByLabel("Guide mode").selectOption("timer");
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(page.getByTestId("progress-strip")).toBeVisible();
   const marker = page.getByTestId("progress-marker");

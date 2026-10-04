@@ -53,7 +53,6 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     setDoseInput(value);
     if (isValidDose(value, recipe)) memory.saveDose(recipe.id, Number(value));
   };
-  const [mode, setMode] = useState<Mode>("timer");
   const [previewIndex, setPreviewIndex] = useState(0);
   const preview = useRef(0);
   const [previewing, setPreviewing] = useState(false);
@@ -158,10 +157,20 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     if (!doseValid) return;
     clock.current = performance.now();
     goToStart();
-    active.current = createSession(recipe, Number(dose), mode);
+    active.current = createSession(recipe, Number(dose), "timer");
     setSession(active.current);
-    prepareLive(mode);
+    prepareLive();
   };
+  const connected = live.liveState.status === "connected";
+  useEffect(() => {
+    const current = active.current;
+    if (current?.phase !== "preparation") return;
+    const mode: Mode = connected ? "live" : "timer";
+    if (current.mode === mode) return;
+    goToStart();
+    active.current = createSession(recipe, Number(dose), mode, now());
+    setSession(active.current);
+  }, [connected]);
   const restart = () => {
     releaseLive();
     active.current = null;
@@ -191,8 +200,6 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     setRecipe,
     dose,
     setDose,
-    mode,
-    setMode,
     previewIndex,
     displayElapsedMs,
     isPreviewing,

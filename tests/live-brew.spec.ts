@@ -90,7 +90,6 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     };
   });
   await page.goto("./");
-  await page.getByLabel("Guide mode").selectOption("live");
   await expect(page.getByLabel("Grams unit code")).toHaveCount(0);
   await expect(page.getByLabel("Positive sign code")).toHaveCount(0);
   await expect(page.getByLabel("Negative sign code")).toHaveCount(0);
@@ -311,7 +310,6 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
     };
   });
   await page.goto("./");
-  await page.getByLabel("Guide mode").selectOption("live");
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Connect scale" }).click();
   await expect(
@@ -401,7 +399,6 @@ test("a cancelled filtered chooser offers Show all devices, which requests every
     });
   });
   await page.goto("./");
-  await page.getByLabel("Guide mode").selectOption("live");
   await page.getByRole("button", { name: "Get ready" }).click();
   const setup = page.getByRole("complementary", { name: "Live scale setup" });
   await expect(setup).toContainText("BOOKOO Themis Mini · verified");
@@ -442,7 +439,7 @@ test("a cancelled filtered chooser offers Show all devices, which requests every
   ).toBe(JSON.stringify({ id: "mock-scale", name: "Unnamed scale" }));
 });
 
-test("live mode without Bluetooth remains a manual timer and never fabricates samples", async ({
+test("without Bluetooth the brew is timer only and never fabricates samples", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
@@ -454,11 +451,16 @@ test("live mode without Bluetooth remains a manual timer and never fabricates sa
     }),
   );
   await page.goto("./");
-  await page.getByLabel("Guide mode").selectOption("live");
   await page.getByRole("button", { name: "Get ready" }).click();
+  await expect(page.getByRole("button", { name: "Connect scale" })).toHaveCount(
+    0,
+  );
   await expect(
-    page.getByRole("button", { name: "Connect scale" }),
-  ).toBeDisabled();
+    page.getByText("This browser can’t reach the scale."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Auto start on weight change" }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.runFor(1000);
   await expect(page.getByRole("timer")).toHaveText("0:01");
@@ -468,22 +470,9 @@ test("live mode without Bluetooth remains a manual timer and never fabricates sa
   await expect(page.locator(".brew-chart")).toBeVisible();
   await expect(page.getByTestId("stage-boundary")).toHaveCount(12);
   await expect(
+    page.getByText("Timer only, so water poured wasn’t measured."),
+  ).toBeVisible();
+  await expect(
     page.getByRole("term").filter({ hasText: "Water poured" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("definition").filter({ hasText: /^Not measured$/ }),
-  ).toBeVisible();
-  await expect(
-    page.getByText(
-      "Some scale readings are missing, so water poured may read low.",
-    ),
-  ).toBeVisible();
-  await expect(
-    page.getByText(
-      "The scale wasn’t zeroed at the start, so water poured is unknown.",
-    ),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("definition").filter({ hasText: /^1:/ }),
   ).toHaveCount(0);
 });

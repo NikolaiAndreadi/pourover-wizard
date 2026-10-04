@@ -108,7 +108,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await page.getByRole("button", { name: "Tare", exact: true }).click();
   await expect(page.getByRole("alert")).toHaveText("Tare write failed");
   await expect(
-    page.getByRole("button", { name: "Start when I pour" }),
+    page.getByRole("button", { name: "Auto start on weight change" }),
   ).toBeDisabled();
   await page.evaluate(() => {
     window.brewMock.failTare = false;
@@ -143,7 +143,9 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Start when I pour" }).click();
+  await page
+    .getByRole("button", { name: "Auto start on weight change" })
+    .click();
   await page.evaluate(() => window.brewMock.drop());
   await expect(
     page.getByRole("dialog", { name: "scales disconnected!" }),
@@ -162,7 +164,9 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     await page.clock.runFor(250);
     await emit(0);
   }
-  await page.getByRole("button", { name: "Start when I pour" }).click();
+  await page
+    .getByRole("button", { name: "Auto start on weight change" })
+    .click();
   for (const grams of [0, 1.5, 3.2]) {
     await page.clock.runFor(250);
     await emit(grams);
@@ -199,7 +203,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Connect scale" }).click();
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.runFor(1000);
   await expect(page.getByRole("timer")).toHaveText("0:01");
   for (let i = 0; i < 4; i++) {
@@ -329,15 +333,9 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
     requests: 1,
     lookups: 1,
   });
-  const setup = page.getByRole("complementary", { name: "Live scale setup" });
-  await expect(setup).toContainText("Remembers BOOKOO_SC 000000.");
-  await setup.getByRole("button", { name: "Forget scale" }).click();
   await expect(page.getByRole("button", { name: "Forget scale" })).toHaveCount(
     0,
   );
-  expect(
-    await page.evaluate(() => localStorage.getItem("pourover-wizard.scale")),
-  ).toBeNull();
 });
 
 test("a cancelled filtered chooser offers Show all devices, which requests every device and identifies the pick", async ({
@@ -454,7 +452,7 @@ test("live mode without Bluetooth remains a manual timer and never fabricates sa
   await expect(
     page.getByRole("button", { name: "Connect scale" }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.runFor(1000);
   await expect(page.getByRole("timer")).toHaveText("0:01");
   await expect(page.getByRole("status")).toContainText("Waiting for the scale");

@@ -97,7 +97,7 @@ test("cached app cold-opens offline, survives a hash-route reload and brews", as
     }),
   ).toBeVisible();
   await offline.getByRole("button", { name: "Get ready" }).click();
-  await offline.getByRole("button", { name: "Pour now" }).click();
+  await offline.getByRole("button", { name: "Start now" }).click();
   await expect(offline.getByRole("timer")).toBeVisible();
   const cached = await offline.evaluate(async () => {
     return Promise.all(
@@ -120,7 +120,7 @@ test("failed update retains offline version; complete update waits for every tab
   const second = await context.newPage();
   await second.goto(appUrl);
   await page.getByRole("button", { name: "Get ready" }).click();
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   await page.evaluate(() => {
     (window as Window & { brewMarker?: string }).brewMarker = "preserved";
   });

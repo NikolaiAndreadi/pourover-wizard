@@ -16,9 +16,9 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(page.getByRole("timer")).toHaveText("0:00");
   await expect(
-    page.getByRole("button", { name: "Start when I pour" }),
+    page.getByRole("button", { name: "Auto start on weight change" }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.runFor(5000);
   await expect(page.getByRole("timer")).toHaveText("0:05");
   await expect(
@@ -77,7 +77,7 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
   });
   await page.getByRole("button", { name: "Prepare another brew" }).click();
   await page.getByRole("button", { name: "Get ready" }).click();
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   await cancel.focus();
   await page.keyboard.down("Enter");
   await page.clock.runFor(1000);
@@ -113,16 +113,28 @@ for (const mode of ["timer", "live"] as const) {
     ).toBeDisabled();
     await page.keyboard.press("ArrowRight");
     await expect(
-      page.getByRole("heading", { name: "Swirl gently", exact: true }),
+      page.getByRole("heading", { name: "Pour to 50 g", exact: true }),
     ).toBeVisible();
-    await expect(page.getByText("Step 2 of 12 · 0:10")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Pour now" })).toHaveCount(0);
+    await expect(page.getByText("Step 1 of 12 · 0:00")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Start now" })).toHaveCount(
+      0,
+    );
     await expect(
-      page.getByRole("button", { name: "Start when I pour" }),
+      page.getByRole("button", { name: "Auto start on weight change" }),
     ).toHaveCount(0);
     await expect(
       page.getByRole("button", { name: "Go to start" }),
     ).toBeVisible();
+    await page.getByRole("button", { name: "Previous step" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Ready when you are" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Next step" }).click();
+    await page.getByRole("button", { name: "Next step" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Swirl gently", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Step 2 of 12 · 0:10")).toBeVisible();
     await page.clock.runFor(30000);
     await expect(page.getByRole("timer")).toHaveText("0:00");
     await page.getByRole("button", { name: "Next step" }).click();
@@ -143,14 +155,14 @@ for (const mode of ["timer", "live"] as const) {
     ).toBeVisible();
     if (mode === "live")
       await expect(
-        page.getByRole("button", { name: "Start when I pour" }),
+        page.getByRole("button", { name: "Auto start on weight change" }),
       ).toBeVisible();
     await page.keyboard.press("Shift+ArrowRight");
-    await expect(page.getByRole("button", { name: "Pour now" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("ArrowLeft");
-    await expect(page.getByRole("button", { name: "Pour now" })).toBeVisible();
-    await page.getByRole("button", { name: "Pour now" }).click();
+    await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
+    await page.getByRole("button", { name: "Start now" }).click();
     await page.keyboard.press("ArrowRight");
     await expect(page.getByRole("button", { name: "Go to start" })).toHaveCount(
       0,
@@ -180,7 +192,7 @@ test("pointer cancellation, focus loss and page hiding release incomplete holds"
   await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
   await page.goto("./");
   await page.getByRole("button", { name: "Get ready" }).click();
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   const cancel = page.getByRole("button", { name: "Hold to cancel" });
   await cancel.hover();
   await page.mouse.down();

@@ -83,14 +83,6 @@ function ScaleSetup({ model }: { model: BrewModel }) {
           </span>
         ))}
       </p>
-      {model.rememberedScale && (
-        <p className="note remembered-scale">
-          Remembers {model.rememberedScale.name ?? "your scale"}.{" "}
-          <button type="button" onClick={model.forgetScale}>
-            Forget scale
-          </button>
-        </p>
-      )}
       {model.liveSupported && live.offerAllDevices && idle && (
         <p className="note all-devices">
           Scale not listed?{" "}
@@ -140,7 +132,7 @@ function Preview({ model }: { model: BrewModel }) {
       <nav className="controls preview-nav" aria-label="Preview brew steps">
         <button
           type="button"
-          disabled={model.previewIndex === 0}
+          disabled={!model.isPreviewing}
           onClick={() => model.browseStep(-1)}
         >
           ← Previous step
@@ -247,11 +239,6 @@ function Home({ model }: { model: BrewModel }) {
             <option value="live">BOOKOO live scale</option>
           </select>
         </label>
-        <ol>
-          <li>Rinse the paper and preheat the V60.</li>
-          <li>Grind the coffee for the recipe; make a small well.</li>
-          <li>Use soft, filtered water, heated for your roast.</li>
-        </ol>
         <button
           type="button"
           className="button"
@@ -371,47 +358,57 @@ export function Brew({ model }: { model: BrewModel }) {
         </div>
         <h1>{armed ? "Waiting for a pour" : "Ready when you are"}</h1>
         {live && <ScaleSetup model={model} />}
-        <button
-          type="button"
-          className="button pour-now"
-          disabled={live && model.liveState.pendingTare}
-          onClick={() => dispatch("start")}
-        >
-          Pour now
-        </button>
         <div className="ready-hint">
           <ActionScene action="prepare" />
           <div>
+            <ol>
+              <li>Rinse the paper and preheat the V60.</li>
+              <li>Grind the coffee for the recipe; make a small well.</li>
+              <li>Use soft, filtered water, heated for your roast.</li>
+            </ol>
             <p>
-              {armed
-                ? "Waiting for your pour. Tap Pour now anytime."
-                : live
-                  ? "Kettle ready? Tap Pour now as the water lands. Connect your scale and tare it first."
-                  : "Kettle ready? Tap Pour now as the water lands."}
+              <strong>
+                {armed
+                  ? "Waiting for your pour. Tap Start now anytime."
+                  : "Kettle ready? Tap Start now as the water lands."}
+              </strong>
             </p>
-            {live && (
-              <div className="controls">
-                <button
-                  type="button"
-                  disabled={
-                    model.liveState.status !== "connected" ||
-                    model.liveState.pendingTare
-                  }
-                  onClick={model.tareLive}
-                >
-                  {model.liveState.pendingTare ? "Taring…" : "Tare"}
-                </button>
-                <button
-                  type="button"
-                  disabled={!session.tared || armed || !model.liveCanArm}
-                  onClick={() => dispatch("arm")}
-                >
-                  Start when I pour
-                </button>
-              </div>
-            )}
           </div>
         </div>
+        <div className={`start-row${live ? " is-live" : ""}`}>
+          <button
+            type="button"
+            className="button start-now"
+            disabled={live && model.liveState.pendingTare}
+            onClick={() => dispatch("start")}
+          >
+            Start now
+          </button>
+          {live && (
+            <button
+              type="button"
+              className="button auto-start"
+              disabled={!session.tared || armed || !model.liveCanArm}
+              onClick={() => dispatch("arm")}
+            >
+              {armed ? "Waiting for weight…" : "Auto start on weight change"}
+            </button>
+          )}
+        </div>
+        {live && (
+          <div className="controls">
+            <button
+              type="button"
+              disabled={
+                model.liveState.status !== "connected" ||
+                model.liveState.pendingTare
+              }
+              onClick={model.tareLive}
+            >
+              {model.liveState.pendingTare ? "Taring…" : "Tare"}
+            </button>
+          </div>
+        )}
         <Preview model={model} />
       </section>
     );

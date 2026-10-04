@@ -81,7 +81,7 @@ test("the pour zoom stays pinned to the pour's range when readings stray far out
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Connect scale" }).click();
   await expect(page.getByRole("status")).toContainText("connected");
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
 
   const emit = async (grams: number) => {
     await page.clock.runFor(250);

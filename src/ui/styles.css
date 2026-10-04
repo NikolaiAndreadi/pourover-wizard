@@ -576,15 +576,30 @@ progress {
 .preview-caption {
   font-size: 13px;
 }
-.pour-now {
-  width: 100%;
+.start-row {
+  display: flex;
+  gap: 12px;
+  margin: 8px 0 4px;
+}
+.start-row .button {
+  flex: 1;
   justify-content: center;
   min-height: 64px;
-  margin: 8px 0 4px;
   border: 0;
   border-radius: 12px;
   font-size: 22px;
   font-weight: 600;
+}
+.start-row .auto-start {
+  font-size: 17px;
+  background: #e4e7da;
+  color: #1f2a1c;
+}
+@media (prefers-color-scheme: dark) {
+  .start-row .auto-start {
+    background: #3a4434;
+    color: #eef0e6;
+  }
 }
 .done {
   width: 100%;
@@ -604,6 +619,13 @@ progress {
 }
 .ready-hint p {
   margin: 0 0 8px;
+}
+.ready-hint ol {
+  margin: 0 0 8px;
+  padding-left: 1.2em;
+}
+.ready-hint li {
+  margin: 2px 0;
 }
 .recipe-preview {
   margin-top: 20px;
@@ -701,11 +723,6 @@ progress {
   font-size: 13px;
   color: #596052;
   font-variant-numeric: tabular-nums;
-}
-.remembered-scale button {
-  min-height: 36px;
-  padding: 4px 10px;
-  font-size: 13px;
 }
 @media (prefers-color-scheme: dark) {
   .recipe-preview,

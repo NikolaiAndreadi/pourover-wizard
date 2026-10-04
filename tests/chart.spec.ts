@@ -11,7 +11,7 @@ test("live brewing uses the compact strip, zooms into pours, and the summary sho
   await expect(page.getByTestId("progress-strip")).toBeVisible();
   await expect(page.locator(".brew-chart")).toHaveCount(0);
   await expect(page.getByTestId("pour-zoom")).toHaveCount(0);
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   await expect(page.getByTestId("progress-strip")).toBeVisible();
   await expect(page.locator(".brew-chart")).toHaveCount(0);
   await expect(page.getByTestId("progress-boundary")).toHaveCount(12);
@@ -99,7 +99,7 @@ test("timer brewing shows a compact progress strip instead of the full chart", a
   await page.goto("./");
   await page.getByLabel("Guide mode").selectOption("timer");
   await page.getByRole("button", { name: "Get ready" }).click();
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   const strip = page.getByTestId("progress-strip");
   await expect(strip).toBeVisible();
   await expect(page.locator(".brew-chart")).toHaveCount(0);
@@ -163,14 +163,16 @@ test("preparation shows the progress strip and browsing moves its guidance marke
     );
   const startX = await left();
   await page.keyboard.press("ArrowRight");
+  expect(await left()).toBe(startX);
+  await page.keyboard.press("ArrowRight");
   expect(await left()).toBeGreaterThan(startX);
-  await expect(page.getByRole("button", { name: "Pour now" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Start now" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Go to start" })).toBeVisible();
   await page.screenshot({
     path: info.outputPath("preparation-step-preview.png"),
     fullPage: true,
   });
   await page.getByRole("button", { name: "Go to start" }).click();
-  await expect(page.getByRole("button", { name: "Pour now" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
   expect(await left()).toBe(startX);
 });

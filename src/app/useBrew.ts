@@ -56,6 +56,8 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
   const [mode, setMode] = useState<Mode>("timer");
   const [previewIndex, setPreviewIndex] = useState(0);
   const preview = useRef(0);
+  const [previewing, setPreviewing] = useState(false);
+  const previewOpen = useRef(false);
   const [session, setSession] = useState<Session | null>(null);
   const clock = useRef(performance.now());
   const active = useRef<Session | null>(null);
@@ -68,7 +70,7 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
   };
   const dispatch = (type: Event["type"]) => {
     if (!active.current || type === "sample") return;
-    if ((type === "start" || type === "arm") && preview.current > 0) return;
+    if ((type === "start" || type === "arm") && previewOpen.current) return;
     apply({ type, nowMs: now(), holdNowMs: performance.now() });
   };
   const { prepareLive, releaseLive, ...live } = useLiveScale(session, {
@@ -92,18 +94,30 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
       document.removeEventListener("visibilitychange", release);
     };
   }, []);
-  const browseStep = (delta: number) => {
-    if (active.current?.phase !== "preparation") return;
-    const index = Math.max(
-      0,
-      Math.min(active.current.recipe.steps.length - 1, preview.current + delta),
-    );
-    preview.current = index;
-    setPreviewIndex(index);
-  };
   const goToStart = () => {
+    previewOpen.current = false;
+    setPreviewing(false);
     preview.current = 0;
     setPreviewIndex(0);
+  };
+  const browseStep = (delta: number) => {
+    if (active.current?.phase !== "preparation") return;
+    if (!previewOpen.current) {
+      if (delta <= 0) return;
+      previewOpen.current = true;
+      setPreviewing(true);
+      preview.current = 0;
+      setPreviewIndex(0);
+      return;
+    }
+    const index = preview.current + delta;
+    if (index < 0) {
+      goToStart();
+      return;
+    }
+    const clamped = Math.min(active.current.recipe.steps.length - 1, index);
+    preview.current = clamped;
+    setPreviewIndex(clamped);
   };
   useEffect(() => {
     const browse = (event: KeyboardEvent) => {
@@ -150,7 +164,7 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     setSession(null);
   };
   const canPreview = session?.phase === "preparation";
-  const isPreviewing = canPreview && previewIndex > 0;
+  const isPreviewing = canPreview && previewing;
   const displayElapsedMs = canPreview
     ? (session.recipe.steps[previewIndex]?.atMs ?? 0)
     : (session?.elapsedMs ?? 0);

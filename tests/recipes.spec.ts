@@ -33,7 +33,7 @@ test("picking a recipe shows its credits, resets the dose and scales pour target
   await page.getByLabel("Coffee dose (g)").fill("20");
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(page.getByText("Step 1 of 10 · 0:00")).toBeVisible();
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.runFor(1000);
   await expect(
     page.getByRole("heading", { name: "Pour to 60 g", exact: true }),
@@ -66,7 +66,7 @@ test("the Ultimate V60 recipe stirs, and the stir hides readings like a swirl", 
   await expect(page.getByLabel("Coffee dose (g)")).toHaveValue("30");
   await expect(page.getByText("500 g water · 1:16.67.")).toBeVisible();
   await page.getByRole("button", { name: "Get ready" }).click();
-  await page.getByRole("button", { name: "Pour now" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.fastForward(105500);
   await expect(
     page.getByRole("heading", { name: "Stir once each way", exact: true }),

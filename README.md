@@ -89,11 +89,11 @@ visibility changes require separate authorization.
 
 ## Brewing behavior and source
 
-**Pour now** starts at tap time in every mode, including live brewing without a
+**Start now** starts at tap time in every mode, including live brewing without a
 connected scale. Choose BOOKOO live scale, prepare the brew, and connect. The built-in
 Mini profile handles signed grams without setup codes or a confirmation checkbox.
 Connect, explicitly tare, wait for at least 500 ms of fresh stable readings within
-1 g of zero, then explicitly tap **Start when I pour** if desired. A completed tare write
+1 g of zero, then explicitly tap **Auto start on weight change** if desired. A completed tare write
 is not proof that the hardware tared; zero readings are also required. Tare never
 arms. Readings older than 500 ms clear readiness and detection; the timer continues
 while waiting for fresh readings. An actual Bluetooth disconnect stops a live
@@ -154,9 +154,8 @@ Chrome currently exposes `getDevices()` and `watchAdvertisements()` only behind
 shows the filtered chooser on every connection. If the remembered scale cannot
 be reached, the filtered chooser opens and a new pick replaces the remembered
 scale; if the browser refuses the chooser because the tap has expired, the next
-tap opens it directly. When a scale is remembered, the live scale setup on the
-ready screen says **Remembers** its name with a **Forget scale** button that
-clears it. Filtering, identification, Show all devices, the iOS scan and sort,
+tap opens it directly. The remembered scale cannot be forgotten from the app; clearing the
+site data clears it. Filtering, identification, Show all devices, the iOS scan and sort,
 remembering and reconnecting are covered only by mocked radios; real-device
 behavior on Chrome and iOS, including whether the Ultra Scale connects at
 all, is unverified.
@@ -173,11 +172,14 @@ original sources; the brew summary repeats it for the brewed recipe. Recipe
 names omit the author's name, so credits do not imply endorsement. The guide's
 limits are documented in this README only, not in the app.
 
-**Get ready** opens the ready screen: in live mode **Tare** first, then **Pour
-now**, one short instruction, **Start when I pour** in live mode, and a
-secondary recipe preview. Use the previous/next buttons or
-Left/Right arrow keys to preview the recipe. Previewing a later stage hides start
-and arm controls; **Go to start** or returning to the first stage restores them.
+**Get ready** opens the ready screen: three preparation reminders, the bold
+prompt to tap **Start now** as the water lands, then **Start now** alone in
+timer mode or beside **Auto start on weight change** with a scale, **Tare** in
+live mode, and a secondary recipe preview. **Next step** or the Right arrow
+opens the step layout at the first step; the previous/next buttons or
+Left/Right arrow keys move through the recipe. Previewing hides start and arm
+controls; **Go to start**, or stepping back before the first step, restores
+them.
 Previewing never starts a timer or produces scale measurements.
 
 While brewing, the screen shows the step headline (pours name their scaled
@@ -187,7 +189,7 @@ cards (the Next card shows a still frame of its scene), the recipe progress, and
 the compact progress strip. The elapsed timer stays small in the top corner.
 During a session, **Hold to cancel** and, in live mode, the one-line scale status
 with **Connect scale**/**Disconnect scale** sit in the page header; **Tare** and
-**Start when I pour** stay on the ready screen. Both modes brew with a compact
+**Auto start on weight change** stay on the ready screen. Both modes brew with a compact
 progress strip showing the recipe shape, step boundaries, swirl bands and the
 current guidance position. In live mode, each pour step adds a taller panel
 beneath the strip that zooms into that pour's time and gram range: the ideal

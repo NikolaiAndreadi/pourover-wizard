@@ -1,5 +1,9 @@
 # Pourover Wizard
 
+[![Check](https://github.com/NikolaiAndreadi/pourover-wizard/actions/workflows/check.yml/badge.svg)](https://github.com/NikolaiAndreadi/pourover-wizard/actions/workflows/check.yml)
+[![CodeQL](https://github.com/NikolaiAndreadi/pourover-wizard/actions/workflows/codeql.yml/badge.svg)](https://github.com/NikolaiAndreadi/pourover-wizard/actions/workflows/codeql.yml)
+[![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
+
 A guided V60 pour-over timer for the browser and iPhone. Pick a recipe, set
 your dose, and follow step-by-step cues. Connect a BOOKOO scale over Bluetooth
 and the guide shows your pour against the target in real time.
@@ -52,8 +56,8 @@ Safari has no Web Bluetooth, so there are two ways to brew with a scale:
 1. **Web Bluetooth browser.** Install a BLE-enabled browser such as
    [Bluefy](https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055)
    and open the same link in it. No install beyond the browser.
-2. **Native app via SideStore.** Download `PouroverWizard.ipa` from the latest
-   [release](https://github.com/NikolaiAndreadi/pourover-wizard/releases),
+2. **Native app via SideStore.** Download `PouroverWizard.ipa` from the
+   [Releases page](https://github.com/NikolaiAndreadi/pourover-wizard/releases),
    install [SideStore](https://docs.sidestore.io/docs/intro), then import the
    IPA from Files in SideStore's **My Apps** screen. SideStore signs it with
    your free Apple ID and refreshes it; see the
@@ -119,3 +123,9 @@ npm run check    # type checks, lint, architecture, unit and browser tests
 [CONTRIBUTING.md](CONTRIBUTING.md) covers the toolchain, the quality gates, the
 layered architecture, CI, and how to build the iOS app.
 [docs/behavior.md](docs/behavior.md) is the detailed behavior reference.
+
+## License
+
+[GNU General Public License v3.0](LICENSE). You may use, share and change the
+app, and anything you distribute based on it must stay under the same license.
+Recipes remain the work of their authors and are credited in the app.

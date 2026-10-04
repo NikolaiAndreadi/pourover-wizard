@@ -1,9 +1,20 @@
 # Contributing
 
-Issues and pull requests are welcome. For a new scale, open an issue with the
-scale model, the advertised Bluetooth name, and a few captured weight frames
-if you can get them. For a new recipe, link the author's original source; the
-engine is time-locked, so every step needs a clock time.
+Contributions of every kind are welcome:
+
+- **Bluetooth scales.** Support for another scale, or confirmation that an
+  untested one works. Open an issue with the model, the advertised Bluetooth
+  name, and a few captured weight frames if you can get them; scales are data
+  in `src/scale/supported.ts` plus a codec.
+- **Bug fixes.** A failing test with the fix is ideal, but a clear report
+  with the browser or iOS version and the scale involved already helps.
+- **Features.** Open an issue to discuss the idea first if it is large;
+  otherwise send a pull request. For a new recipe, link the author's
+  original source; the engine is time-locked, so every step needs a clock
+  time.
+
+By contributing you agree that your work is licensed under the
+[GNU GPL v3](LICENSE), like the rest of the project.
 
 ## Toolchain
 

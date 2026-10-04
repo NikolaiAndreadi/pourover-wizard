@@ -9,6 +9,22 @@ const output = path.resolve("reports/ios");
 const archive = path.join(output, "PouroverWizard.xcarchive");
 const staging = path.join(output, "staging");
 const ipa = path.join(output, "PouroverWizard.ipa");
+const tag =
+  process.env.GITHUB_REF_TYPE === "tag"
+    ? process.env.GITHUB_REF_NAME
+    : (() => {
+        try {
+          return execFileSync("git", ["describe", "--tags", "--exact-match"], {
+            encoding: "utf8",
+            stdio: ["ignore", "pipe", "ignore"],
+          }).trim();
+        } catch {
+          return undefined;
+        }
+      })();
+const version = tag?.match(/^v(\d+\.\d+\.\d+)$/)?.[1];
+if (tag && !version)
+  throw new Error(`Tag ${tag} is not a vMAJOR.MINOR.PATCH version.`);
 await mkdir(output, { recursive: true });
 await rm(ipa, { force: true });
 await rm(`${ipa}.sha256`, { force: true });
@@ -33,6 +49,9 @@ execFileSync(
     "CODE_SIGNING_ALLOWED=NO",
     "CODE_SIGNING_REQUIRED=NO",
     "CODE_SIGN_IDENTITY=",
+    ...(version
+      ? [`MARKETING_VERSION=${version}`, `CURRENT_PROJECT_VERSION=${version}`]
+      : []),
     "archive",
   ],
   { stdio: "inherit" },
@@ -57,5 +76,5 @@ const hash = createHash("sha256")
 await writeFile(`${ipa}.sha256`, `${hash}  PouroverWizard.ipa\n`);
 await rm(staging, { recursive: true, force: true });
 console.log(
-  `Unsigned device IPA: ${ipa}\nSideStore must sign it before device installation. Import and hardware acceptance remain unverified.`,
+  `Unsigned device IPA (${version ?? "project default version"}): ${ipa}\nSideStore must sign it before device installation. Import and hardware acceptance remain unverified.`,
 );

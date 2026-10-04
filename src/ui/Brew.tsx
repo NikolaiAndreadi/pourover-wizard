@@ -214,14 +214,9 @@ function Home({ model }: { model: BrewModel }) {
   const dose = Number(model.dose);
   return (
     <>
-      <h1>
-        Your daily pour-over,
-        <br />
-        with room to focus.
-      </h1>
       <section className="brew-panel">
         <div className="home-head">
-          <h2>Prepare your brew</h2>
+          <h1>Prepare your brew</h1>
           <ActionScene action="prepare" />
         </div>
         <RecipePicker model={model} />

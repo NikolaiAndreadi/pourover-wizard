@@ -100,9 +100,7 @@ test("a prepared brew previews every stage without starting, then returns to sta
   await expect(page.getByRole("button", { name: "Back" })).toHaveCount(0);
   await page.getByRole("link", { name: /Pourover Wizard/ }).click();
   await expect(
-    page.getByRole("heading", {
-      name: "Your daily pour-over, with room to focus.",
-    }),
+    page.getByRole("heading", { name: "Prepare your brew" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(

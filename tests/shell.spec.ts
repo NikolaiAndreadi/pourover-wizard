@@ -15,9 +15,7 @@ test("loads built assets under the project path and ignores unknown hashes", asy
     page.getByRole("link", { name: "Pourover Wizard V60 brew guide" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", {
-      name: "Your daily pour-over, with room to focus.",
-    }),
+    page.getByRole("heading", { name: "Prepare your brew" }),
   ).toBeVisible();
   await expect(page.getByRole("navigation")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Scale lab" })).toHaveCount(0);
@@ -40,9 +38,7 @@ test("loads built assets under the project path and ignores unknown hashes", asy
   await expect(page.locator("main")).toBeFocused();
   await page.goto("./#/missing");
   await expect(
-    page.getByRole("heading", {
-      name: "Your daily pour-over, with room to focus.",
-    }),
+    page.getByRole("heading", { name: "Prepare your brew" }),
   ).toBeVisible();
   expect(
     await page.evaluate(

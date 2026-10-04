@@ -86,15 +86,11 @@ test("cached app cold-opens offline, survives a hash-route reload and brews", as
   const offline = await context.newPage();
   await offline.goto(`${appUrl}#/`);
   await expect(
-    offline.getByRole("heading", {
-      name: "Your daily pour-over, with room to focus.",
-    }),
+    offline.getByRole("heading", { name: "Prepare your brew" }),
   ).toBeVisible();
   await offline.reload();
   await expect(
-    offline.getByRole("heading", {
-      name: "Your daily pour-over, with room to focus.",
-    }),
+    offline.getByRole("heading", { name: "Prepare your brew" }),
   ).toBeVisible();
   await offline.getByRole("button", { name: "Get ready" }).click();
   await offline.getByRole("button", { name: "Start now" }).click();

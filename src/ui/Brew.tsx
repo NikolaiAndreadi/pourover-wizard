@@ -20,7 +20,6 @@ const localTime = (iso: string) =>
     timeStyle: "short",
   });
 
-/** Credits the recipe's author and links to the originals. */
 function Source({ recipe }: { recipe: Recipe }) {
   return (
     <p className="source">
@@ -37,7 +36,6 @@ function Source({ recipe }: { recipe: Recipe }) {
     </p>
   );
 }
-/** Recipe choice; picking one resets the dose to that recipe's own. */
 function RecipePicker({ model }: { model: BrewModel }) {
   return (
     <fieldset className="recipes">
@@ -69,7 +67,6 @@ function RecipePicker({ model }: { model: BrewModel }) {
     </fieldset>
   );
 }
-/** Supported-scale registry, the all-devices fallback and the iOS scan list. */
 function ScaleSetup({ model }: { model: BrewModel }) {
   const live = model.liveState;
   const idle = live.status === "disconnected" && !live.scanning;
@@ -140,7 +137,6 @@ function StepNav({ model, label }: { model: BrewModel; label: string }) {
     </nav>
   );
 }
-/** Recipe preview shown before brewing: step position, neighbours and the shape. */
 function Preview({ model }: { model: BrewModel }) {
   const session = model.session;
   if (!session) return null;
@@ -164,7 +160,6 @@ function Preview({ model }: { model: BrewModel }) {
     </div>
   );
 }
-/** Now on the left with the number to watch; the next step, stilled and muted, on the right. */
 function StepPanes({ model, brewing }: { model: BrewModel; brewing: boolean }) {
   const { session, step, nextStep } = model;
   if (!session || !step) return null;
@@ -301,7 +296,6 @@ function Home({ model }: { model: BrewModel }) {
     </>
   );
 }
-/** Saved brews, newest first; each opens as a summary, and the list can be cleared with a hold. */
 function History({ model }: { model: BrewModel }) {
   return (
     <section className="brew-panel brew-history">
@@ -359,7 +353,6 @@ function History({ model }: { model: BrewModel }) {
     </section>
   );
 }
-/** A finished brew, live or saved: the overview, or one browsed step over the strip and chart. */
 function Summary({ model }: { model: BrewModel }) {
   const { session, step } = model;
   if (!session || !step) return null;

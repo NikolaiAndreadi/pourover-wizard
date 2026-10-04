@@ -18,9 +18,7 @@ export interface Recipe {
   id: string;
   /** Recipe name, without the author: attribution without implied endorsement. */
   name: string;
-  /** Person credited for the recipe. */
   author: string;
-  /** Links to the original recipe. */
   sources: readonly RecipeSource[];
   /** One line about the recipe, such as temperature and grind hints. */
   summary: string;

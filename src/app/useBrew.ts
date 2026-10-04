@@ -63,14 +63,12 @@ export function useBrew(
   const [recipeId, setRecipeId] = useState(() => rememberedRecipe(memory).id);
   const recipe = recipeById(recipeId);
   const [dose, setDoseInput] = useState(() => rememberedDose(memory, recipe));
-  /** Chooses a recipe and shows its remembered or default dose. */
   const setRecipe = (id: string) => {
     const chosen = recipeById(id);
     memory.saveRecipe(chosen.id);
     setRecipeId(chosen.id);
     setDoseInput(rememberedDose(memory, chosen));
   };
-  /** Edits the dose; a value valid for this recipe is remembered for it. */
   const setDose = (value: string) => {
     setDoseInput(value);
     if (isValidDose(value, recipe)) memory.saveDose(recipe.id, Number(value));
@@ -296,7 +294,6 @@ export function useBrew(
     history.clear();
     setRecords(history.load());
   };
-  // The shown session: the reviewed brew when one is open, else the live one.
   const shown = viewed ?? session;
   const isPreviewing =
     (shown?.phase === "preparation" || shown?.phase === "completed") &&
@@ -360,7 +357,6 @@ export function useBrew(
     historyOpen,
     showHistory: () => setHistoryOpen(true),
     closeHistory,
-    /** True while a saved brew is open instead of the live session. */
     reviewing: viewed !== null,
     openBrew,
     closeBrew,
@@ -380,7 +376,6 @@ export function useBrew(
     /** Pour pace against the ideal ramp while pouring with a scale; otherwise null. */
     pace,
     holdProgress,
-    /** Done is available once brewing reaches the recipe's drawdown. */
     canFinish:
       session?.phase === "brewing" &&
       session.elapsedMs >= drawdownStartMs(session.recipe),

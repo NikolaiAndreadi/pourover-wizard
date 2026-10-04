@@ -243,18 +243,6 @@ export function ProgressStrip({ model }: { model: StripModel }) {
         <span>0:00</span>
         <span>{formatTime(duration)}</span>
       </figcaption>
-      {zoomed && step && (
-        <svg
-          className="zoom-funnel"
-          viewBox={`0 0 ${WIDTH} 12`}
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path
-            d={`M${x(step.atMs)},0 L${x(stepEnd)},0 L${WIDTH},12 L0,12 Z`}
-          />
-        </svg>
-      )}
       {zoomed && <PourZoom model={model} />}
     </figure>
   );

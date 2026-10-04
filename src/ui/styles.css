@@ -1047,14 +1047,8 @@ figcaption,
   fill: var(--recommendation);
   opacity: 0.18;
 }
-.zoom-funnel {
-  display: block;
-  height: 12px;
-  margin-top: 2px;
-}
-.zoom-funnel path {
-  fill: var(--recommendation);
-  opacity: 0.12;
+.pour-zoom {
+  margin-top: 8px;
 }
 .pour-zoom-plot {
   position: relative;

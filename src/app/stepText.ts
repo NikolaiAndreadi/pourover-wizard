@@ -12,10 +12,10 @@ export function movesDripper(step: RecipeStep) {
 export function stepTargetGrams(step: RecipeStep, recipe: Recipe) {
   return Math.round(step.targetFraction * recipe.waterGrams);
 }
-/** The instruction for a step; pours name their scaled water target. */
+/** The instruction for a step; pours add their scaled water target to the label. */
 export function stepTitle(step: RecipeStep, recipe: Recipe) {
   return step.action === "pour"
-    ? `Pour to ${stepTargetGrams(step, recipe)} g`
+    ? `${step.label} to ${stepTargetGrams(step, recipe)} g`
     : step.label;
 }
 /** Step position, prefixed by the recipe stage when the step has one. */

@@ -191,7 +191,8 @@ them.
 Previewing never starts a timer or produces scale measurements.
 
 While brewing, the screen splits in two. The left pane is the current step: its
-headline (pours name their scaled target, such as "Pour to 100 g"), a pixel-art
+headline (pours add their scaled target to the step's label, such as "Pour to
+100 g" or the Ultimate's "Pour slower to 500 g"), a pixel-art
 scene of the action, and the time left in the step (the largest number during
 swirls and waits). During a pour it adds one row: **Aim for**, the ideal weight
 right now; with a scale, **Actual**, the smoothed reading; and **Pace**, which

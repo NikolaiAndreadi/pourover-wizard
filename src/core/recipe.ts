@@ -2,7 +2,7 @@ export interface RecipeStep {
   atMs: number;
   /** Swirls and spoon stirs move the dripper, so readings during them are unreliable. */
   action: "pour" | "swirl" | "stir" | "wait" | "drawdown";
-  /** What to do, as a short imperative phrase. Pour targets are added by the app. */
+  /** What to do, as a short imperative phrase. Pours get their water target appended by the app. */
   label: string;
   targetFraction: number;
   /** Named brewing stage shown alongside the step, such as the bloom. */

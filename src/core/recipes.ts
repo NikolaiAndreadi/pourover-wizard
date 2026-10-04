@@ -161,7 +161,7 @@ const ultimate: Recipe = {
     {
       atMs: 75000,
       action: "pour",
-      label: "Pour",
+      label: "Pour slower",
       targetFraction: 1,
       hint: "Keep pouring without a pause, a little slower, to the full water over 30 s.",
     },

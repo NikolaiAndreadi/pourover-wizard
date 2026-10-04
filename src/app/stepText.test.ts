@@ -58,6 +58,8 @@ describe("step instructions", () => {
     const ultimate = recipeById("hoffmann-ultimate");
     const stir = ultimate.steps.find((step) => step.action === "stir");
     expect(stir && stepTitle(stir, ultimate)).toBe("Stir once each way");
+    const slower = ultimate.steps[4];
+    expect(slower && stepTitle(slower, ultimate)).toBe("Pour slower to 500 g");
     expect(stir && stepEyebrow(stir, ultimate)).toBe("Step 6 of 9");
     expect(ultimate.steps.map(movesDripper)).toEqual([
       false,

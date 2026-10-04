@@ -145,6 +145,15 @@ function Preview({ model }: { model: BrewModel }) {
         </button>
       </nav>
       <ProgressStrip model={model} />
+      {model.isPreviewing && (
+        <button
+          type="button"
+          className="button go-to-start"
+          onClick={model.goToStart}
+        >
+          Go to start
+        </button>
+      )}
     </div>
   );
 }
@@ -417,6 +426,15 @@ export function Brew({ model }: { model: BrewModel }) {
             </button>
           )}
         </div>
+        {live && model.liveState.status === "connected" && !armed && (
+          <p className="note arm-hint">
+            {!session.tared
+              ? "Auto start needs a tared scale: tap the weight in the header to tare."
+              : model.liveCanArm
+                ? "Scale is zeroed and steady; auto start is ready."
+                : "Waiting for a steady zero on the scale…"}
+          </p>
+        )}
         <Preview model={model} />
       </section>
     );
@@ -448,14 +466,7 @@ export function Brew({ model }: { model: BrewModel }) {
           )}
         </>
       ) : (
-        <>
-          <div className="controls">
-            <button type="button" className="button" onClick={model.goToStart}>
-              Go to start
-            </button>
-          </div>
-          <Preview model={model} />
-        </>
+        <Preview model={model} />
       )}
     </section>
   );

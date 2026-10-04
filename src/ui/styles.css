@@ -556,6 +556,14 @@ figcaption,
   line-height: 1.4;
   color: #596052;
 }
+.is-preview .step-panes li {
+  min-height: 352px;
+}
+.go-to-start {
+  width: 100%;
+  justify-content: center;
+  margin-top: 12px;
+}
 .step-panes .action-scene {
   width: 96px;
   height: 96px;
@@ -908,6 +916,9 @@ figcaption,
   .step-next .action-scene {
     width: 96px;
     height: 96px;
+  }
+  .is-preview .step-panes li {
+    min-height: 400px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

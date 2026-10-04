@@ -109,7 +109,7 @@ No automatic tare or scale timer synchronization occurs. Live weight display use
 a short median; detection and settled estimation use unsmoothed decoded readings.
 The connection outlives the brew: completion, cancellation, interruption and
 restart keep it, so the next brew is scale assist without reconnecting, and the
-header shows the current weight on every screen. Only **Disconnect**, a
+header shows the current weight on every screen. Only **Hold to disconnect**, a
 Bluetooth drop or app teardown releases it. Each brew still needs its own tare
 before arming.
 
@@ -194,8 +194,9 @@ While brewing, the screen splits in two. The left pane is the current step: its
 headline (pours add their scaled target to the step's label, such as "Pour to
 100 g" or the Ultimate's "Pour slower to 500 g"), a pixel-art
 scene of the action, and the time left in the step (the largest number during
-swirls and waits). During a pour it adds one row: **Aim for**, the ideal weight
-right now; with a scale, **Actual**, the smoothed reading; and **Pace**, which
+swirls and waits). During a pour it adds **Aim for**, the ideal weight right
+now, on the left and, with a scale, **Actual**, the smoothed reading, on the
+right, then **Pace** centred beneath them, which
 reads **↑ Faster**, **– Keep pace** or **↓ Slow down**. Pace compares the two
 in seconds along the pour's ramp, flips only when 1.5 s off and returns to
 keep pace only within 0.75 s, so it does not flicker; it resets with each pour.
@@ -206,7 +207,8 @@ timer stays small in the top corner. While previewing, the left pane also shows
 the step's one-line hint from the recipe data; hints are not shown while brewing.
 The page header holds the session controls on every screen, the home screen
 included: **Connect scale**, or
-once connected **Disconnect** and a fixed-width weight button reading the
+once connected **Hold to disconnect**, which releases the scale only after a
+one-second hold so a stray tap cannot drop it, and a fixed-width weight button reading the
 identified model and the current weight, captioned **Press to tare**, which
 tares the scale when tapped (the caption reads **Taring…** meanwhile); then
 **Hold to cancel** once the brew is armed or brewing. Before the start, tapping

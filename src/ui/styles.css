@@ -256,17 +256,24 @@ figcaption,
 .source {
   font-size: 12px;
 }
-.cancel {
-  --cancel-fill: #c8614f66;
+/* Hold buttons fill from the bottom as the one-second hold progresses. */
+.cancel,
+.hold {
   user-select: none;
   touch-action: none;
-  color: #8a3b30;
-  border-color: #b65a4d;
   background: linear-gradient(
     to top,
-    var(--cancel-fill) calc(var(--hold, 0) * 100%),
+    var(--hold-fill) calc(var(--hold, 0) * 100%),
     transparent 0
   );
+}
+.cancel {
+  --hold-fill: #c8614f66;
+  color: #8a3b30;
+  border-color: #b65a4d;
+}
+.disconnect {
+  --hold-fill: #69775366;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -629,10 +636,16 @@ figcaption,
 /* Pour guidance: the target, the reading and the pace side by side. */
 .pour-stats {
   display: grid;
-  grid-template-columns: repeat(3, auto);
-  justify-content: start;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
   margin: 12px 0 0;
+}
+.pour-stats .actual {
+  text-align: right;
+}
+.pour-stats .pace {
+  grid-column: 1 / -1;
+  text-align: center;
 }
 .pour-stats dt {
   font-size: 12px;
@@ -1152,7 +1165,7 @@ figcaption,
 }
 @media (prefers-color-scheme: dark) {
   .cancel {
-    --cancel-fill: #d8766680;
+    --hold-fill: #d8766680;
     color: #e9a497;
     border-color: #b96a5d;
   }

@@ -1,5 +1,17 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { syntheticFrame } from "../src/scale/bookoo/synthetic.fixture";
+
+/** A tap must not disconnect; a one-second hold under the installed clock does. */
+async function holdToDisconnect(page: Page) {
+  const button = page.getByRole("button", { name: "Hold to disconnect" });
+  await button.click();
+  await page.clock.runFor(100);
+  await expect(button).toBeVisible();
+  await button.hover();
+  await page.mouse.down();
+  await page.clock.runFor(1000);
+  await page.mouse.up();
+}
 
 declare global {
   interface Window {
@@ -245,7 +257,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     page.getByRole("heading", { name: "Let it bloom", exact: true }),
   ).toBeVisible();
   await expect(page.getByTestId("pour-zoom")).toHaveCount(0);
-  await page.getByRole("button", { name: "Disconnect" }).click();
+  await holdToDisconnect(page);
   await expect(
     page.getByRole("dialog", { name: "scales disconnected!" }),
   ).toBeVisible();
@@ -336,7 +348,7 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
     requests: 1,
     lookups: 0,
   });
-  await page.getByRole("button", { name: "Disconnect" }).click();
+  await holdToDisconnect(page);
   await expect(
     page.getByRole("button", { name: "Connect scale" }),
   ).toBeVisible();
@@ -390,7 +402,7 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
     requests: 1,
     lookups: 1,
   });
-  await page.getByRole("button", { name: "Disconnect" }).click();
+  await holdToDisconnect(page);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByText("Timer only")).toBeVisible();
 });
@@ -398,6 +410,8 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
 test("a cancelled filtered chooser offers Show all devices, which requests every device and identifies the pick", async ({
   page,
 }) => {
+  await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
   await page.addInitScript(() => {
     const notify = Object.assign(new EventTarget(), {
       value: new DataView(new ArrayBuffer(0)),

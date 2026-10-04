@@ -1,5 +1,6 @@
 import { type LiveSnapshot, modelName } from "@/app/liveScale";
 import type { BrewModel } from "@/app/useBrew";
+import { HoldButton } from "./HoldButton";
 import { HoldToCancel } from "./HoldToCancel";
 
 function connectingLabel({ progress }: LiveSnapshot): string {
@@ -33,9 +34,9 @@ function ScaleControls({ model }: { model: BrewModel }) {
       : model.liveWeight.toFixed(1);
   return (
     <>
-      <button type="button" onClick={model.disconnectLive}>
-        Disconnect
-      </button>
+      <HoldButton className="disconnect" onHold={model.disconnectLive}>
+        Hold to disconnect
+      </HoldButton>
       <div className="weight-control">
         <button
           type="button"

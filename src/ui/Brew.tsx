@@ -185,12 +185,12 @@ function StepPanes({ model, brewing }: { model: BrewModel; brewing: boolean }) {
               </dl>
               {pour && (
                 <dl className="pour-stats" aria-label="Pour guidance">
-                  <div>
+                  <div className="aim">
                     <dt>Aim for</dt>
                     <dd>{Math.round(model.expected)} g</dd>
                   </div>
                   {brewing && session.mode === "live" && (
-                    <div>
+                    <div className="actual">
                       <dt>Actual</dt>
                       <dd>
                         {model.liveWeight === null ||

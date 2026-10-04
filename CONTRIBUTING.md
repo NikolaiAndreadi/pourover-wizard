@@ -18,79 +18,38 @@ By contributing you agree that your work is licensed under the
 
 ## Toolchain
 
-Use Node **26.10.0** (`nvm use`) and npm **12.2.0**. Install locked
-dependencies with `npm ci`, then `npx playwright install chromium` (Linux CI
-adds `--with-deps`). Track the latest stable Node Current and the latest
-compatible npm when updating the runtime.
+Node **26.10.0** (`nvm use`) and npm **12.2.0**. Then:
 
-Installing also points Git at `.githooks/`, whose `pre-push` hook runs
-`npm run check` so a push never reaches CI with a failure it would have
-caught locally. Skip it once with `git push --no-verify`.
+```sh
+npm ci
+npx playwright install chromium
+```
 
-| Command                      | Purpose / output                                                                                |
-|------------------------------|-------------------------------------------------------------------------------------------------|
-| `npm run dev`                | Local app at `/pourover-wizard/`                                                                |
-| `npm run check:fast`         | Type checks, Biome, dependency/Bluetooth boundaries, unit tests                                 |
-| `npm run test:watch`         | Unit tests while editing                                                                        |
-| `npm run test:e2e`           | Build and test production assets with Playwright                                                |
-| `npm run check`              | Fast checks, production browser checks, and the coverage, complexity and CRAP report            |
-| `npm run test:coverage`      | Core/BOOKOO codec coverage, including untouched files; `reports/coverage/`                      |
-| `npm run report:complexity`  | Cyclomatic complexity; `reports/complexity.json`                                                |
-| `npm run quality:report`     | Coverage, complexity, then the CRAP gate                                                        |
-| `npm run report:crap`        | CRAP gate from the two reports above; `reports/crap.json`                                       |
-| `npm run test:mutation`      | Core session modules, recipe functions, BOOKOO codec; cache `reports/mutation/incremental.json` |
-| `npm run test:mutation:full` | Fresh mutation run; `reports/mutation/index.html` and `mutation.json`                           |
-| `npm run format`             | Format source and configuration                                                                 |
-| `npm run ios:sync`           | Build native web assets and sync the iOS SPM project                                            |
-| `npm run ios:package`        | Unsigned device IPA and SHA-256 in `reports/ios/`; requires macOS/Xcode                         |
+Installing points Git at `.githooks/`, whose `pre-push` hook runs
+`npm run check`. Skip it once with `git push --no-verify`.
 
-Run fresh mutation checks after dependency, configuration, or fixture changes
-and before releases; review survivors rather than treating a score as proof.
-Checks run at most two tasks concurrently; the coverage run writes its JUnit
-result to `reports/unit-coverage.xml` so it never overwrites `reports/unit.xml`.
-Vitest uses two workers, Playwright one, and mutation four. On smaller hosts,
-use `npm run test:mutation:full -- --concurrency 2`.
+| Command              | Purpose                                                             |
+|----------------------|---------------------------------------------------------------------|
+| `npm run dev`        | Local app at `/pourover-wizard/`                                    |
+| `npm run check:fast` | Type checks, Biome, dependency and Bluetooth boundaries, unit tests |
+| `npm run test:watch` | Unit tests while editing                                            |
+| `npm run check`      | Fast checks, Playwright, coverage, complexity and the CRAP gate     |
+| `npm run format`     | Format source and configuration                                     |
 
-Browser tests own their preview server and exercise `/pourover-wizard/`,
-including a reload of the hash URL, using an injected clock. Stop any existing
-preview on port 4173 first. Failure screenshots and traces land in
-`test-results/`, HTML reports in `playwright-report/`, and JUnit reports in
-`reports/`. Generated outputs are ignored by git.
+The remaining scripts in `package.json` produce individual reports under
+`reports/`, run mutation tests, or build the iOS app.
 
-### CRAP gate
+Browser tests build the app and own their preview server on port 4173, so
+stop any running preview first. Failure screenshots and traces land in
+`test-results/`.
 
-`npm run report:crap` scores every function that unit coverage measures, that
-is `src/core/**/*.ts` and `src/scale/bookoo/codec.ts` without tests, with
-CRAP = complexity² × (1 − coverage)³ + complexity, where coverage is the
-fraction of the function's own statements the unit tests executed. Any
-function above **30**, the classic CRAP threshold, fails the check. UI, app
-hooks, transport and platform adapters are out of scope because Playwright
-and mocked radios exercise them, not unit coverage, and mutation results stay
-ungated. Fix a failure with behavior tests or by simplifying the function; do
-not raise the threshold. `reports/crap.json` lists every scored function in
-descending order with any join warnings.
+The CRAP gate scores every function under `src/core/` and the BOOKOO codec
+from unit coverage and cyclomatic complexity. Anything above **30** fails the
+check; fix it with behavior tests or by simplifying the function, not by
+raising the threshold.
 
-### Version pins
-
-Vitest and coverage stay paired at **4.1.11** because
-[Stryker issue #6210](https://github.com/stryker-mutator/stryker-js/issues/6210)
-affects Vitest 5 nested-test filtering. Before upgrading, prove nested tests
-run with known checksum/cancellation mutants, then run fresh mutation and
-normal checks.
-
-TypeScript **7.0.2** checks app and DOM-free core through `tsc`.
-[Supported side-by-side aliases](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-60)
-keep `@typescript/native` on the native compiler and `typescript` on the
-classic compatibility package: package **6.0.2**, locked compiler API
-**6.0.3**, CLI `tsc6`. The guards, dependency checker, complexity parser, and
-Stryker use that classic API; the parser requires TypeScript below 6.1.
-After changes, verify `npm exec -- tsc --version`, `npm exec -- tsc6 --version`,
-and the version and `createSourceFile` export from `import ts from "typescript"`.
-
-The Capacitor CLI uses `xcode`, whose CommonJS `uuid.v4()` call remains
-compatible with the narrowly overridden `uuid` **11.1.1**. This avoids the
-older uuid [buffer bounds advisory](https://github.com/advisories/GHSA-w5hq-g745-h8pq);
-native sync and archive validate the CLI dependency path.
+Why specific versions are pinned, and how to recover from a mismatched Xcode
+runtime, is in [docs/maintenance.md](docs/maintenance.md).
 
 ## Architecture
 
@@ -136,57 +95,23 @@ deploys from every push to `main`, independent of tags.
 
 The native app wraps the same SPA in Capacitor with native Bluetooth LE.
 Bundle identifier `com.nikolaiandreadi.pouroverwizard`, deployment target iOS
-**15.0**. Browser builds use `/pourover-wizard/` as base; native builds use
-root-relative assets in `dist-ios/`, which already contain the web assets and
-register no service worker or manifest.
+**15.0**. Native builds use root-relative assets in `dist-ios/` and register
+no service worker or manifest.
 
-You need macOS, Xcode **26.6** with its iOS platform, and the pinned Node and
-npm. Dependencies are pinned to Capacitor **8.5.2** and Bluetooth LE
-**8.3.0**; the generated `ios/App/CapApp-SPM/Package.swift` uses the npm
-plugin package and the exact Capacitor version, and the committed
-`Package.resolved` records the resolved revision. See
+You need macOS and Xcode **26.6** with its iOS platform; see
 [Capacitor's environment requirements](https://capacitorjs.com/docs/getting-started/environment-setup).
+The generated `ios/App/CapApp-SPM/Package.swift` and the committed
+`Package.resolved` pin the Capacitor packages to the npm versions.
 
 ```sh
-npm ci
 npm run ios:package
 ```
 
-`ios:sync` builds native web assets and synchronizes plugins. `ios:package`
-archives the device Release target with signing disabled and packages
-`Payload/App.app` as `reports/ios/PouroverWizard.ipa` alongside a SHA-256
-file. It clears previous artifacts first, so a failed build leaves no stale
-IPA. The IPA is unsigned; SideStore signs it on the device. No Apple account
-credentials or pairing records belong in the repository or CI.
+This builds the web assets, syncs plugins, archives the device Release target
+with signing disabled and writes `reports/ios/PouroverWizard.ipa` with a
+SHA-256 file. The IPA is unsigned; SideStore signs it on the device. No Apple
+account credentials or pairing records belong in the repository or CI.
 
 Bluetooth permission is requested on first connect using the purpose text in
-`ios/App/App/Info.plist`. The in-app **Show all devices** scan uses the same
-central role and the same `NSBluetoothAlwaysUsageDescription` key. The app
-does not enable Bluetooth background mode. The plugin documents that BLE is
-unavailable in the iOS simulator.
-
-### Xcode reports an installed iOS platform as missing
-
-An SDK patch build can select a runtime build that is unavailable even when an
-iOS runtime from the same release family is installed. Inspect the selection:
-
-```sh
-xcrun simctl runtime match list
-xcrun simctl runtime list
-```
-
-Try downloading the matching patch first with
-`xcodebuild -downloadPlatform iOS -buildVersion <version> -architectureVariant arm64`.
-If it is unavailable, a temporary match override can select an installed
-runtime from the same release family. For the iOS 26.5 SDK build `23F81a` and
-installed 26.5 runtime `23F73`:
-
-```sh
-xcrun simctl runtime match set iphoneos26.5 23F73 --sdkBuild 23F81a
-npm run ios:package
-xcrun simctl runtime match set iphoneos26.5 --default --sdkBuild 23F81a
-```
-
-Restore the mapping afterwards. `--default` restores an originally unset user
-override; if one was already set, restore that recorded runtime build instead.
-Use the build identifiers shown on your machine.
+`ios/App/App/Info.plist`. The app does not enable Bluetooth background mode,
+and BLE is unavailable in the iOS simulator.

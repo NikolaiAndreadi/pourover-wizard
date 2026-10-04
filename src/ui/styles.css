@@ -1,5 +1,24 @@
+/* Latin subsets only: the app is English, and the worker precaches every emitted file. */
+@font-face {
+  font-family: "Manrope Variable";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2")
+    format("woff2-variations");
+}
+@font-face {
+  font-family: "Fraunces Variable";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2")
+    format("woff2-variations");
+}
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family:
+    "Manrope Variable", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
   color: #292e27;
   background: #f6f3ed;
   font-synthesis: none;
@@ -65,11 +84,14 @@ main {
   color: #687251;
 }
 h1 {
-  font-family: Georgia, serif;
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-variation-settings:
+    "SOFT" 40,
+    "WONK" 0;
   font-size: clamp(40px, 6vw, 68px);
   line-height: 1.12;
-  letter-spacing: -0.04em;
-  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-weight: 500;
   margin: 0 0 24px;
 }
 section {

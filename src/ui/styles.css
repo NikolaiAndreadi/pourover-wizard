@@ -338,7 +338,8 @@ figcaption,
   margin: 0 0 12px;
 }
 .brew-summary .metrics {
-  justify-content: center;
+  justify-content: space-evenly;
+  gap: 16px 32px;
 }
 .brew-summary .brew-chart figcaption {
   justify-content: center;

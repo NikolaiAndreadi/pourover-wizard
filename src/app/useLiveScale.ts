@@ -43,6 +43,16 @@ export function displayWeight(
   const sorted = buffer.map((sample) => sample.grams).sort((a, b) => a - b);
   return Math.max(0, sorted[Math.floor(sorted.length / 2)] ?? latest.grams);
 }
+/** A live session that still takes readings: before and during the brew. */
+function streaming(session: Session | null): session is Session {
+  return (
+    session !== null &&
+    session.mode === "live" &&
+    (session.phase === "preparation" ||
+      session.phase === "armed" ||
+      session.phase === "brewing")
+  );
+}
 /** Brew session access the live connection needs from its owner. */
 export interface LiveBrew {
   active: RefObject<Session | null>;
@@ -51,10 +61,15 @@ export interface LiveBrew {
   /** Applies an event to the active session and publishes the result. */
   apply: (event: Event) => Session | null;
 }
-/** Owns the BOOKOO connection for one prepared live brew. */
+/**
+ * Owns the one BOOKOO connection for the app's lifetime. Brews come and go
+ * while the scale stays connected; only Disconnect or teardown releases it.
+ */
 export function useLiveScale(session: Session | null, brew: LiveBrew) {
   const [liveState, setLiveState] = useState<LiveSnapshot>(disconnected);
   const [disconnectNotice, setDisconnectNotice] = useState(false);
+  /** The newest reading while no brew is taking samples, so the header still shows weight. */
+  const [idleSample, setIdleSample] = useState<ScaleSample | null>(null);
   const [rememberedScale, setRememberedScale] =
     useState<RememberedScale | null>(() => scaleMemory.load());
   // Tracks saves and forgets so About can offer Forget scale only when relevant.
@@ -74,38 +89,29 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
   );
   const smooth = useRef<ScaleSample[]>([]);
   const live = useRef<ReturnType<typeof createLiveScale> | null>(null);
-  const release = () => {
-    live.current?.dispose();
-    live.current = null;
-  };
-  useEffect(() => () => live.current?.dispose(), []);
+  // The connection is created once, so its callbacks read the latest brew through a ref.
+  const owner = useRef(brew);
+  owner.current = brew;
   useEffect(() => {
-    if (
-      session?.phase === "completed" ||
-      session?.phase === "cancelled" ||
-      session?.phase === "interrupted"
-    )
-      release();
-  }, [session?.phase]);
-  /** Resets display state for a newly prepared brew and offers a fresh connection. */
-  const prepareLive = () => {
-    setDisconnectNotice(false);
-    smooth.current = [];
-    live.current?.dispose();
-    setLiveState(disconnected);
     const event = (type: "signalLost" | "tare") => {
       smooth.current = [];
-      brew.dispatch(type);
+      setIdleSample(null);
+      owner.current.dispatch(type);
     };
     live.current = createLiveScale(
       createScaleTransport(memory),
       bookooMiniEncoding,
-      brew.now,
+      () => owner.current.now(),
       (sample) => {
-        if (brew.active.current?.mode !== "live") return;
-        const next = brew.apply({
+        const current = owner.current.active.current;
+        if (!streaming(current)) {
+          smooth.current = pushDisplayReading(smooth.current, sample);
+          setIdleSample(sample);
+          return;
+        }
+        const next = owner.current.apply({
           type: "sample",
-          nowMs: brew.now(),
+          nowMs: owner.current.now(),
           holdNowMs: performance.now(),
           sample,
         });
@@ -116,28 +122,37 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
       () => event("tare"),
       setLiveState,
       () => {
-        const current = brew.active.current;
+        const current = owner.current.active.current;
         if (
           current?.mode !== "live" ||
           (current.phase !== "brewing" && current.phase !== "armed")
         )
           return;
-        brew.dispatch("disconnect");
+        owner.current.dispatch("disconnect");
         setDisconnectNotice(true);
       },
     );
-  };
-  /** Releases the connection and notice when the brew is discarded. */
-  const releaseLive = () => {
-    release();
+    return () => {
+      live.current?.dispose();
+      live.current = null;
+    };
+  }, [memory]);
+  /** Clears per-brew display state; the connection itself carries over. */
+  const resetLive = () => {
     setDisconnectNotice(false);
+    smooth.current = [];
   };
   return {
-    prepareLive,
-    releaseLive,
+    /** Prepares display state for a new brew without touching the connection. */
+    prepareLive: resetLive,
+    /** Clears display state when a brew is discarded without touching the connection. */
+    resetLive,
     disconnectNotice,
     dismissDisconnectNotice: () => setDisconnectNotice(false),
-    liveWeight: displayWeight(smooth.current, session?.lastSample ?? null),
+    liveWeight: displayWeight(
+      smooth.current,
+      streaming(session) ? session.lastSample : idleSample,
+    ),
     liveState,
     liveSupported: supportsScaleConnection(),
     /** The scale a later connection tries before opening the chooser. */

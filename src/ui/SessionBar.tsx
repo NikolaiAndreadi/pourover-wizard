@@ -53,22 +53,15 @@ function ScaleControls({ model }: { model: BrewModel }) {
     </>
   );
 }
+/** Scale controls on every screen, since the connection outlives a brew; cancel while armed or brewing. */
 export function SessionBar({ model }: { model: BrewModel }) {
-  const session = model.session;
-  if (
-    session?.phase !== "preparation" &&
-    session?.phase !== "armed" &&
-    session?.phase !== "brewing"
-  )
-    return null;
-  const scale =
-    model.liveSupported &&
-    (session.mode === "live" || session.phase === "preparation");
-  if (!scale && session.phase === "preparation") return null;
+  const phase = model.session?.phase;
+  const cancellable = phase === "armed" || phase === "brewing";
+  if (!model.liveSupported && !cancellable) return null;
   return (
     <div className="session-bar">
-      {scale && <ScaleControls model={model} />}
-      {session.phase !== "preparation" && <HoldToCancel model={model} />}
+      {model.liveSupported && <ScaleControls model={model} />}
+      {cancellable && <HoldToCancel model={model} />}
     </div>
   );
 }

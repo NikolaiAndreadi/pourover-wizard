@@ -78,7 +78,7 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     if ((type === "start" || type === "arm") && previewOpen.current) return;
     apply({ type, nowMs: now(), holdNowMs: performance.now() });
   };
-  const { prepareLive, releaseLive, ...live } = useLiveScale(session, {
+  const { prepareLive, resetLive, ...live } = useLiveScale(session, {
     active,
     now,
     dispatch,
@@ -158,7 +158,12 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     if (!doseValid) return;
     clock.current = performance.now();
     goToStart();
-    active.current = createSession(recipe, Number(dose), "timer");
+    // A scale connected earlier makes the new brew scale assist from the start.
+    active.current = createSession(
+      recipe,
+      Number(dose),
+      live.liveState.status === "connected" ? "live" : "timer",
+    );
     setSession(active.current);
     prepareLive();
   };
@@ -173,7 +178,7 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     setSession(active.current);
   }, [connected]);
   const restart = () => {
-    releaseLive();
+    resetLive();
     active.current = null;
     goToStart();
     setSession(null);

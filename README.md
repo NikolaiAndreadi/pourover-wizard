@@ -91,9 +91,10 @@ visibility changes require separate authorization.
 
 **Start now** starts at tap time in every mode, except that it is disabled
 while a scale connection is in progress so a tap cannot begin a timer-only brew
-by mistake. There is no mode switch: a
-prepared brew is timer only until a scale connects from the header, which turns
-it into scale assist, and disconnecting before the start turns it back. The
+by mistake. There is no mode switch: a brew prepared while a scale is
+connected is scale assist from the start; otherwise it is timer only until a
+scale connects from the header, which turns it into scale assist, and
+disconnecting before the start turns it back. The
 built-in Mini profile handles signed grams without setup codes or a
 confirmation checkbox.
 Connect, explicitly tare, wait for at least 500 ms of fresh stable readings within
@@ -106,8 +107,11 @@ brew immediately, preserves its elapsed time and chart, and shows
 tare again before arming a new brew.
 No automatic tare or scale timer synchronization occurs. Live weight display uses
 a short median; detection and settled estimation use unsmoothed decoded readings.
-Completion, cancellation, interruption, restart and app teardown release the
-live connection.
+The connection outlives the brew: completion, cancellation, interruption and
+restart keep it, so the next brew is scale assist without reconnecting, and the
+header shows the current weight on every screen. Only **Disconnect**, a
+Bluetooth drop or app teardown releases it. Each brew still needs its own tare
+before arming.
 
 Supported scales are data in [`supported.ts`](src/scale/supported.ts): each
 entry names the brand and model, its advertised name prefixes, the service,
@@ -199,7 +203,8 @@ still frame of its scene, and the countdown to it; during drawdown it says to
 finish when dripping stops. The compact progress strip follows. The elapsed
 timer stays small in the top corner. While previewing, the left pane also shows
 the step's one-line hint from the recipe data; hints are not shown while brewing.
-The page header holds the session controls: in live mode **Connect scale**, or
+The page header holds the session controls on every screen, the home screen
+included: **Connect scale**, or
 once connected **Disconnect** and a fixed-width weight button reading the
 identified model and the current weight, captioned **Press to tare**, which
 tares the scale when tapped (the caption reads **Taring…** meanwhile); then

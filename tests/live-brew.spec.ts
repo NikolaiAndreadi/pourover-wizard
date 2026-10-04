@@ -256,9 +256,11 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   ]);
 });
 
-test("mocked live brewing reconnects to the remembered scale without the chooser and can forget it", async ({
+test("mocked live brewing reconnects to the remembered scale without the chooser and keeps the connection across brews", async ({
   page,
 }) => {
+  await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
   await page.addInitScript(() => {
     const notify = Object.assign(new EventTarget(), {
       value: new DataView(new ArrayBuffer(0)),
@@ -362,6 +364,35 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
   await expect(page.getByRole("button", { name: "Forget scale" })).toHaveCount(
     0,
   );
+  // The connection outlives the brew: summary, home and the next brew reuse it.
+  const weight = page.getByRole("button", { name: /^BOOKOO Themis Mini · / });
+  await page.getByRole("button", { name: "Start now" }).click();
+  await page.clock.fastForward(131000);
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Brew summary" }),
+  ).toBeVisible();
+  await expect(weight).toBeVisible();
+  await page.getByRole("button", { name: "Prepare another brew" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Prepare your brew" }),
+  ).toBeVisible();
+  await expect(weight).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Hold to cancel" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Get ready" }).click();
+  await expect(page.getByText("Scale assist")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Auto start on weight change" }),
+  ).toBeVisible();
+  expect(await page.evaluate(() => window.knownScale)).toMatchObject({
+    requests: 1,
+    lookups: 1,
+  });
+  await page.getByRole("button", { name: "Disconnect" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByText("Timer only")).toBeVisible();
 });
 
 test("a cancelled filtered chooser offers Show all devices, which requests every device and identifies the pick", async ({

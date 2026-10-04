@@ -52,10 +52,10 @@ describe("brew state and clock", () => {
     expect(event(state, "tick", NaN)).toBe(state);
     expect(() => createSession(recipe, 15, "timer", -1)).toThrow();
     expect(() => createSession(recipe, 15, "timer", Infinity)).toThrow();
-    expect(event(state, "done", 124999).phase).toBe("brewing");
-    state = event(state, "done", 125500);
+    expect(event(state, "done", 129999).phase).toBe("brewing");
+    state = event(state, "done", 130500);
     expect(state.phase).toBe("completed");
-    expect(event(state, "done", 130000)).toBe(state);
+    expect(event(state, "done", 135000)).toBe(state);
     expect(sample(state, 140000, 0)).toBe(state);
     expect(state.pouredGrams).toBeNull();
     expect(state.samples).toEqual([]);
@@ -314,12 +314,12 @@ describe("live stream readiness and loss", () => {
     expect(state.phase).toBe("brewing");
     expect(state.originMs).toBe(750);
     expect(state.baselineVerified).toBe(true);
-    for (let atMs = 1500; atMs <= 125750; atMs += 250)
+    for (let atMs = 1500; atMs <= 130750; atMs += 250)
       state = sample(state, atMs, 250);
-    state = event(state, "done", 125750);
+    state = event(state, "done", 130750);
     expect(state.phase).toBe("completed");
     expect(state.pouredGrams).toBe(250);
-    expect(state.elapsedMs).toBe(125000);
+    expect(state.elapsedMs).toBe(130000);
     expect(state.missingData).toBe(false);
   });
   it("manual start while armed keeps the verified zero baseline and wins over detection", () => {
@@ -357,7 +357,7 @@ describe("live stream readiness and loss", () => {
   it("marks manual start without any received stream as missing and still permits timer completion", () => {
     let state = event(createSession(recipe, 15, "live"), "start", 0);
     expect(state.missingData).toBe(true);
-    state = event(state, "done", 125000);
+    state = event(state, "done", 130000);
     expect(state.phase).toBe("completed");
     expect(state.pouredGrams).toBeNull();
   });

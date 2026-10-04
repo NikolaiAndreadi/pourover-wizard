@@ -44,7 +44,7 @@ const betterOneCup: Recipe = {
       stage: "Bloom",
     },
     {
-      atMs: 15000,
+      atMs: 20000,
       action: "wait",
       label: "Let it bloom",
       hint: "Let gas escape; keep the kettle hot.",
@@ -96,7 +96,7 @@ const betterOneCup: Recipe = {
       hint: "A last swirl flattens the bed for an even drawdown.",
     },
     {
-      atMs: 125000,
+      atMs: 130000,
       action: "drawdown",
       label: "Let it drain",
       hint: "Tap Done when dripping stops; about 3:00 is typical.",
@@ -144,7 +144,7 @@ const ultimate: Recipe = {
       stage: "Bloom",
     },
     {
-      atMs: 15000,
+      atMs: 20000,
       action: "wait",
       label: "Let it bloom",
       hint: "Bloom for the full 45 s.",
@@ -163,7 +163,7 @@ const ultimate: Recipe = {
       action: "pour",
       label: "Pour",
       targetFraction: 1,
-      hint: "Finish the water a little slower, also over 30 s.",
+      hint: "Keep pouring without a pause, a little slower, to the full water over 30 s.",
     },
     {
       atMs: 105000,
@@ -173,7 +173,7 @@ const ultimate: Recipe = {
       targetFraction: 1,
     },
     {
-      atMs: 110000,
+      atMs: 115000,
       action: "wait",
       label: "Let it drain a little",
       hint: "Let it drain a little before the swirl.",
@@ -187,7 +187,7 @@ const ultimate: Recipe = {
       hint: "A gentle swirl flattens the bed.",
     },
     {
-      atMs: 125000,
+      atMs: 130000,
       action: "drawdown",
       label: "Let it drain",
       hint: "Aim to finish by 3:30; tap Done when dripping stops.",

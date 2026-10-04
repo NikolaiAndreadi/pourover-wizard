@@ -236,15 +236,19 @@ scale disturbances with hidden readings.
   [4:46 table](https://www.youtube.com/watch?v=1oB1oDrDkHM&t=286s), with captions and
   [Hario's reference](https://www.hario-usa.com/blogs/recipes-and-more-from-friends/james-hoffmann-1-cup-v60-technique)
   corroborating. The guide reaches 250 g at 2:00 and starts drawdown after the
-  final swirl at 2:05.
+  final swirl at 2:10; both swirls are modeled at 10 s so they can be read and
+  followed, taking that time from the bloom wait and the drawdown.
 - **Ultimate V60** (James Hoffmann): 30 g coffee, 500 g water, doses 20–40 g,
   done around 3:30. [Hario's reference](https://www.hario-usa.com/blogs/recipes-and-more-from-friends/james-hoffmann-uitimate-v60-technique)
   was checked for the 60 g bloom of up to 45 s, the pour to 300 g from 0:45 over
   30 s, the pour to 500 g from 1:15 over 30 s, one stir each way with a spoon,
   a gentle swirl after some drainage, and finishing drawdown by 3:30. The source
   gives no clock times for the bloom swirl, the stir or the final swirl; the
-  guide models them at 0:10, 1:45 and 2:00, each five seconds long, with
-  drawdown from 2:05. The [original video](https://www.youtube.com/watch?v=AI4ynXzkSQo)
+  guide models them at 0:10, 1:45 and 2:00, each ten seconds long, with a short
+  drain between the stir and the swirl and drawdown from 2:10. The two pours
+  are distinct in the source, 240 g then 200 g over 30 s each with the second
+  a little slower, so the guide keeps them as two steps poured without a pause.
+  The [original video](https://www.youtube.com/watch?v=AI4ynXzkSQo)
   is linked but was not re-checked.
 - **4:6 Method** (Tetsu Kasuya): 20 g coffee, 300 g water, doses 15–30 g,
   dripper removed at 3:30. [Philocoffea's guide](https://en.philocoffea.com/blogs/blog/coffee-brewing-method)

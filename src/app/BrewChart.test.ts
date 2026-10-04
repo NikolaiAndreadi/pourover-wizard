@@ -44,12 +44,12 @@ test("swirl movement is hidden from actual curves and scale without changing raw
   const samples = [
     { atMs: 9000, grams: 45 },
     { atMs: 11000, grams: 9000 },
-    { atMs: 16000, grams: 50 },
+    { atMs: 21000, grams: 50 },
     { atMs: 119000, grams: 245 },
     { atMs: 121000, grams: -9000 },
-    { atMs: 126000, grams: 250 },
+    { atMs: 131000, grams: 250 },
   ];
-  const markup = render(samples, 126000);
+  const markup = render(samples, 131000);
   expect(traces(markup)).toHaveLength(3);
   expect(markup.match(/data-testid="swirl-band"/g)).toHaveLength(2);
   expect(markup).toContain('class="chart-key swirl-key">Swirl</span>');
@@ -72,11 +72,11 @@ test("traces do not bridge swirl intervals even without samples during movement"
       render(
         [
           { atMs: 9900, grams: 50 },
-          { atMs: 15100, grams: 50 },
+          { atMs: 20100, grams: 50 },
           { atMs: 119900, grams: 250 },
-          { atMs: 125100, grams: 250 },
+          { atMs: 130100, grams: 250 },
         ],
-        126000,
+        131000,
       ),
     ),
   ).toHaveLength(3);

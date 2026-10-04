@@ -72,7 +72,11 @@ test("the Ultimate V60 recipe stirs, and the stir hides readings like a swirl", 
     page.getByRole("heading", { name: "Stir once each way", exact: true }),
   ).toBeVisible();
   await expect(page.locator("[data-scene=stir]")).toHaveCount(1);
-  await page.clock.fastForward(20500);
+  await page.clock.fastForward(10000);
+  await expect(
+    page.getByRole("heading", { name: "Let it drain a little", exact: true }),
+  ).toBeVisible();
+  await page.clock.fastForward(15500);
   await expect(
     page.getByRole("heading", { name: "Let it drain", exact: true }),
   ).toBeVisible();

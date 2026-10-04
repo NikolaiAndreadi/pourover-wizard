@@ -19,8 +19,8 @@ describe("Hoffmann recipe guidance", () => {
   });
   it("matches independent source timing and target checkpoints", () => {
     expect(recipe.steps.map((step) => step.atMs)).toEqual([
-      0, 10000, 15000, 45000, 60000, 70000, 80000, 90000, 100000, 110000,
-      120000, 125000,
+      0, 10000, 20000, 45000, 60000, 70000, 80000, 90000, 100000, 110000,
+      120000, 130000,
     ]);
     for (const [at, grams] of [
       [-1, 0],
@@ -163,8 +163,8 @@ describe("independent recipe validation failures", () => {
 });
 describe("drawdown start", () => {
   it("is the final drawdown step time for original and scaled recipes", () => {
-    expect(drawdownStartMs(recipe)).toBe(125000);
-    expect(drawdownStartMs(scaleRecipe(20, recipe))).toBe(125000);
+    expect(drawdownStartMs(recipe)).toBe(130000);
+    expect(drawdownStartMs(scaleRecipe(20, recipe))).toBe(130000);
     const later = recipe.steps.map((step, index, all) =>
       index === all.length - 1 ? { ...step, atMs: 130000 } : step,
     );
@@ -221,7 +221,7 @@ describe("recipe catalogue", () => {
     expect(ultimate.doseGrams).toBe(30);
     expect(ultimate.waterGrams).toBe(500);
     expect(ultimate.steps.map((step) => step.atMs)).toEqual([
-      0, 10000, 15000, 45000, 75000, 105000, 110000, 120000, 125000,
+      0, 10000, 20000, 45000, 75000, 105000, 115000, 120000, 130000,
     ]);
     expect(ultimate.steps.map((step) => step.action)).toEqual([
       "pour",
@@ -246,7 +246,7 @@ describe("recipe catalogue", () => {
       [999999, 500],
     ])
       expect(expectedWeight(ultimate, at ?? 0)).toBeCloseTo(grams ?? 0);
-    expect(drawdownStartMs(ultimate)).toBe(125000);
+    expect(drawdownStartMs(ultimate)).toBe(130000);
     expect(ultimate.finishGuideMs).toBe(210000);
     expect(expectedPoints(ultimate, 100000).at(-1)).toEqual({
       atMs: 210000,
@@ -318,7 +318,7 @@ describe("recipe catalogue", () => {
       expect(() => validateRecipe({ ...recipe, ...patch })).toThrow(
         /author and at least one source/,
       );
-    for (const finishGuideMs of [NaN, Infinity, 125000, 0])
+    for (const finishGuideMs of [NaN, Infinity, 130000, 0])
       expect(() => validateRecipe({ ...recipe, finishGuideMs })).toThrow(
         /finish guide/,
       );

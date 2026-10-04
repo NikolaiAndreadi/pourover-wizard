@@ -68,25 +68,25 @@ function RecipePicker({ model }: { model: BrewModel }) {
   );
 }
 function ScaleSetup({ model }: { model: BrewModel }) {
-  const live = model.liveState;
-  const idle = live.status === "disconnected" && !live.scanning;
   return (
     <aside className="scale-setup" aria-label="Live scale setup">
-      {live.error && <p role="alert">{live.error}</p>}
       {!model.liveSupported && (
         <p className="note">
           This browser can’t reach the scale. Use Chrome on a Mac or the iOS
           app.
         </p>
       )}
-      {model.liveSupported && live.offerAllDevices && idle && (
-        <p className="note all-devices">
-          Scale not listed?{" "}
-          <button type="button" onClick={model.connectAllLive}>
-            Show all devices
-          </button>
-        </p>
-      )}
+      <ScanResults model={model} />
+    </aside>
+  );
+}
+const hasScanResults = ({ liveState: live }: BrewModel) =>
+  Boolean(live.error) || live.scanning || live.candidates.length > 0;
+function ScanResults({ model }: { model: BrewModel }) {
+  const live = model.liveState;
+  return (
+    <>
+      {live.error && <p role="alert">{live.error}</p>}
       {live.scanning && (
         <p className="note scan-status" aria-live="polite">
           Scanning…{" "}
@@ -111,7 +111,7 @@ function ScaleSetup({ model }: { model: BrewModel }) {
           ))}
         </ul>
       )}
-    </aside>
+    </>
   );
 }
 /** Previous/next through the shown session's steps; back from the first step leaves browsing. */
@@ -252,6 +252,11 @@ function Home({ model }: { model: BrewModel }) {
           <h1>Prepare your brew</h1>
           <ActionScene action="prepare" durationMs={2400} />
         </div>
+        {hasScanResults(model) && (
+          <aside className="scale-setup" aria-label="Live scale setup">
+            <ScanResults model={model} />
+          </aside>
+        )}
         <RecipePicker model={model} />
         <label>
           Coffee dose (g)

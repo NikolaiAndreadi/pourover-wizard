@@ -20,7 +20,6 @@ const disconnected: LiveSnapshot = {
   model: null,
   pendingTare: false,
   error: "",
-  offerAllDevices: false,
   scanning: false,
   candidates: [],
 };

@@ -431,7 +431,34 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
   await expect(page.getByText("Timer only")).toBeVisible();
 });
 
-test("a cancelled filtered chooser offers Show all devices, which requests every device and identifies the pick", async ({
+test("home offers Show all devices beside Connect scale, and a cancelled chooser is no error", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "bluetooth", {
+      configurable: true,
+      value: {
+        async requestDevice() {
+          throw new DOMException(
+            "User cancelled the requestDevice() chooser.",
+            "NotFoundError",
+          );
+        },
+      },
+    });
+  });
+  await page.goto("./");
+  const header = page.getByRole("banner");
+  const showAll = header.getByRole("button", { name: "Show all devices" });
+  await expect(showAll).toBeVisible();
+  await header.getByRole("button", { name: "Connect scale" }).click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(showAll).toBeVisible();
+  await page.getByRole("button", { name: "Brew history" }).click();
+  await expect(showAll).toHaveCount(0);
+});
+
+test("after a cancelled filtered chooser, Show all devices requests every device and identifies the pick", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
@@ -496,22 +523,18 @@ test("a cancelled filtered chooser offers Show all devices, which requests every
   await expect(footer).toContainText("BOOKOO Ultra Scale · untested");
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(footer).toHaveCount(0);
-  const setup = page.getByRole("complementary", { name: "Live scale setup" });
-  await expect(
-    setup.getByRole("button", { name: "Show all devices" }),
-  ).toHaveCount(0);
+  const showAll = page.getByRole("button", { name: "Show all devices" });
+  await expect(showAll).toBeVisible();
   await page.getByRole("button", { name: "Connect scale" }).click();
-  await expect(page.getByRole("alert")).toContainText("User cancelled");
+  await expect(page.getByRole("alert")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Connect scale" }),
   ).toBeVisible();
-  await setup.getByRole("button", { name: "Show all devices" }).click();
+  await showAll.click();
   await expect(
     page.getByRole("button", { name: /^BOOKOO Themis Mini · / }),
   ).toBeVisible();
-  await expect(
-    setup.getByRole("button", { name: "Show all devices" }),
-  ).toHaveCount(0);
+  await expect(showAll).toHaveCount(0);
   await expect(
     page.getByRole("list", { name: "Devices in range" }),
   ).toHaveCount(0);

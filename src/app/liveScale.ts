@@ -20,13 +20,16 @@ export interface LiveSnapshot {
   model: ScaleModel | null;
   pendingTare: boolean;
   error: string;
-  /** A filtered attempt failed or was cancelled, so an unfiltered pick is worth offering. */
-  offerAllDevices: boolean;
   /** An in-app scan is collecting devices (iOS only). */
   scanning: boolean;
   /** Devices seen by the in-app scan, strongest signal first. */
   candidates: readonly ScanCandidate[];
 }
+/** Closing the chooser is a choice, not a failure: web and iOS both say "cancelled". */
+const failureMessage = (error: unknown) => {
+  if (!(error instanceof Error)) return "Connection failed.";
+  return /cancel/i.test(error.message) ? "" : error.message;
+};
 /** The one protocol this adapter decodes; other registry protocols are refused. */
 const DECODED_PROTOCOL: ScaleModel["protocol"] = "bookoo-mini";
 /** Only matching unit/sign codes may turn BOOKOO notifications into brewing samples. */
@@ -49,7 +52,6 @@ export function createLiveScale(
     model: null,
     pendingTare: false,
     error: "",
-    offerAllDevices: false,
     scanning: false,
     candidates: [],
   };
@@ -75,7 +77,7 @@ export function createLiveScale(
       scanning: false,
     });
   };
-  /** Runs one connection attempt; failures leave the all-devices offer open. */
+  /** Runs one connection attempt. */
   const attempt = async (
     run: (observers: Parameters<ScaleTransport["connect"]>[0]) => Promise<void>,
   ) => {
@@ -135,7 +137,6 @@ export function createLiveScale(
       publish({
         status: "connected",
         progress: null,
-        offerAllDevices: false,
         candidates: [],
       });
     } catch (error) {
@@ -148,8 +149,7 @@ export function createLiveScale(
         progress: null,
         model: null,
         pendingTare: false,
-        offerAllDevices: true,
-        error: error instanceof Error ? error.message : "Connection failed.",
+        error: failureMessage(error),
       });
     }
   };

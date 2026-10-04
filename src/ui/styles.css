@@ -1,24 +1,34 @@
 /* Latin subsets only: the app is English, and the worker precaches every emitted file. */
 @font-face {
-  font-family: "Manrope Variable";
+  font-family: "Lora Variable";
   font-style: normal;
-  font-weight: 200 800;
+  font-weight: 400 700;
   font-display: swap;
-  src: url("@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2")
+  src: url("@fontsource-variable/lora/files/lora-latin-wght-normal.woff2")
     format("woff2-variations");
 }
 @font-face {
-  font-family: "Fraunces Variable";
+  font-family: "Inter Variable";
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url("@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2")
+  src: url("@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")
     format("woff2-variations");
 }
 :root {
-  font-family:
-    "Manrope Variable", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  --font-text: "Lora Variable", Georgia, serif;
+  --font-ui:
+    "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --text-label: 11px;
+  --text-small: 13px;
+  --text-body: 16px;
+  --text-sub: 18px;
+  --text-value: 22px;
+  --text-big: 34px;
+  --text-display: clamp(30px, 6vw, 48px);
+  --text-muted: #596052;
+  font-family: var(--font-text);
+  font-size: var(--text-body);
   color: #292e27;
   background: #f6f3ed;
   font-synthesis: none;
@@ -61,37 +71,45 @@ header {
   gap: 12px;
 }
 .brand {
-  font-size: 22px;
-  font-weight: 650;
+  font-size: var(--text-value);
   text-decoration: none;
-  letter-spacing: -0.03em;
   white-space: nowrap;
 }
 .brand span {
   display: block;
-  font-size: 12px;
+  font-family: var(--font-text);
+  font-size: var(--text-small);
   font-weight: 400;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
+  color: var(--text-muted);
 }
 main {
   padding: 20px 0 80px;
   min-height: 70vh;
 }
-.eyebrow {
+.eyebrow,
+.pane-label,
+.metrics dt,
+.hero-stats dt,
+.pour-stats dt {
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-size: 12px;
-  letter-spacing: 0.15em;
-  color: #687251;
+  color: var(--muted);
+}
+h1,
+h2,
+.brand {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 h1 {
-  font-family: "Fraunces Variable", Georgia, serif;
-  font-variation-settings:
-    "SOFT" 40,
-    "WONK" 0;
-  font-size: clamp(40px, 6vw, 68px);
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  font-weight: 500;
+  font-size: var(--text-display);
   margin: 0 0 24px;
 }
 section {
@@ -106,11 +124,10 @@ main > section:first-child {
 }
 h2 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: var(--text-sub);
 }
 section p {
-  color: #596052;
+  color: var(--text-muted);
 }
 .button {
   display: inline-flex;
@@ -130,8 +147,8 @@ footer {
   justify-content: space-between;
   border-top: 1px solid #d9dbcf;
   padding: 24px 0;
-  color: #596052;
-  font-size: 12px;
+  color: var(--text-muted);
+  font-size: var(--text-small);
   gap: 16px;
 }
 .footer-scales {
@@ -210,11 +227,6 @@ footer a,
   :root:not([data-theme="light"]) footer {
     border-color: #48503f;
   }
-  :root:not([data-theme="light"]) .eyebrow,
-  :root:not([data-theme="light"]) section p,
-  :root:not([data-theme="light"]) footer {
-    color: #b6c1a9;
-  }
   :root:not([data-theme="light"]) .button {
     background: #c4d0b3;
     color: #20251f;
@@ -227,11 +239,6 @@ footer a,
 :root[data-theme="dark"] section,
 :root[data-theme="dark"] footer {
   border-color: #48503f;
-}
-:root[data-theme="dark"] .eyebrow,
-:root[data-theme="dark"] section p,
-:root[data-theme="dark"] footer {
-  color: #b6c1a9;
 }
 :root[data-theme="dark"] .button {
   background: #c4d0b3;
@@ -286,12 +293,28 @@ select {
   padding-top: 13px;
 }
 .brew-panel h1 {
-  font-size: clamp(30px, 5vw, 48px);
   margin: 24px 0;
 }
-.timer {
-  font-size: 64px;
+.timer,
+.metrics dd,
+.hero-stats dd,
+.pour-stats dd,
+.session-bar .weight,
+svg text,
+.brew-chart figcaption,
+.progress-strip figcaption,
+.pour-zoom-key {
+  font-family: var(--font-ui);
   font-variant-numeric: tabular-nums;
+}
+.brew-chart figcaption,
+.progress-strip figcaption,
+.pour-zoom-key {
+  font-size: var(--text-label);
+  color: var(--text-muted);
+}
+.timer {
+  font-size: var(--text-big);
   line-height: 1;
   margin: 28px 0;
 }
@@ -306,13 +329,9 @@ select {
   flex-wrap: wrap;
   gap: 20px;
 }
-.metrics dt {
-  font-size: 12px;
-}
 .metrics dd {
   margin: 0;
-  font-size: 24px;
-  font-variant-numeric: tabular-nums;
+  font-size: var(--text-value);
 }
 figure {
   margin: 24px 0;
@@ -327,7 +346,7 @@ svg text {
 }
 figcaption,
 .source {
-  font-size: 12px;
+  font-size: var(--text-small);
 }
 /* Hold buttons fill from the bottom as the one-second hold progresses. */
 .cancel,
@@ -352,11 +371,13 @@ figcaption,
   :root:not([data-theme="light"]) {
     --accent: #c4d0b3;
     --muted: #b6c1a9;
+    --text-muted: #b6c1a9;
   }
 }
 :root[data-theme="dark"] {
   --accent: #c4d0b3;
   --muted: #b6c1a9;
+  --text-muted: #b6c1a9;
 }
 @media (max-width: 600px) {
   header {
@@ -391,7 +412,7 @@ figcaption,
     row-gap: 10px;
   }
   .active-session .brand {
-    font-size: 17px;
+    font-size: var(--text-sub);
   }
   .active-session .brand span {
     display: none;
@@ -430,11 +451,6 @@ figcaption,
 /* The summary's only title is its eyebrow, kept as the heading for assistive tech. */
 .brew-panel h1.summary-title,
 .active-session .brew-panel h1.summary-title {
-  font-family: inherit;
-  font-size: 12px;
-  line-height: 1.6;
-  letter-spacing: 0.15em;
-  font-weight: 400;
   margin: 0 0 12px;
 }
 .brew-summary .metrics {
@@ -496,14 +512,14 @@ figcaption,
 }
 .history-when,
 .history-meta {
-  font-size: 13px;
-  color: #596052;
+  font-size: var(--text-small);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 .history-delete {
   flex: none;
   padding: 6px 12px;
-  font-size: 14px;
+  font-size: var(--text-small);
 }
 .history-actions {
   flex-direction: column;
@@ -522,10 +538,6 @@ figcaption,
   :root:not([data-theme="light"]) .history-row {
     border-color: #48503f;
   }
-  :root:not([data-theme="light"]) .history-when,
-  :root:not([data-theme="light"]) .history-meta {
-    color: #b6c1a9;
-  }
   :root:not([data-theme="light"]) .clear-history {
     --hold-fill: #d8766680;
     color: #e9a497;
@@ -534,10 +546,6 @@ figcaption,
 }
 :root[data-theme="dark"] .history-row {
   border-color: #48503f;
-}
-:root[data-theme="dark"] .history-when,
-:root[data-theme="dark"] .history-meta {
-  color: #b6c1a9;
 }
 :root[data-theme="dark"] .clear-history {
   --hold-fill: #d8766680;
@@ -604,7 +612,6 @@ figcaption,
   fill: var(--actual);
 }
 .brew-chart figcaption {
-  font-size: 7px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px 16px;
@@ -675,7 +682,7 @@ figcaption,
   box-shadow: 0 20px 60px #0003;
 }
 .disconnect-dialog h2 {
-  font-size: 24px;
+  font-size: var(--text-value);
   margin-top: 0;
 }
 .disconnect-dialog::backdrop {
@@ -717,8 +724,8 @@ figcaption,
 
 .offline-status {
   margin: 1rem 0;
-  color: var(--muted);
-  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-size: var(--text-small);
 }
 
 .visually-hidden {
@@ -743,13 +750,10 @@ figcaption,
 .brew-top .timer,
 .active-session .brew-top .timer {
   margin: 0;
-  font-size: 24px;
-  opacity: 0.85;
+  font-size: var(--text-value);
 }
 .brew-panel .step-title,
 .active-session .brew-panel .step-title {
-  font-size: clamp(30px, 7.5vw, 48px);
-  line-height: 1.05;
   margin: 4px 0 10px;
 }
 .step-panes {
@@ -776,7 +780,7 @@ figcaption,
 }
 .step-next {
   background: #d9dbcf22;
-  color: #596052;
+  color: var(--text-muted);
 }
 .step-next .action-scene {
   filter: grayscale(0.6);
@@ -784,26 +788,20 @@ figcaption,
 }
 .pane-label {
   display: block;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }
 .next-title {
   margin: 4px 0 10px;
-  font-size: 18px;
-  line-height: 1.2;
 }
 .next-note {
   margin: 8px 0 0;
-  font-size: 15px;
+  font-size: var(--text-body);
 }
 .step-hint {
   margin: 10px 0 0;
-  font-size: 14px;
+  font-size: var(--text-small);
   line-height: 1.4;
-  color: #596052;
+  color: var(--text-muted);
 }
 .is-preview .step-panes li {
   min-height: 352px;
@@ -816,7 +814,7 @@ figcaption,
 }
 .get-ready {
   min-height: 56px;
-  font-size: 18px;
+  font-size: var(--text-sub);
   font-weight: 600;
 }
 .step-panes .action-scene {
@@ -834,23 +832,14 @@ figcaption,
   gap: 10px;
   margin: 12px 0 0;
 }
-.hero-stats dt {
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
-}
 .hero-stats dd {
   margin: 0;
-  font-size: 22px;
+  font-size: var(--text-value);
   line-height: 1.1;
-  font-variant-numeric: tabular-nums;
 }
 .hero-stats .hero-number {
-  font-size: clamp(40px, 12vw, 60px);
+  font-size: var(--text-big);
   line-height: 1;
-}
-.step-pour .hero-stats .hero-number {
-  font-size: clamp(28px, 8vw, 34px);
 }
 /* Pour guidance: the target, the reading and the pace side by side. */
 .pour-stats {
@@ -866,27 +855,18 @@ figcaption,
   grid-column: 1 / -1;
   text-align: center;
 }
-.pour-stats dt {
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
-}
 .pour-stats dd {
   margin: 0;
-  font-size: 22px;
+  font-size: var(--text-value);
   line-height: 1.1;
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 @media (max-width: 600px) {
   .pour-stats {
     gap: 10px;
   }
-  .pour-stats dt {
-    font-size: 11px;
-  }
   .pour-stats dd {
-    font-size: 16px;
+    font-size: var(--text-sub);
   }
 }
 .pour-stats .pace dd {
@@ -923,7 +903,7 @@ figcaption,
 }
 .drawdown-note {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--text-sub);
   line-height: 1.4;
 }
 .scale-setup .controls {
@@ -931,7 +911,7 @@ figcaption,
 }
 .note,
 .preview-caption {
-  font-size: 13px;
+  font-size: var(--text-small);
 }
 .start-row {
   display: flex;
@@ -944,11 +924,11 @@ figcaption,
   min-height: 64px;
   border: 0;
   border-radius: 12px;
-  font-size: 22px;
+  font-size: var(--text-sub);
   font-weight: 600;
 }
 .start-row .auto-start {
-  font-size: 17px;
+  font-size: var(--text-body);
   line-height: 1.25;
   text-align: center;
   background: #e4e7da;
@@ -971,7 +951,7 @@ figcaption,
   margin-top: 8px;
   border: 0;
   border-radius: 12px;
-  font-size: 20px;
+  font-size: var(--text-sub);
   font-weight: 600;
 }
 .ready-hint {
@@ -997,14 +977,14 @@ figcaption,
 }
 .recipe-preview .preview-caption {
   margin: 0;
-  opacity: 0.8;
+  color: var(--text-muted);
 }
 .preview-nav {
   margin: 8px 0;
 }
 .preview-nav button {
   flex: 1;
-  font-size: 14px;
+  font-size: var(--text-small);
 }
 .home-head {
   display: flex;
@@ -1075,13 +1055,13 @@ figcaption,
 }
 .recipe-author {
   grid-area: author;
-  font-size: 14px;
-  color: #596052;
+  font-size: var(--text-small);
+  color: var(--text-muted);
 }
 .recipe-meta {
   grid-area: meta;
-  font-size: 13px;
-  color: #596052;
+  font-size: var(--text-small);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 @media (prefers-color-scheme: dark) {
@@ -1093,10 +1073,6 @@ figcaption,
     border-color: var(--muted);
     background: #d9dbcf1a;
   }
-  :root:not([data-theme="light"]) .recipe-author,
-  :root:not([data-theme="light"]) .recipe-meta {
-    color: #b6c1a9;
-  }
 }
 :root[data-theme="dark"] .recipe-preview,
 :root[data-theme="dark"] .recipe-card {
@@ -1105,10 +1081,6 @@ figcaption,
 :root[data-theme="dark"] .recipe-card.is-selected {
   border-color: var(--muted);
   background: #d9dbcf1a;
-}
-:root[data-theme="dark"] .recipe-author,
-:root[data-theme="dark"] .recipe-meta {
-  color: #b6c1a9;
 }
 /* Compact recipe progress for timer brewing. */
 .progress-strip {
@@ -1165,9 +1137,6 @@ figcaption,
   margin-top: 3px;
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
-  opacity: 0.7;
-  font-variant-numeric: tabular-nums;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .progress-strip {
@@ -1302,10 +1271,6 @@ figcaption,
   }
   :root:not([data-theme="light"]) .step-next {
     background: #d9dbcf14;
-    color: #b6c1a9;
-  }
-  :root:not([data-theme="light"]) .step-hint {
-    color: #b6c1a9;
   }
 }
 :root[data-theme="dark"] .step-now {
@@ -1313,10 +1278,6 @@ figcaption,
 }
 :root[data-theme="dark"] .step-next {
   background: #d9dbcf14;
-  color: #b6c1a9;
-}
-:root[data-theme="dark"] .step-hint {
-  color: #b6c1a9;
 }
 
 .progress-strip,
@@ -1376,9 +1337,6 @@ figcaption,
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 11px;
-  opacity: 0.8;
-  font-variant-numeric: tabular-nums;
 }
 .zoom-key-expected,
 .zoom-key-actual {
@@ -1425,13 +1383,18 @@ figcaption,
 .session-bar button {
   min-height: 44px;
   padding: 6px 12px;
-  font-size: 14px;
+  font-size: var(--text-small);
   white-space: nowrap;
+}
+.connect-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
 }
 .session-bar .weight {
   min-width: 15em;
   justify-content: center;
-  font-variant-numeric: tabular-nums;
 }
 .weight-control {
   display: flex;
@@ -1440,16 +1403,8 @@ figcaption,
   gap: 2px;
 }
 .weight-caption {
-  font-size: 11px;
-  color: #596052;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .weight-caption {
-    color: #b6c1a9;
-  }
-}
-:root[data-theme="dark"] .weight-caption {
-  color: #b6c1a9;
+  font-size: var(--text-label);
+  color: var(--text-muted);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .cancel {
@@ -1473,12 +1428,11 @@ figcaption,
 :root[data-theme="dark"] .pour-zoom-plot svg {
   background: #ffffff0d;
 }
-/* Live scale setup: all-devices fallback and the iOS scan list. */
-.all-devices button,
+/* Live scale setup: the iOS scan list. */
 .scan-status button {
   min-height: 36px;
   padding: 4px 10px;
-  font-size: 13px;
+  font-size: var(--text-small);
 }
 .candidates {
   display: grid;

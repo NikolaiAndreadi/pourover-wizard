@@ -158,7 +158,7 @@ describe("live brewing adapter", () => {
 });
 describe("show all devices", () => {
   const mini = supportedScales[0]!;
-  it("offers all devices after a failed filtered attempt, then connects through the unfiltered chooser and names the model", async () => {
+  it("treats a cancelled chooser as no error, then connects through the unfiltered chooser and names the model", async () => {
     const s = setup();
     s.transport.connect.mockRejectedValueOnce(
       Object.assign(new Error("User cancelled"), { name: "NotFoundError" }),
@@ -167,8 +167,7 @@ describe("show all devices", () => {
     expect(s.changed).toHaveBeenLastCalledWith(
       expect.objectContaining({
         status: "disconnected",
-        offerAllDevices: true,
-        error: "User cancelled",
+        error: "",
       }),
     );
     s.transport.connectAll.mockImplementationOnce(
@@ -182,7 +181,6 @@ describe("show all devices", () => {
       expect.objectContaining({
         status: "connected",
         model: mini,
-        offerAllDevices: false,
         scanning: false,
       }),
     );
@@ -209,7 +207,6 @@ describe("show all devices", () => {
       expect.objectContaining({
         status: "disconnected",
         model: null,
-        offerAllDevices: true,
         error: 'Unsupported scale protocol "other-protocol" on BOOKOO Other.',
       }),
     );

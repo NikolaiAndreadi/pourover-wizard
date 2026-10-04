@@ -11,15 +11,25 @@ function connectingLabel({ progress }: LiveSnapshot): string {
 }
 function ScaleControls({ model }: { model: BrewModel }) {
   const live = model.liveState;
+  const showsScan = model.session
+    ? model.session.phase === "preparation" && !model.isPreviewing
+    : !model.historyOpen;
   if (live.status === "disconnected")
     return (
-      <button
-        type="button"
-        disabled={!model.liveSupported}
-        onClick={model.connectLive}
-      >
-        Connect scale
-      </button>
+      <div className="connect-row">
+        <button
+          type="button"
+          disabled={!model.liveSupported}
+          onClick={model.connectLive}
+        >
+          Connect scale
+        </button>
+        {!live.scanning && showsScan && (
+          <button type="button" onClick={model.connectAllLive}>
+            Show all devices
+          </button>
+        )}
+      </div>
     );
   if (live.status === "connecting")
     return (

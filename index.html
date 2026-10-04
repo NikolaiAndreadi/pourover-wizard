@@ -7,7 +7,45 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="theme-color" content="#f6f3ed" />
-    <title>Pourover Wizard</title>
+    <title>Pourover Wizard · V60 brew guide</title>
+    <meta
+      name="description"
+      content="A free guided V60 pour-over timer. Pick a recipe, set your coffee dose and follow step-by-step pour cues, with live pour tracking on a Bluetooth coffee scale. Works offline, no account."
+    />
+    <link
+      rel="canonical"
+      href="https://nikolaiandreadi.github.io/pourover-wizard/"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Pourover Wizard · V60 brew guide" />
+    <meta
+      property="og:description"
+      content="Guided V60 pour-over timer with step-by-step cues and live Bluetooth scale tracking."
+    />
+    <meta
+      property="og:url"
+      content="https://nikolaiandreadi.github.io/pourover-wizard/"
+    />
+    <meta
+      property="og:image"
+      content="https://nikolaiandreadi.github.io/pourover-wizard/icon-512.png"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Pourover Wizard",
+        "url": "https://nikolaiandreadi.github.io/pourover-wizard/",
+        "description": "Guided V60 pour-over timer with step-by-step cues and live Bluetooth scale tracking.",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Web Bluetooth for live scale assist",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+        "codeRepository": "https://github.com/NikolaiAndreadi/pourover-wizard"
+      }
+    </script>
     <script>
       // Inline so a saved theme applies before first paint.
       try {
@@ -18,7 +56,25 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Replaced on first render; read by crawlers and agents that skip JavaScript. -->
+      <h1>Pourover Wizard</h1>
+      <p>
+        A guided V60 pour-over timer. Pick a recipe, set your coffee dose and
+        follow step-by-step pour cues. Connect a supported Bluetooth coffee
+        scale and the guide shows your pour against the target in real time.
+      </p>
+      <p>
+        Recipes: Better 1 Cup V60, Ultimate V60, 4:6 Method. Works offline, with
+        no account and no analytics. Live scale assist needs Web Bluetooth
+        (Chrome or Edge on desktop or Android, Bluefy on iOS).
+      </p>
+      <p>
+        <a href="https://github.com/NikolaiAndreadi/pourover-wizard"
+          >Source code on GitHub</a
+        >
+      </p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

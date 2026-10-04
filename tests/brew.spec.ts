@@ -200,6 +200,47 @@ test("a prepared brew previews every stage without starting, then returns to sta
   });
   await expect(page.getByRole("timer")).toHaveText("0:02");
 });
+test("horizontal swipes browse steps like the arrow keys; vertical ones do not", async ({
+  page,
+}) => {
+  const swipe = (dx: number, dy = 0) =>
+    page.locator("main").evaluate(
+      (target, { dx, dy }) => {
+        const touch = (x: number, y: number) =>
+          new Touch({ identifier: 1, target, clientX: x, clientY: y });
+        const fire = (type: string, at: Touch) =>
+          target.dispatchEvent(
+            new TouchEvent(type, {
+              bubbles: true,
+              touches: type === "touchend" ? [] : [at],
+              changedTouches: [at],
+            }),
+          );
+        fire("touchstart", touch(200, 300));
+        fire("touchend", touch(200 + dx, 300 + dy));
+      },
+      { dx, dy },
+    );
+  await page.goto("./");
+  await page.getByRole("button", { name: "Get ready" }).click();
+  await swipe(-120, 90);
+  await expect(
+    page.getByRole("heading", { name: "Ready when you are" }),
+  ).toBeVisible();
+  await swipe(-120);
+  await expect(
+    page.getByRole("heading", { name: "Pour to 50 g", exact: true }),
+  ).toBeVisible();
+  await swipe(-120);
+  await expect(
+    page.getByRole("heading", { name: "Swirl gently", exact: true }),
+  ).toBeVisible();
+  await swipe(120);
+  await swipe(120);
+  await expect(
+    page.getByRole("heading", { name: "Ready when you are" }),
+  ).toBeVisible();
+});
 test("pointer cancellation, focus loss and page hiding release incomplete holds", async ({
   page,
 }) => {

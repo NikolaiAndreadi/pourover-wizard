@@ -10,7 +10,7 @@ test("loads built assets under the project path and ignores unknown hashes", asy
       failures.push(`${response.status()} ${response.url()}`);
   });
   await page.goto("./");
-  await expect(page).toHaveTitle("Pourover Wizard");
+  await expect(page).toHaveTitle("Pourover Wizard · V60 brew guide");
   await expect(
     page.getByRole("link", { name: "Pourover Wizard V60 brew guide" }),
   ).toBeVisible();

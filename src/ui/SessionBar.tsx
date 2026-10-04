@@ -9,6 +9,18 @@ function connectingLabel({ progress }: LiveSnapshot): string {
     ? "Choose your scale"
     : `Connecting to ${progress.name ?? "your scale"}…`;
 }
+function BluetoothIcon() {
+  return (
+    <svg
+      className="bluetooth-icon"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M7 7l10 10-5 5V2l5 5L7 17" />
+    </svg>
+  );
+}
 function ScaleControls({ model }: { model: BrewModel }) {
   const live = model.liveState;
   const showsScan = model.session
@@ -22,11 +34,11 @@ function ScaleControls({ model }: { model: BrewModel }) {
           disabled={!model.liveSupported}
           onClick={model.connectLive}
         >
-          Connect scale
+          Connect <BluetoothIcon /> scale
         </button>
         {!live.scanning && showsScan && (
           <button type="button" onClick={model.connectAllLive}>
-            Show all devices
+            Show all <BluetoothIcon /> devices
           </button>
         )}
       </div>

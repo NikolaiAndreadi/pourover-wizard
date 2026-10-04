@@ -197,6 +197,9 @@ footer a,
 .skip:focus {
   top: 8px;
 }
+main:focus {
+  outline: none;
+}
 @media (max-width: 600px) {
   .shell {
     padding: 0 22px;
@@ -1391,6 +1394,17 @@ figcaption,
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   gap: 8px;
+}
+.bluetooth-icon {
+  display: inline;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.2em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .session-bar .weight {
   min-width: 15em;

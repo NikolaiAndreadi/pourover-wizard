@@ -139,7 +139,7 @@ test("failed update retains offline version; complete update waits for every tab
   await expect(page.getByRole("status")).toHaveCount(0);
   await context.setOffline(true);
   await second.reload();
-  await expect(second).toHaveTitle("Pourover Wizard");
+  await expect(second).toHaveTitle("Pourover Wizard · V60 brew guide");
   await context.setOffline(false);
   failDownload = false;
   // Returning online invokes the app's own update check.
@@ -151,16 +151,16 @@ test("failed update retains offline version; complete update waits for every tab
       () => (window as Window & { brewMarker?: string }).brewMarker,
     ),
   ).toBe("preserved");
-  await expect(page).toHaveTitle("Pourover Wizard");
+  await expect(page).toHaveTitle("Pourover Wizard · V60 brew guide");
   await page.close();
   await second.reload();
-  await expect(second).toHaveTitle("Pourover Wizard");
+  await expect(second).toHaveTitle("Pourover Wizard · V60 brew guide");
   await expect(second.getByRole("status")).toContainText("Update ready");
   await context.setOffline(true);
   await second.close();
   const reopened = await context.newPage();
   await reopened.goto(appUrl);
-  await expect(reopened).toHaveTitle("Pourover Wizard v2");
+  await expect(reopened).toHaveTitle("Pourover Wizard · V60 brew guide v2");
   await expect(reopened.locator(".shell")).toHaveAttribute(
     "data-offline-ready",
     "true",

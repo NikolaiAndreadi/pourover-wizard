@@ -204,6 +204,40 @@ export function useBrew(
     window.addEventListener("keydown", browse);
     return () => window.removeEventListener("keydown", browse);
   }, []);
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = useEffectEvent((event: TouchEvent) => {
+    const target = event.target;
+    const touch = event.touches.length === 1 ? event.touches[0] : undefined;
+    swipeStart.current =
+      touch &&
+      !(
+        target instanceof Element &&
+        target.closest("input, textarea, select, .hold, .cancel")
+      )
+        ? { x: touch.clientX, y: touch.clientY }
+        : null;
+  });
+  const onTouchEnd = useEffectEvent((event: TouchEvent) => {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    const touch = event.changedTouches[0];
+    if (!start || !touch || !browsable()) return;
+    if (document.querySelector("[role=dialog], dialog[open]")) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < 2 * Math.abs(dy)) return;
+    browseStep(dx < 0 ? 1 : -1);
+  });
+  useEffect(() => {
+    const start = (event: TouchEvent) => onTouchStart(event);
+    const end = (event: TouchEvent) => onTouchEnd(event);
+    window.addEventListener("touchstart", start, { passive: true });
+    window.addEventListener("touchend", end);
+    return () => {
+      window.removeEventListener("touchstart", start);
+      window.removeEventListener("touchend", end);
+    };
+  }, []);
   const doseValid = isValidDose(dose, recipe);
   const prepare = () => {
     if (!doseValid) return;

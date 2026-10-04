@@ -72,15 +72,10 @@ section {
   max-width: 600px;
   padding: 26px;
   border: 1px solid #d9dbcf;
+  border-radius: 12px;
 }
 main > section:first-child {
   margin-top: 0;
-}
-.home-head h1 {
-  margin: 0;
-  font-size: 26px;
-  line-height: 1.2;
-  border-radius: 12px;
 }
 h2 {
   margin: 0;

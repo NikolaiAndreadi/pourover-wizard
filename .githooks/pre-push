@@ -1,6 +1,18 @@
 #!/bin/sh
 set -e
 cd "$(git rev-parse --show-toplevel)"
+stamp=$(cat reports/check-passed 2>/dev/null || true)
+if [ -n "$stamp" ]; then
+  verified=1
+  while read -r _local_ref local_sha _remote_ref _remote_sha; do
+    case "$local_sha" in *[!0]*) ;; *) continue ;; esac
+    [ "$(git rev-parse "$local_sha^{tree}")" = "$stamp" ] || verified=0
+  done
+  if [ "$verified" = 1 ]; then
+    echo "pre-push: npm run check already passed for this content; skipping"
+    exit 0
+  fi
+fi
 if ! command -v npm >/dev/null 2>&1; then
   echo "pre-push: npm is not on PATH; run \`nvm use\` or push with --no-verify." >&2
   exit 1

@@ -34,9 +34,6 @@ function ScaleControls({ model }: { model: BrewModel }) {
       : model.liveWeight.toFixed(1);
   return (
     <>
-      <HoldButton className="disconnect" onHold={model.disconnectLive}>
-        Hold to disconnect
-      </HoldButton>
       <div className="weight-control">
         <button
           type="button"
@@ -51,6 +48,9 @@ function ScaleControls({ model }: { model: BrewModel }) {
           {live.pendingTare ? "Taring…" : "Press to tare"}
         </span>
       </div>
+      <HoldButton className="disconnect" onHold={model.disconnectLive}>
+        Hold to disconnect
+      </HoldButton>
     </>
   );
 }

@@ -55,7 +55,15 @@ export function Shell({
           {!active && <SessionBar model={brew} />}
         </header>
       )}
-      <main id="content" tabIndex={-1}>
+      <main
+        id="content"
+        tabIndex={-1}
+        className={
+          phase === "preparation" || phase === "completed"
+            ? "swipes-steps"
+            : undefined
+        }
+      >
         <Brew model={brew} />
       </main>
       {active && <SessionBar model={brew} />}

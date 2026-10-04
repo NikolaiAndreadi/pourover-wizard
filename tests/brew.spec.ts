@@ -200,30 +200,38 @@ test("a prepared brew previews every stage without starting, then returns to sta
   });
   await expect(page.getByRole("timer")).toHaveText("0:02");
 });
-test("horizontal swipes browse steps like the arrow keys; vertical ones do not", async ({
+test("horizontal swipes browse steps like the arrow keys; vertical and cancelled ones do not", async ({
   page,
 }) => {
-  const swipe = (dx: number, dy = 0) =>
+  const swipe = (dx: number, dy = 0, cancelled = false) =>
     page.locator("main").evaluate(
-      (target, { dx, dy }) => {
+      (target, { dx, dy, cancelled }) => {
         const touch = (x: number, y: number) =>
           new Touch({ identifier: 1, target, clientX: x, clientY: y });
         const fire = (type: string, at: Touch) =>
           target.dispatchEvent(
             new TouchEvent(type, {
               bubbles: true,
-              touches: type === "touchend" ? [] : [at],
+              touches: type === "touchstart" ? [at] : [],
               changedTouches: [at],
             }),
           );
         fire("touchstart", touch(200, 300));
+        if (cancelled) fire("touchcancel", touch(200 + dx, 300 + dy));
         fire("touchend", touch(200 + dx, 300 + dy));
       },
-      { dx, dy },
+      { dx, dy, cancelled },
     );
   await page.goto("./");
+  await expect(page.locator("main")).toHaveCSS("touch-action", "auto");
   await page.getByRole("button", { name: "Get ready" }).click();
+  // Native panning would otherwise claim the gesture before touchend.
+  await expect(page.locator("main")).toHaveCSS(
+    "touch-action",
+    "pan-y pinch-zoom",
+  );
   await swipe(-120, 90);
+  await swipe(-120, 0, true);
   await expect(
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();

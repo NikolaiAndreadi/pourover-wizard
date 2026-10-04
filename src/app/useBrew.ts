@@ -231,11 +231,16 @@ export function useBrew(
   useEffect(() => {
     const start = (event: TouchEvent) => onTouchStart(event);
     const end = (event: TouchEvent) => onTouchEnd(event);
+    const cancel = () => {
+      swipeStart.current = null;
+    };
     window.addEventListener("touchstart", start, { passive: true });
     window.addEventListener("touchend", end);
+    window.addEventListener("touchcancel", cancel);
     return () => {
       window.removeEventListener("touchstart", start);
       window.removeEventListener("touchend", end);
+      window.removeEventListener("touchcancel", cancel);
     };
   }, []);
   const doseValid = isValidDose(dose, recipe);

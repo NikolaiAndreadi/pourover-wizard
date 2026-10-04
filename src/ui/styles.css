@@ -200,6 +200,10 @@ footer a,
 main:focus {
   outline: none;
 }
+/* Horizontal swipes browse steps, so the browser must not pan with them. */
+.swipes-steps {
+  touch-action: pan-y pinch-zoom;
+}
 @media (max-width: 600px) {
   .shell {
     padding: 0 22px;

@@ -401,9 +401,6 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
     requests: 1,
     lookups: 1,
   });
-  await expect(page.getByRole("button", { name: "Forget scale" })).toHaveCount(
-    0,
-  );
   // The connection outlives the brew: summary, home and the next brew reuse it.
   const weight = page.getByRole("button", { name: /^BOOKOO Themis Mini · / });
   await page.getByRole("button", { name: "Start now" }).click();

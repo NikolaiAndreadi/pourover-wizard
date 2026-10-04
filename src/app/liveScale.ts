@@ -235,12 +235,7 @@ export function createLiveScale(
 }
 export type { ConfirmedEncoding } from "@/scale/bookoo/codec";
 export { bookooMiniEncoding } from "@/scale/bookoo/codec";
-export type {
-  ConnectStep,
-  RememberedDevice,
-  RememberedScale,
-  ScanCandidate,
-} from "@/scale/contracts";
+export type { ConnectStep, ScanCandidate } from "@/scale/contracts";
 export { modelName, type ScaleModel, supportedScales } from "@/scale/supported";
 export {
   createScaleTransport,

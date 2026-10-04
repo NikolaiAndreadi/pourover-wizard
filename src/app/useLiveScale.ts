@@ -1,4 +1,4 @@
-import { type RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import { canArmLive, type Event, type Session } from "@/core/engine";
 import type { ScaleSample } from "@/core/scale";
 import { createRememberedDevice } from "@/platform/rememberedDevice";
@@ -7,8 +7,6 @@ import {
   createLiveScale,
   createScaleTransport,
   type LiveSnapshot,
-  type RememberedDevice,
-  type RememberedScale,
   supportedScales,
   supportsScaleConnection,
 } from "./liveScale";
@@ -69,23 +67,6 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
   const [disconnectNotice, setDisconnectNotice] = useState(false);
   /** The newest reading while no brew is taking samples, so the header still shows weight. */
   const [idleSample, setIdleSample] = useState<ScaleSample | null>(null);
-  const [rememberedScale, setRememberedScale] =
-    useState<RememberedScale | null>(() => scaleMemory.load());
-  // Tracks saves and forgets so About can offer Forget scale only when relevant.
-  const memory = useMemo<RememberedDevice>(
-    () => ({
-      load: () => scaleMemory.load(),
-      save(value) {
-        scaleMemory.save(value);
-        setRememberedScale(scaleMemory.load());
-      },
-      clear() {
-        scaleMemory.clear();
-        setRememberedScale(null);
-      },
-    }),
-    [],
-  );
   const smooth = useRef<ScaleSample[]>([]);
   const live = useRef<ReturnType<typeof createLiveScale> | null>(null);
   // The connection is created once, so its callbacks read the latest brew through a ref.
@@ -98,7 +79,7 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
       owner.current.dispatch(type);
     };
     live.current = createLiveScale(
-      createScaleTransport(memory),
+      createScaleTransport(scaleMemory),
       bookooMiniEncoding,
       () => owner.current.now(),
       (sample) => {
@@ -135,16 +116,13 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
       live.current?.dispose();
       live.current = null;
     };
-  }, [memory]);
+  }, []);
   /** Clears per-brew display state; the connection itself carries over. */
   const resetLive = () => {
     setDisconnectNotice(false);
     smooth.current = [];
   };
   return {
-    /** Prepares display state for a new brew without touching the connection. */
-    prepareLive: resetLive,
-    /** Clears display state when a brew is discarded without touching the connection. */
     resetLive,
     disconnectNotice,
     dismissDisconnectNotice: () => setDisconnectNotice(false),
@@ -154,9 +132,6 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
     ),
     liveState,
     liveSupported: supportsScaleConnection(),
-    /** The scale a later connection tries before opening the chooser. */
-    rememberedScale,
-    forgetScale: () => memory.clear(),
     connectLive: () => live.current?.connect(),
     /** Everything in range: the browser's chooser, or the in-app list on iOS. */
     connectAllLive: () => live.current?.connectAll(),

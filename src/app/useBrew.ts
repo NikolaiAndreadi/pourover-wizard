@@ -116,7 +116,7 @@ export function useBrew(
     if ((type === "start" || type === "arm") && previewOpen.current) return;
     apply({ type, nowMs: now(), holdNowMs: performance.now() });
   };
-  const { prepareLive, resetLive, ...live } = useLiveScale(session, {
+  const { resetLive, ...live } = useLiveScale(session, {
     active,
     now,
     dispatch,
@@ -213,7 +213,7 @@ export function useBrew(
       live.liveState.status === "connected" ? "live" : "timer",
     );
     setSession(active.current);
-    prepareLive();
+    resetLive();
   };
   const connected = live.liveState.status === "connected";
   useEffect(() => {
@@ -366,7 +366,6 @@ export function useBrew(
     prepare,
     restart,
     dispatch,
-    releaseHold: () => dispatch("release"),
     toggleArm,
     armPending,
     step,

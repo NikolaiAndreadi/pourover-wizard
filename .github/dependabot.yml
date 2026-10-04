@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ["*"]
+    ignore:
+      # Vitest and its coverage provider stay on 4.x until Stryker handles
+      # Vitest 5 nested-test filtering: stryker-mutator/stryker-js#6210.
+      - dependency-name: vitest
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/coverage-v8"
+        update-types: ["version-update:semver-major"]
+      # The `typescript` alias is pinned to the TypeScript 6 compatibility
+      # package on purpose; see CONTRIBUTING.md "Version pins".
+      - dependency-name: typescript
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

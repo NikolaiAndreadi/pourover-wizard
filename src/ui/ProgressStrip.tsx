@@ -60,6 +60,7 @@ function PourZoom({ model }: { model: StripModel }) {
   const latest = shown.at(-1);
   // Like the full chart, mark the newest recorded reading while readings are fresh.
   const fresh =
+    session.phase === "brewing" &&
     latest !== undefined &&
     session.lastSample !== null &&
     latest === session.samples.at(-1);
@@ -165,7 +166,7 @@ export function ProgressStrip({ model }: { model: StripModel }) {
   const stepEnd = model.nextStep?.atMs ?? duration;
   const zoomed =
     session.mode === "live" &&
-    session.phase === "brewing" &&
+    (session.phase === "brewing" || session.phase === "completed") &&
     step?.action === "pour" &&
     model.nextStep !== null;
   const marker = {

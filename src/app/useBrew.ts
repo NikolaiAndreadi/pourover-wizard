@@ -16,6 +16,11 @@ import {
 } from "@/core/recipe";
 import { recipeById, recipes } from "@/core/recipes";
 import {
+  type BrewHistory,
+  type BrewRecord,
+  createBrewHistory,
+} from "@/platform/brewHistory";
+import {
   type BrewMemory,
   createRememberedBrew,
 } from "@/platform/rememberedBrew";
@@ -38,7 +43,22 @@ const rememberedDose = (memory: BrewMemory, recipe: Recipe) => {
     ? String(grams)
     : String(recipe.doseGrams);
 };
-export function useBrew(memory: BrewMemory = createRememberedBrew()) {
+const newId = () =>
+  typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+/** A saved brew as the completed session it was, for the shared summary. */
+const recordSession = (record: BrewRecord): Session => ({
+  ...createSession(record.recipe, record.recipe.doseGrams, record.mode),
+  phase: "completed",
+  elapsedMs: record.elapsedMs,
+  samples: record.samples,
+  pouredGrams: record.pouredGrams,
+});
+export function useBrew(
+  memory: BrewMemory = createRememberedBrew(),
+  history: BrewHistory = createBrewHistory(),
+) {
   const [recipeId, setRecipeId] = useState(() => rememberedRecipe(memory).id);
   const recipe = recipeById(recipeId);
   const [dose, setDoseInput] = useState(() => rememberedDose(memory, recipe));
@@ -62,6 +82,23 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
   const clock = useRef(performance.now());
   const active = useRef<Session | null>(null);
   const now = () => performance.now() - clock.current;
+  const [records, setRecords] = useState(() => history.load());
+  const [historyOpen, setHistoryOpen] = useState(false);
+  // A saved brew being reviewed, mirrored in a ref for the step browser guards.
+  const [viewed, setViewed] = useState<Session | null>(null);
+  const viewing = useRef<Session | null>(null);
+  const save = (done: Session) => {
+    history.add({
+      id: newId(),
+      completedAt: new Date().toISOString(),
+      mode: done.mode,
+      recipe: done.recipe,
+      elapsedMs: done.elapsedMs,
+      pouredGrams: done.pouredGrams,
+      samples: done.samples,
+    });
+    setRecords(history.load());
+  };
   const apply = (event: Event) => {
     if (!active.current) return null;
     const wasBrewing = active.current.phase === "brewing";
@@ -70,6 +107,8 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
       restart();
       return null;
     }
+    if (active.current.phase === "completed" && wasBrewing)
+      save(active.current);
     setSession(active.current);
     return active.current;
   };
@@ -105,8 +144,16 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     preview.current = 0;
     setPreviewIndex(0);
   };
+  /** Steps can be browsed before a brew and on a finished one, live or saved. */
+  const browsable = () => {
+    const current = viewing.current ?? active.current;
+    return current?.phase === "preparation" || current?.phase === "completed"
+      ? current
+      : null;
+  };
   const browseStep = (delta: number) => {
-    if (active.current?.phase !== "preparation") return;
+    const current = browsable();
+    if (!current) return;
     if (!previewOpen.current) {
       if (delta <= 0) return;
       previewOpen.current = true;
@@ -120,7 +167,7 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
       goToStart();
       return;
     }
-    const clamped = Math.min(active.current.recipe.steps.length - 1, index);
+    const clamped = Math.min(current.recipe.steps.length - 1, index);
     preview.current = clamped;
     setPreviewIndex(clamped);
   };
@@ -141,10 +188,7 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
           target.closest("input, textarea, select, [contenteditable]"))
       )
         return;
-      if (
-        active.current?.phase !== "preparation" ||
-        document.querySelector("[role=dialog], dialog[open]")
-      )
+      if (!browsable() || document.querySelector("[role=dialog], dialog[open]"))
         return;
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
       event.preventDefault();
@@ -183,18 +227,43 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     goToStart();
     setSession(null);
   };
-  const canPreview = session?.phase === "preparation";
-  const isPreviewing = canPreview && previewing;
-  const displayElapsedMs = canPreview
-    ? (session.recipe.steps[previewIndex]?.atMs ?? 0)
-    : (session?.elapsedMs ?? 0);
-  const step = session ? stepAt(session.recipe, displayElapsedMs) : null;
+  const openBrew = (id: string) => {
+    const record = records.find((item) => item.id === id);
+    if (!record) return;
+    goToStart();
+    viewing.current = recordSession(record);
+    setViewed(viewing.current);
+  };
+  const closeBrew = () => {
+    goToStart();
+    viewing.current = null;
+    setViewed(null);
+  };
+  const closeHistory = () => {
+    closeBrew();
+    setHistoryOpen(false);
+  };
+  const deleteBrew = (id: string) => {
+    history.remove(id);
+    setRecords(history.load());
+  };
+  const clearHistory = () => {
+    history.clear();
+    setRecords(history.load());
+  };
+  // The shown session: the reviewed brew when one is open, else the live one.
+  const shown = viewed ?? session;
+  const isPreviewing =
+    (shown?.phase === "preparation" || shown?.phase === "completed") &&
+    previewing;
+  const displayElapsedMs = isPreviewing
+    ? (shown.recipe.steps[previewIndex]?.atMs ?? 0)
+    : (shown?.elapsedMs ?? 0);
+  const step = shown ? stepAt(shown.recipe, displayElapsedMs) : null;
   const nextStep =
-    session?.recipe.steps.find((item) => item.atMs > displayElapsedMs) ?? null;
-  const curve = session ? expectedPoints(session.recipe, displayElapsedMs) : [];
-  const expected = session
-    ? expectedWeight(session.recipe, displayElapsedMs)
-    : 0;
+    shown?.recipe.steps.find((item) => item.atMs > displayElapsedMs) ?? null;
+  const curve = shown ? expectedPoints(shown.recipe, displayElapsedMs) : [];
+  const expected = shown ? expectedWeight(shown.recipe, displayElapsedMs) : 0;
   // Hysteresis state for the pour pace hint; reset whenever the pour changes.
   const paceState = useRef<{ pourAtMs: number | null; pace: Pace }>({
     pourAtMs: null,
@@ -238,10 +307,20 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
     previewIndex,
     displayElapsedMs,
     isPreviewing,
-    canPreview,
     browseStep,
     goToStart,
-    session,
+    session: shown,
+    /** Saved brews, newest first. */
+    history: records,
+    historyOpen,
+    showHistory: () => setHistoryOpen(true),
+    closeHistory,
+    /** True while a saved brew is open instead of the live session. */
+    reviewing: viewed !== null,
+    openBrew,
+    closeBrew,
+    deleteBrew,
+    clearHistory,
     doseValid,
     prepare,
     restart,

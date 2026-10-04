@@ -28,7 +28,9 @@ export function Shell({
           onClick={(event) => {
             event.preventDefault();
             const phase = brew.session?.phase;
-            if (phase === "preparation" || phase === "armed") brew.restart();
+            if (brew.reviewing || brew.historyOpen) brew.closeHistory();
+            else if (phase === "preparation" || phase === "armed")
+              brew.restart();
           }}
         >
           Pourover Wizard<span>V60 brew guide</span>

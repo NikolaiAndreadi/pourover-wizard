@@ -10,7 +10,15 @@ import type { BrewModel } from "@/app/useBrew";
 import type { Recipe } from "@/core/recipe";
 import { ActionScene } from "./ActionScene";
 import { BrewChart } from "./BrewChart";
+import { HoldButton } from "./HoldButton";
 import { ProgressStrip } from "./ProgressStrip";
+
+/** Saved brews complete in UTC and are shown in the viewer's local time. */
+const localTime = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
 /** Credits the recipe's author and links to the originals. */
 function Source({ recipe }: { recipe: Recipe }) {
@@ -109,6 +117,29 @@ function ScaleSetup({ model }: { model: BrewModel }) {
     </aside>
   );
 }
+/** Previous/next through the shown session's steps; back from the first step leaves browsing. */
+function StepNav({ model, label }: { model: BrewModel; label: string }) {
+  const session = model.session;
+  if (!session) return null;
+  return (
+    <nav className="controls preview-nav" aria-label={label}>
+      <button
+        type="button"
+        disabled={!model.isPreviewing}
+        onClick={() => model.browseStep(-1)}
+      >
+        ← Previous step
+      </button>
+      <button
+        type="button"
+        disabled={model.previewIndex === session.recipe.steps.length - 1}
+        onClick={() => model.browseStep(1)}
+      >
+        Next step →
+      </button>
+    </nav>
+  );
+}
 /** Recipe preview shown before brewing: step position, neighbours and the shape. */
 function Preview({ model }: { model: BrewModel }) {
   const session = model.session;
@@ -119,22 +150,7 @@ function Preview({ model }: { model: BrewModel }) {
         Step {model.previewIndex + 1} of {session.recipe.steps.length} ·{" "}
         {formatTime(model.displayElapsedMs)}
       </p>
-      <nav className="controls preview-nav" aria-label="Preview brew steps">
-        <button
-          type="button"
-          disabled={!model.isPreviewing}
-          onClick={() => model.browseStep(-1)}
-        >
-          ← Previous step
-        </button>
-        <button
-          type="button"
-          disabled={model.previewIndex === session.recipe.steps.length - 1}
-          onClick={() => model.browseStep(1)}
-        >
-          Next step →
-        </button>
-      </nav>
+      <StepNav model={model} label="Preview brew steps" />
       <ProgressStrip model={model} />
       {model.isPreviewing && (
         <button
@@ -273,55 +289,172 @@ function Home({ model }: { model: BrewModel }) {
         >
           Get ready
         </button>
+        <button
+          type="button"
+          className="brew-history-link"
+          onClick={model.showHistory}
+        >
+          Brew history
+        </button>
         <Source recipe={recipe} />
       </section>
     </>
   );
 }
+/** Saved brews, newest first; each opens as a summary, and the list can be cleared with a hold. */
+function History({ model }: { model: BrewModel }) {
+  return (
+    <section className="brew-panel brew-history">
+      <h1>Brew history</h1>
+      {model.history.length === 0 ? (
+        <p>No brews yet.</p>
+      ) : (
+        <ul className="history-list">
+          {model.history.map((brew) => {
+            const when = localTime(brew.completedAt);
+            return (
+              <li key={brew.id}>
+                <button
+                  type="button"
+                  className="history-row"
+                  onClick={() => model.openBrew(brew.id)}
+                >
+                  <span className="history-name">{brew.recipe.name}</span>
+                  <span className="history-when">{when}</span>
+                  <span className="history-meta">
+                    {brew.recipe.doseGrams} g coffee ·{" "}
+                    {formatTime(brew.elapsedMs)} ·{" "}
+                    {brew.pouredGrams === null
+                      ? `${Math.round(brew.recipe.waterGrams)} g water`
+                      : `${brew.pouredGrams.toFixed(1)} g poured`}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="history-delete"
+                  aria-label={`Delete brew from ${when}`}
+                  onClick={() => model.deleteBrew(brew.id)}
+                >
+                  Delete
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <div className="controls history-actions">
+        {model.history.length > 0 && (
+          <HoldButton className="clear-history" onHold={model.clearHistory}>
+            Hold to clear history
+          </HoldButton>
+        )}
+        <button
+          type="button"
+          className="button restart"
+          onClick={model.closeHistory}
+        >
+          Back
+        </button>
+      </div>
+    </section>
+  );
+}
+/** A finished brew, live or saved: the overview, or one browsed step over the strip and chart. */
 function Summary({ model }: { model: BrewModel }) {
-  const session = model.session;
-  if (!session) return null;
+  const { session, step } = model;
+  if (!session || !step) return null;
   const poured = session.pouredGrams;
   return (
     <section className="brew-panel brew-summary">
-      <h1 className="eyebrow summary-title">Your brew</h1>
-      <dl className="metrics">
-        <div>
-          <dt>Coffee</dt>
-          <dd>{session.recipe.doseGrams} g</dd>
-        </div>
-        <div>
-          <dt>Target water</dt>
-          <dd>{Math.round(session.recipe.waterGrams)} g</dd>
-        </div>
-        <div>
-          <dt>Time</dt>
-          <dd>{formatTime(session.elapsedMs)}</dd>
-        </div>
-        {poured !== null && (
-          <>
+      {model.isPreviewing ? (
+        <>
+          <p className="eyebrow step-caption">
+            Step {model.previewIndex + 1} of {session.recipe.steps.length} ·{" "}
+            {formatTime(model.displayElapsedMs)}
+          </p>
+          <ol
+            className="step-panes is-single"
+            aria-label="Brew steps"
+            key={step.atMs}
+          >
+            <li className={`step-now step-${step.action}`} aria-current="step">
+              <h1 className="step-title">{stepTitle(step, session.recipe)}</h1>
+              <ActionScene action={step.action} still />
+            </li>
+          </ol>
+        </>
+      ) : (
+        <>
+          <h1 className="eyebrow summary-title">Your brew</h1>
+          <dl className="metrics">
             <div>
-              <dt>Water poured</dt>
-              <dd>{poured.toFixed(1)} g</dd>
+              <dt>Coffee</dt>
+              <dd>{session.recipe.doseGrams} g</dd>
             </div>
             <div>
-              <dt>Ratio</dt>
-              <dd>1:{(poured / session.recipe.doseGrams).toFixed(2)}</dd>
+              <dt>Target water</dt>
+              <dd>{Math.round(session.recipe.waterGrams)} g</dd>
             </div>
-          </>
-        )}
-      </dl>
+            <div>
+              <dt>Time</dt>
+              <dd>{formatTime(session.elapsedMs)}</dd>
+            </div>
+            {poured !== null && (
+              <>
+                <div>
+                  <dt>Water poured</dt>
+                  <dd>{poured.toFixed(1)} g</dd>
+                </div>
+                <div>
+                  <dt>Ratio</dt>
+                  <dd>1:{(poured / session.recipe.doseGrams).toFixed(2)}</dd>
+                </div>
+              </>
+            )}
+          </dl>
+        </>
+      )}
+      <StepNav model={model} label="Browse brew steps" />
+      {model.isPreviewing && <ProgressStrip model={model} />}
       <BrewChart model={model} />
-      <button type="button" className="button restart" onClick={model.restart}>
-        Prepare another brew
-      </button>
+      {model.isPreviewing && (
+        <button
+          type="button"
+          className="button go-to-start"
+          onClick={model.goToStart}
+        >
+          Go to start
+        </button>
+      )}
+      {model.reviewing ? (
+        <button
+          type="button"
+          className="button restart"
+          onClick={model.closeBrew}
+        >
+          Back
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="button restart"
+          onClick={model.restart}
+        >
+          Prepare another brew
+        </button>
+      )}
       <Source recipe={session.recipe} />
     </section>
   );
 }
 export function Brew({ model }: { model: BrewModel }) {
   const { session, dispatch } = model;
-  if (!session) return <Home model={model} />;
+  if (!session)
+    return model.historyOpen ? (
+      <History model={model} />
+    ) : (
+      <Home model={model} />
+    );
   if (session.phase === "cancelled")
     return (
       <section className="brew-panel">

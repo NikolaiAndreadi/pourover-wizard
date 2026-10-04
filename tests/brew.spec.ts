@@ -71,6 +71,20 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
   await expect(
     page.getByRole("definition").filter({ hasText: /^300 g$/ }),
   ).toBeVisible();
+  // The finished brew can be browsed step by step and still offers a fresh brew.
+  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Pour to 60 g", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Step 1 of 12 · 0:00")).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "Recipe progress" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Go to start" }).click();
+  await expect(page.getByRole("heading", { name: "Your brew" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Prepare another brew" }),
+  ).toBeVisible();
   await page.screenshot({
     path: info.outputPath("summary.png"),
     fullPage: true,

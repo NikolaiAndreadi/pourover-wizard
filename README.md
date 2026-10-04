@@ -234,7 +234,21 @@ cancellation, lost focus, or page hiding resets the hold. Cancelling a running
 brew shows the cancelled screen; tapping the brand before the start, or a
 completed hold while armed, returns to the home screen directly. **Done** appears only once drawdown starts and manually ends
 the brew. Hash changes do not switch screens and leave the in-memory brew
-running; reload clears it. No history is saved.
+running; reload clears it.
+
+Completed brews are kept locally in browser storage under
+`pourover-wizard.history`, newest first and at most 50; cancelled and
+interrupted brews are not kept. Each record stores the scaled recipe, mode,
+elapsed time, poured water when measured, the chart samples and a UTC
+completion time, which **Brew history** on the home screen lists in local
+time with the dose, brew time and poured or target water. Opening a brew shows
+the same **Your brew** summary as after Done; both can be browsed step by step
+with **Next step** and **Previous step** or the arrow keys, showing one step
+pane, the progress strip with that step highlighted, the pour zoom for live
+pours, and the full chart with its step band following the browsed step.
+Each row has a **Delete** button, and **Hold to clear history** removes every
+brew after a one-second hold. Blocked or cleared storage only means an empty
+history.
 
 ### Recipes
 

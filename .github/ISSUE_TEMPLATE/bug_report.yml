@@ -1,0 +1,43 @@
+name: Bug report
+description: Something did not work while brewing or using the app
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what the app did instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where were you running it
+      options:
+        - Web app in Chrome or Edge (desktop)
+        - Web app in Chrome (Android)
+        - Web app in Bluefy or another iOS BLE browser
+        - Web app in Safari or Firefox (timer only)
+        - Native iOS app via SideStore
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Browser or iOS version
+      placeholder: e.g. Chrome 143 on macOS 26, or iOS 26.1 with SideStore 0.6
+  - type: input
+    id: scale
+    attributes:
+      label: Scale and firmware, if one was connected
+      placeholder: e.g. BOOKOO Themis Mini, firmware 1.2
+  - type: input
+    id: recipe
+    attributes:
+      label: Recipe and dose
+      placeholder: e.g. Better 1 Cup V60, 15 g
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, the brew from your history, console errors.

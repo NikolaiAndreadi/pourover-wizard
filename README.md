@@ -10,7 +10,7 @@ and the guide shows your pour against the target in real time.
 
 **Try it:** <https://nikolaiandreadi.github.io/pourover-wizard/>
 
-![Pourover Wizard brewing screen](docs/screenshot.png)
+<img src="docs/screenshot.png" width="360" alt="Brewing screen: current pour with aim, actual and pace, next step, progress strip and pour chart">
 
 ## What it does
 

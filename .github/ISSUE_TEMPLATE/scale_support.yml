@@ -1,0 +1,25 @@
+name: Scale support
+description: Ask for a new scale, or report whether an untested one works
+labels: [scale]
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Scale brand and model
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Bluetooth name as shown in the chooser
+      description: Use **Show all devices** in the app or any BLE scanner.
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Protocol documentation or captured frames
+      description: A link to the vendor's protocol, or a few raw notification frames with the weight the display showed for each.
+  - type: textarea
+    id: result
+    attributes:
+      label: What happened when you tried it
+      description: For a scale the app already lists as untested, whether it connected, tared and showed the right weight.

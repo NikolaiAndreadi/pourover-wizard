@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest a recipe, a behaviour, or an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What should the app do, and when would you use it?
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Source, for a recipe
+      description: Link to the author's original recipe. The engine runs on the clock, so every step needs a time.

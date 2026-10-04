@@ -250,7 +250,7 @@ function Home({ model }: { model: BrewModel }) {
         </p>
         <button
           type="button"
-          className="button"
+          className="button get-ready"
           disabled={!model.doseValid}
           onClick={model.prepare}
         >

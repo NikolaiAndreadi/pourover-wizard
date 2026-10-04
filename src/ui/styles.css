@@ -29,11 +29,12 @@ a:focus-visible {
 }
 header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
   padding: 32px 0;
   border-bottom: 1px solid #d9dbcf;
-  gap: 24px;
+  gap: 12px;
 }
 .brand {
   font-size: 22px;
@@ -272,8 +273,7 @@ figcaption,
 }
 @media (max-width: 600px) {
   header {
-    flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
   }
 }
 .active-session main {
@@ -565,10 +565,16 @@ figcaption,
 .is-preview .step-panes li {
   min-height: 352px;
 }
-.go-to-start {
+.go-to-start,
+.get-ready {
   width: 100%;
   justify-content: center;
   margin-top: 12px;
+}
+.get-ready {
+  min-height: 56px;
+  font-size: 18px;
+  font-weight: 600;
 }
 .step-panes .action-scene {
   width: 96px;
@@ -1041,10 +1047,9 @@ figcaption,
 
 /* Session controls live in the header so the card holds only the brew. */
 .session-bar {
-  flex: 1 1 320px;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: flex-start;
   gap: 8px;
 }

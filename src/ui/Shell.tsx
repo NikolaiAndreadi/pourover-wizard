@@ -74,27 +74,29 @@ export function Shell({
               ))}
             </ul>
           </div>
-          <a
-            href="https://github.com/NikolaiAndreadi/pourover-wizard"
-            target="_blank"
-            rel="noreferrer"
-          >
-            GitHub
-          </a>
-          <a
-            href="https://www.linkedin.com/in/andreadi-n"
-            target="_blank"
-            rel="noreferrer"
-          >
-            LinkedIn
-          </a>
-          <button
-            type="button"
-            className="theme-toggle"
-            onClick={theme.cycleTheme}
-          >
-            Theme · {THEME_LABEL[theme.theme]}
-          </button>
+          <div className="footer-links">
+            <a
+              href="https://github.com/NikolaiAndreadi/pourover-wizard"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://www.linkedin.com/in/andreadi-n"
+              target="_blank"
+              rel="noreferrer"
+            >
+              LinkedIn
+            </a>
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={theme.cycleTheme}
+            >
+              Theme · {THEME_LABEL[theme.theme]}
+            </button>
+          </div>
         </footer>
       )}
     </div>

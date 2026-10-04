@@ -78,9 +78,16 @@ test("cached app cold-opens offline, survives a hash-route reload and brews", as
     return await (await fetch(link?.href ?? "")).json();
   });
   expect(manifest.start_url).toBe("/pourover-wizard/");
-  expect(manifest.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual([
-    "192x192",
-    "512x512",
+  expect(
+    manifest.icons.map(
+      (icon: { sizes: string; purpose: string }) =>
+        `${icon.sizes} ${icon.purpose}`,
+    ),
+  ).toEqual([
+    "192x192 any",
+    "192x192 maskable",
+    "512x512 any",
+    "512x512 maskable",
   ]);
   await context.setOffline(true);
   await page.close();
@@ -96,14 +103,18 @@ test("cached app cold-opens offline, survives a hash-route reload and brews", as
   await offline.getByRole("button", { name: "Get ready" }).click();
   await offline.getByRole("button", { name: "Start now" }).click();
   await expect(offline.getByRole("timer")).toBeVisible();
-  const cached = await offline.evaluate(async () => {
-    return Promise.all(
-      ["manifest.webmanifest", "icon-192.png", "icon-512.png"].map(
-        async (name) => (await fetch(name)).status,
-      ),
-    );
-  });
-  expect(cached).toEqual([200, 200, 200]);
+  const files = [
+    "manifest.webmanifest",
+    "favicon.svg",
+    "favicon-96.png",
+    "icon-180.png",
+    "icon-192.png",
+    "icon-512.png",
+  ];
+  const cached = await offline.evaluate(async (names) => {
+    return Promise.all(names.map(async (name) => (await fetch(name)).status));
+  }, files);
+  expect(cached).toEqual(files.map(() => 200));
 });
 
 test("failed update retains offline version; complete update waits for every tab to close", async ({

@@ -33,10 +33,10 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # The runner image ships Chrome, so Chromium's shared libraries are
+      # already present; only a cold browser cache needs the install.
       - if: steps.browsers.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-      - if: steps.browsers.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: npx playwright install chromium
       - name: Verify production app, boundaries, and core CRAP gate
         run: |
           mkdir -p reports

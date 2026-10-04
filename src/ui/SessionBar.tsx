@@ -37,6 +37,8 @@ function ScaleControls({ model }: { model: BrewModel }) {
         {connectingLabel(live)}
       </button>
     );
+  const brewing =
+    model.session?.mode === "live" && model.session.phase === "brewing";
   const name = live.model ? modelName(live.model) : "Scale";
   const weight =
     model.liveWeight === null || model.liveWeight === undefined
@@ -49,13 +51,17 @@ function ScaleControls({ model }: { model: BrewModel }) {
           type="button"
           className="weight"
           aria-describedby="tare-hint"
-          disabled={live.pendingTare}
+          disabled={live.pendingTare || brewing}
           onClick={model.tareLive}
         >
           {name} · {weight} g
         </button>
         <span id="tare-hint" className="weight-caption">
-          {live.pendingTare ? "Taring…" : "Press to tare"}
+          {live.pendingTare
+            ? "Taring…"
+            : brewing
+              ? "Tare is off while brewing"
+              : "Press to tare"}
         </span>
       </div>
       <HoldButton className="disconnect" onHold={model.disconnectLive}>

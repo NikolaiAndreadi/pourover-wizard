@@ -1396,6 +1396,9 @@ figcaption,
   min-width: 15em;
   justify-content: center;
 }
+.session-bar .weight:disabled {
+  opacity: 1;
+}
 .weight-control {
   display: flex;
   flex-direction: column;

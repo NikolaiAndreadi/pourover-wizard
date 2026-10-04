@@ -165,7 +165,11 @@ export function useLiveScale(session: Session | null, brew: LiveBrew) {
     /** Registry entries shown on the ready screen; only verified ones were seen on hardware. */
     supportedScales,
     disconnectLive: () => live.current?.disconnect(),
-    tareLive: () => live.current?.tare(),
+    tareLive: () => {
+      const current = owner.current.active.current;
+      if (current?.mode === "live" && current.phase === "brewing") return;
+      return live.current?.tare();
+    },
     liveCanArm:
       session !== null &&
       canArmLive(session) &&

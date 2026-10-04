@@ -214,6 +214,8 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await expect(page.getByTestId("pour-zoom")).toBeVisible();
   await expect(page.getByTestId("pour-zoom-expected")).toHaveCount(1);
   await expect(page.getByTestId("pour-zoom-actual")).toHaveCount(1);
+  await expect(weight).toBeDisabled();
+  await expect(page.getByText("Tare is off while brewing")).toBeVisible();
   for (let i = 0; i < 4; i++) {
     await page.clock.runFor(250);
     await emit(250);

@@ -26,6 +26,7 @@ import {
 } from "@/platform/rememberedBrew";
 import { type Pace, paceHint } from "./pace";
 import { useLiveScale } from "./useLiveScale";
+import { useWakeLock } from "./useWakeLock";
 export type BrewModel = ReturnType<typeof useBrew>;
 const defaultRecipe = recipeById(recipes[0]?.id ?? "");
 const isValidDose = (value: string, recipe: Recipe) =>
@@ -123,6 +124,9 @@ export function useBrew(
     dispatch,
     apply,
   });
+  useWakeLock(
+    session?.phase === "preparation" || session?.phase === "armed" || session?.phase === "brewing",
+  );
   useEffect(() => {
     const timer = window.setInterval(
       () => apply({ type: "tick", nowMs: now(), holdNowMs: performance.now() }),

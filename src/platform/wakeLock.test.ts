@@ -123,6 +123,20 @@ describe("screen wake lock", () => {
     await holding;
     expect(held(page)).toBe(0);
   });
+  it("keeps the lock when held again while a release is pending", async () => {
+    const page = fakePage();
+    const { requester, count } = fakeRequester(page);
+    const lock = createWakeLock(
+      () => requester,
+      () => page,
+    );
+    await Promise.all([lock.hold(), lock.release(), lock.hold()]);
+    expect(count()).toBe(1);
+    expect(held(page)).toBe(1);
+    await lock.release();
+    expect(held(page)).toBe(0);
+    expect(page.listeners.size).toBe(0);
+  });
   it("is a no-op without the API or when the browser refuses", async () => {
     const page = fakePage();
     const missing = createWakeLock(

@@ -64,6 +64,7 @@ export function createWakeLock(
       wanted = false;
       page()?.removeEventListener("visibilitychange", visible);
       await pending;
+      if (wanted) return;
       const lock = sentinel;
       sentinel = null;
       if (!lock || lock.released) return;

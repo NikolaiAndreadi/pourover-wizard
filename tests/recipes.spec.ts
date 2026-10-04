@@ -47,9 +47,7 @@ test("picking a recipe shows its credits, resets the dose and scales pour target
   ).toBeVisible();
   await expect(page.getByText("Done around 3:30.")).toBeVisible();
   await page.getByRole("button", { name: "Done", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "Brew summary" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your brew" })).toBeVisible();
   await expect(page.getByText("Recipe by Tetsu Kasuya")).toBeVisible();
 });
 

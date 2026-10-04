@@ -327,6 +327,16 @@ figcaption,
 .brew-summary {
   text-align: center;
 }
+/* The summary's only title is its eyebrow, kept as the heading for assistive tech. */
+.brew-panel h1.summary-title,
+.active-session .brew-panel h1.summary-title {
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.15em;
+  font-weight: 400;
+  margin: 0 0 12px;
+}
 .brew-summary .metrics {
   justify-content: center;
 }

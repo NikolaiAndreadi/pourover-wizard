@@ -381,9 +381,7 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
   await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.fastForward(131000);
   await page.getByRole("button", { name: "Done", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "Brew summary" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your brew" })).toBeVisible();
   await expect(weight).toBeVisible();
   await page.getByRole("button", { name: "Prepare another brew" }).click();
   await expect(
@@ -538,9 +536,6 @@ test("without Bluetooth the brew is timer only and never fabricates samples", as
   await page.getByRole("button", { name: "Done", exact: true }).click();
   await expect(page.locator(".brew-chart")).toBeVisible();
   await expect(page.getByTestId("stage-boundary")).toHaveCount(12);
-  await expect(
-    page.getByText("Timer only, so water poured wasn’t measured."),
-  ).toBeVisible();
   await expect(
     page.getByRole("term").filter({ hasText: "Water poured" }),
   ).toHaveCount(0);

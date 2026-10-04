@@ -284,8 +284,7 @@ function Summary({ model }: { model: BrewModel }) {
   const poured = session.pouredGrams;
   return (
     <section className="brew-panel brew-summary">
-      <p className="eyebrow">Your brew</p>
-      <h1>Brew summary</h1>
+      <h1 className="eyebrow summary-title">Your brew</h1>
       <dl className="metrics">
         <div>
           <dt>Coffee</dt>
@@ -299,37 +298,19 @@ function Summary({ model }: { model: BrewModel }) {
           <dt>Time</dt>
           <dd>{formatTime(session.elapsedMs)}</dd>
         </div>
-        {session.mode === "live" && (
-          <div>
-            <dt>Water poured</dt>
-            <dd>
-              {poured === null ? "Not measured" : `${poured.toFixed(1)} g`}
-            </dd>
-          </div>
-        )}
-        {session.mode === "live" && poured !== null && (
-          <div>
-            <dt>Ratio</dt>
-            <dd>1:{(poured / session.recipe.doseGrams).toFixed(2)}</dd>
-          </div>
+        {poured !== null && (
+          <>
+            <div>
+              <dt>Water poured</dt>
+              <dd>{poured.toFixed(1)} g</dd>
+            </div>
+            <div>
+              <dt>Ratio</dt>
+              <dd>1:{(poured / session.recipe.doseGrams).toFixed(2)}</dd>
+            </div>
+          </>
         )}
       </dl>
-      {session.mode === "timer" ? (
-        <p>Timer only, so water poured wasn’t measured.</p>
-      ) : (
-        <>
-          {!session.baselineVerified && (
-            <p>
-              The scale wasn’t zeroed at the start, so water poured is unknown.
-            </p>
-          )}
-          {session.missingData && (
-            <p>
-              Some scale readings are missing, so water poured may read low.
-            </p>
-          )}
-        </>
-      )}
       <BrewChart model={model} />
       <button type="button" className="button restart" onClick={model.restart}>
         Prepare another brew

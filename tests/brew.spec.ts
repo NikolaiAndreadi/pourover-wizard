@@ -62,12 +62,12 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
     fullPage: true,
   });
   await page.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Your brew" })).toBeVisible();
+  // Timer brews show no measurement rows or notes about what was not measured.
   await expect(
-    page.getByRole("heading", { name: "Brew summary" }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Timer only, so water poured wasn’t measured."),
-  ).toBeVisible();
+    page.getByRole("term").filter({ hasText: "Water poured" }),
+  ).toHaveCount(0);
+  await expect(page.getByText(/measured|zeroed|missing/)).toHaveCount(0);
   await expect(
     page.getByRole("definition").filter({ hasText: /^300 g$/ }),
   ).toBeVisible();

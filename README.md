@@ -275,15 +275,16 @@ scale disturbances with hidden readings.
 Scott Rao's recipe is deferred: its third pour is triggered by drainage rather
 than the clock, and the engine is time-locked.
 
-Timer summaries show targets without fabricated measurements. Live summaries show
-**Water poured**, an estimate from the highest settled reading (at least 500 ms within 1 g), excluding brief spikes and
-dripper removal; sustained load disturbances may inflate it. Live water/ratio
-estimates require a verified tared stable zero baseline at manual start or
-explicit arming; starting without that baseline still provides the timer and
-measured chart, but no net poured-water estimate. A stopped brew retains its
-original baseline and measurements. Live summaries identify missing readings
-and show an estimated ratio
-only when a settled measurement exists. Charts split across lost readings,
+The summary, titled **Your brew**, shows only what was recorded: coffee, target
+water, time and the chart, plus **Water poured** and **Ratio** when a live brew
+measured them. Nothing is said about measurements that were not taken, so a
+timer brew or an unzeroed scale simply shows no poured-water row. Water poured
+is an estimate from the highest settled reading (at least 500 ms within 1 g),
+excluding brief spikes and dripper removal; sustained load disturbances may
+inflate it. It requires a verified tared stable zero baseline at manual start
+or explicit arming; starting without that baseline still provides the timer
+and measured chart. A stopped brew retains its original baseline and
+measurements. Charts split across lost readings,
 retain at most 600 display samples, and are not raw recordings. The full chart
 shows gram/time ticks, a grid, amber guidance and teal scale weight, plus
 moving progress dots; the timer-mode strip has its own moving guidance dot. The complete recommendation stays

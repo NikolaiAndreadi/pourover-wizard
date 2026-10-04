@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { BrewModel } from "@/app/useBrew";
 
 /** Cancels the session after a one-second hold of pointer, Space or Enter. */
@@ -8,11 +9,12 @@ export function HoldToCancel({
 }) {
   const { dispatch } = model;
   return (
-    <div className="hold-to-cancel">
+    <>
       <button
         type="button"
         className="cancel"
         aria-describedby="cancel-hint"
+        style={{ "--hold": model.holdProgress } as CSSProperties}
         onPointerDown={(event) => {
           event.currentTarget.setPointerCapture(event.pointerId);
           dispatch("hold");
@@ -36,14 +38,9 @@ export function HoldToCancel({
       >
         Hold to cancel
       </button>
-      <progress
-        aria-label="Cancel hold progress"
-        max="1"
-        value={model.holdProgress}
-      />
       <span id="cancel-hint" className="visually-hidden">
         Hold for one second. With a keyboard, hold Space or Enter.
       </span>
-    </div>
+    </>
   );
 }

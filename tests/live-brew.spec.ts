@@ -97,7 +97,8 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await expect(page.getByRole("checkbox")).toHaveCount(0);
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Connect scale" }).click();
-  await expect(page.getByRole("status")).toContainText("connected");
+  const weight = page.getByRole("button", { name: /^BOOKOO Themis Mini · / });
+  await expect(weight).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(
     await page.evaluate(() => localStorage.getItem("pourover-wizard.scale")),
@@ -105,7 +106,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await page.evaluate(() => {
     window.brewMock.failTare = true;
   });
-  await page.getByRole("button", { name: "Tare", exact: true }).click();
+  await weight.click();
   await expect(page.getByRole("alert")).toHaveText("Tare write failed");
   await expect(
     page.getByRole("button", { name: "Auto start on weight change" }),
@@ -113,7 +114,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await page.evaluate(() => {
     window.brewMock.failTare = false;
   });
-  await page.getByRole("button", { name: "Tare", exact: true }).click();
+  await weight.click();
   const emit = async (grams: number) =>
     page.evaluate(
       (bytes) => window.brewMock.emit(bytes),
@@ -138,7 +139,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     },
     Array.from(syntheticFrame({ magnitude: 99900, unit: 1, sign: 0x2b })),
   );
-  await expect(page.getByRole("status")).toContainText("0.0 g");
+  await expect(weight).toHaveText("BOOKOO Themis Mini · 0.0 g");
   await expect(
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();
@@ -159,7 +160,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await expect(
     page.getByRole("heading", { name: "Ready when you are" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Tare", exact: true }).click();
+  await weight.click();
   for (let i = 0; i < 3; i++) {
     await page.clock.runFor(250);
     await emit(0);
@@ -210,7 +211,9 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     await page.clock.runFor(250);
     await emit(-12.2);
   }
-  await expect(page.getByRole("status")).toContainText("0.0 g");
+  await expect(
+    page.getByRole("button", { name: /^BOOKOO Themis Mini · / }),
+  ).toHaveText("BOOKOO Themis Mini · 0.0 g");
   await expect(page.getByTestId("pour-zoom")).toBeVisible();
   for (const grams of [10, 20, 30]) {
     await page.clock.runFor(250);
@@ -228,7 +231,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     page.getByRole("heading", { name: "Let it bloom", exact: true }),
   ).toBeVisible();
   await expect(page.getByTestId("pour-zoom")).toHaveCount(0);
-  await page.getByRole("button", { name: "Disconnect scale" }).click();
+  await page.getByRole("button", { name: "Disconnect" }).click();
   await expect(
     page.getByRole("dialog", { name: "scales disconnected!" }),
   ).toBeVisible();
@@ -311,24 +314,26 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
   await page.getByLabel("Guide mode").selectOption("live");
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Connect scale" }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "BOOKOO Themis Mini connected",
-  );
+  await expect(
+    page.getByRole("button", { name: /^BOOKOO Themis Mini · / }),
+  ).toBeVisible();
   expect(await page.evaluate(() => window.knownScale)).toMatchObject({
     requests: 1,
     lookups: 0,
   });
-  await page.getByRole("button", { name: "Disconnect scale" }).click();
-  await expect(page.getByRole("status")).toContainText("Scale disconnected");
+  await page.getByRole("button", { name: "Disconnect" }).click();
+  await expect(
+    page.getByRole("button", { name: "Connect scale" }),
+  ).toBeVisible();
   await page.evaluate(() => window.knownScale.hold());
   await page.getByRole("button", { name: "Connect scale" }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "Connecting to BOOKOO_SC 000000…",
-  );
+  await expect(
+    page.getByRole("button", { name: "Connecting to BOOKOO_SC 000000…" }),
+  ).toBeDisabled();
   await page.evaluate(() => window.knownScale.release());
-  await expect(page.getByRole("status")).toContainText(
-    "BOOKOO Themis Mini connected",
-  );
+  await expect(
+    page.getByRole("button", { name: /^BOOKOO Themis Mini · / }),
+  ).toBeVisible();
   expect(await page.evaluate(() => window.knownScale)).toMatchObject({
     requests: 1,
     lookups: 1,
@@ -406,11 +411,13 @@ test("a cancelled filtered chooser offers Show all devices, which requests every
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Connect scale" }).click();
   await expect(page.getByRole("alert")).toContainText("User cancelled");
-  await expect(page.getByRole("status")).toContainText("Scale disconnected");
+  await expect(
+    page.getByRole("button", { name: "Connect scale" }),
+  ).toBeVisible();
   await setup.getByRole("button", { name: "Show all devices" }).click();
-  await expect(page.getByRole("status")).toContainText(
-    "BOOKOO Themis Mini connected",
-  );
+  await expect(
+    page.getByRole("button", { name: /^BOOKOO Themis Mini · / }),
+  ).toBeVisible();
   await expect(
     setup.getByRole("button", { name: "Show all devices" }),
   ).toHaveCount(0);
@@ -455,7 +462,6 @@ test("live mode without Bluetooth remains a manual timer and never fabricates sa
   await page.getByRole("button", { name: "Start now" }).click();
   await page.clock.runFor(1000);
   await expect(page.getByRole("timer")).toHaveText("0:01");
-  await expect(page.getByRole("status")).toContainText("Waiting for the scale");
   await expect(page.getByTestId("actual-series")).toHaveCount(0);
   await page.clock.fastForward(130000);
   await page.getByRole("button", { name: "Done", exact: true }).click();

@@ -174,8 +174,8 @@ limits are documented in this README only, not in the app.
 
 **Get ready** opens the ready screen: three preparation reminders, the bold
 prompt to tap **Start now** as the water lands, then **Start now** alone in
-timer mode or beside **Auto start on weight change** with a scale, **Tare** in
-live mode, and a secondary recipe preview. **Next step** or the Right arrow
+timer mode or beside **Auto start on weight change** with a scale, and a
+secondary recipe preview. **Next step** or the Right arrow
 opens the step layout at the first step; the previous/next buttons or
 Left/Right arrow keys move through the recipe. Previewing hides start and arm
 controls; **Go to start**, or stepping back before the first step, restores
@@ -187,9 +187,11 @@ target, such as "Pour to 100 g"), a pixel-art scene of the current action, time
 left in the step (the largest number during swirls and waits), Now and Next step
 cards (the Next card shows a still frame of its scene), the recipe progress, and
 the compact progress strip. The elapsed timer stays small in the top corner.
-During a session, **Hold to cancel** and, in live mode, the one-line scale status
-with **Connect scale**/**Disconnect scale** sit in the page header; **Tare** and
-**Auto start on weight change** stay on the ready screen. Both modes brew with a compact
+The page header holds the session controls: in live mode **Connect scale**, or
+once connected **Disconnect** and a weight button reading the identified model
+and the current weight, which tares the scale when tapped; then **Back** before
+the brew starts, or **Hold to cancel** once it is armed or brewing.
+**Auto start on weight change** stays on the ready screen. Both modes brew with a compact
 progress strip showing the recipe shape, step boundaries, swirl bands and the
 current guidance position. In live mode, each pour step adds a taller panel
 beneath the strip that zooms into that pour's time and gram range: the ideal
@@ -204,9 +206,11 @@ consecutive rises totaling at least 3 g over at least 500 ms and backdates start
 to the rise baseline. The first manual or detected start wins. These thresholds
 need validation with the physical scale.
 
-Hold **Hold to cancel**, Space, or Enter for one physical second. Early release,
-pointer cancellation, lost focus, or page hiding resets the hold. Cancellation
-clears the session. **Done** appears only once drawdown starts and manually ends
+Hold **Hold to cancel**, Space, or Enter for one physical second; the button
+fills from the bottom as the hold progresses. Early release, pointer
+cancellation, lost focus, or page hiding resets the hold. Cancelling a running
+brew shows the cancelled screen; **Back** before the start, or a completed hold
+while armed, returns to the home screen directly. **Done** appears only once drawdown starts and manually ends
 the brew. Hash changes do not switch screens and leave the in-memory brew
 running; reload clears it. No history is saved.
 

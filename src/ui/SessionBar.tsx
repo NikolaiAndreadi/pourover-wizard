@@ -2,21 +2,55 @@ import { type LiveSnapshot, modelName } from "@/app/liveScale";
 import type { BrewModel } from "@/app/useBrew";
 import { HoldToCancel } from "./HoldToCancel";
 
-const SCALE_STATUS = {
-  connected: "Scale connected",
-  connecting: "Connecting to scale",
-  disconnected: "Scale disconnected",
-} as const;
-/** Names the identified model once connected, such as "BOOKOO Themis Mini connected". */
-function scaleStatus({ status, progress, model }: LiveSnapshot): string {
-  if (status === "connected" && model) return `${modelName(model)} connected`;
-  if (status !== "connecting" || !progress) return SCALE_STATUS[status];
+function connectingLabel({ progress }: LiveSnapshot): string {
+  if (!progress) return "Connecting…";
   return progress.kind === "chooser"
     ? "Choose your scale"
     : `Connecting to ${progress.name ?? "your scale"}…`;
 }
-
-/** Session controls in the header: scale status and connection, and hold to cancel. */
+function ScaleControls({ model }: { model: BrewModel }) {
+  const live = model.liveState;
+  if (live.status === "disconnected")
+    return (
+      <button
+        type="button"
+        disabled={!model.liveSupported}
+        onClick={model.connectLive}
+      >
+        Connect scale
+      </button>
+    );
+  if (live.status === "connecting")
+    return (
+      <button type="button" disabled>
+        {connectingLabel(live)}
+      </button>
+    );
+  const name = live.model ? modelName(live.model) : "Scale";
+  const weight =
+    model.liveWeight === null || model.liveWeight === undefined
+      ? "—"
+      : model.liveWeight.toFixed(1);
+  return (
+    <>
+      <button type="button" onClick={model.disconnectLive}>
+        Disconnect
+      </button>
+      <button
+        type="button"
+        className="weight"
+        aria-describedby="tare-hint"
+        disabled={live.pendingTare}
+        onClick={model.tareLive}
+      >
+        {live.pendingTare ? "Taring…" : `${name} · ${weight} g`}
+      </button>
+      <span id="tare-hint" className="visually-hidden">
+        Tap the weight to tare the scale.
+      </span>
+    </>
+  );
+}
 export function SessionBar({ model }: { model: BrewModel }) {
   const session = model.session;
   if (
@@ -26,31 +60,15 @@ export function SessionBar({ model }: { model: BrewModel }) {
   )
     return null;
   return (
-    <div className={`session-bar${session.mode === "live" ? " is-live" : ""}`}>
-      {session.mode === "live" && (
-        <div className="session-scale">
-          <p role="status">
-            {scaleStatus(model.liveState)} ·{" "}
-            {session.lastSample
-              ? `${model.liveWeight?.toFixed(1) ?? "—"} g`
-              : "Waiting for the scale…"}
-          </p>
-          {model.liveState.status === "disconnected" ? (
-            <button
-              type="button"
-              disabled={!model.liveSupported}
-              onClick={model.connectLive}
-            >
-              Connect scale
-            </button>
-          ) : (
-            <button type="button" onClick={model.disconnectLive}>
-              Disconnect scale
-            </button>
-          )}
-        </div>
+    <div className="session-bar">
+      {session.mode === "live" && <ScaleControls model={model} />}
+      {session.phase === "preparation" ? (
+        <button type="button" onClick={model.restart}>
+          Back
+        </button>
+      ) : (
+        <HoldToCancel model={model} />
       )}
-      <HoldToCancel model={model} />
     </div>
   );
 }

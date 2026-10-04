@@ -395,20 +395,6 @@ export function Brew({ model }: { model: BrewModel }) {
             </button>
           )}
         </div>
-        {live && (
-          <div className="controls">
-            <button
-              type="button"
-              disabled={
-                model.liveState.status !== "connected" ||
-                model.liveState.pendingTare
-              }
-              onClick={model.tareLive}
-            >
-              {model.liveState.pendingTare ? "Taring…" : "Tare"}
-            </button>
-          </div>
-        )}
         <Preview model={model} />
       </section>
     );

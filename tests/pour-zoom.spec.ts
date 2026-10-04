@@ -80,7 +80,9 @@ test("the pour zoom stays pinned to the pour's range when readings stray far out
   await page.getByLabel("Guide mode").selectOption("live");
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Connect scale" }).click();
-  await expect(page.getByRole("status")).toContainText("connected");
+  await expect(
+    page.getByRole("button", { name: /^BOOKOO Themis Mini · / }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Start now" }).click();
 
   const emit = async (grams: number) => {

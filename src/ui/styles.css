@@ -246,16 +246,16 @@ figcaption,
   font-size: 12px;
 }
 .cancel {
+  --cancel-fill: #c8614f66;
   user-select: none;
   touch-action: none;
-  width: 100%;
-}
-progress {
-  width: 100%;
-  height: 8px;
-  display: block;
-  margin-top: 8px;
-  accent-color: var(--accent);
+  color: #8a3b30;
+  border-color: #b65a4d;
+  background: linear-gradient(
+    to top,
+    var(--cancel-fill) calc(var(--hold, 0) * 100%),
+    transparent 0
+  );
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -1010,51 +1010,26 @@ progress {
 /* Session controls live in the header so the card holds only the brew. */
 .session-bar {
   flex-basis: 100%;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px 10px;
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
-.session-bar.is-live {
-  grid-template-columns: auto 1fr;
-  grid-template-areas:
-    "status status"
-    "connect hold";
-}
-.session-scale {
-  display: contents;
-}
-.session-scale p {
-  grid-area: status;
-  margin: 0;
-  height: 20px;
-  font-size: 13px;
-  line-height: 20px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-variant-numeric: tabular-nums;
-}
-.session-scale button {
-  grid-area: connect;
+.session-bar button {
   min-height: 44px;
   padding: 6px 12px;
   font-size: 14px;
+  white-space: nowrap;
 }
-.hold-to-cancel {
-  min-width: 0;
+.session-bar .weight {
+  font-variant-numeric: tabular-nums;
 }
-.is-live .hold-to-cancel {
-  grid-area: hold;
-}
-.hold-to-cancel .cancel {
-  min-height: 44px;
-  padding: 6px 12px;
-  font-size: 15px;
-}
-.hold-to-cancel progress {
-  height: 4px;
-  margin-top: 4px;
+@media (prefers-color-scheme: dark) {
+  .cancel {
+    --cancel-fill: #d8766680;
+    color: #e9a497;
+    border-color: #b96a5d;
+  }
 }
 @media (prefers-color-scheme: dark) {
   .progress-plot svg,

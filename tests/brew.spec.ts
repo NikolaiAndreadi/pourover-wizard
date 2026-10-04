@@ -197,10 +197,11 @@ test("pointer cancellation, focus loss and page hiding release incomplete holds"
   await cancel.hover();
   await page.mouse.down();
   await page.clock.runFor(500);
-  await expect(page.getByLabel("Cancel hold progress")).toHaveJSProperty(
-    "value",
-    0.5,
-  );
+  expect(
+    await cancel.evaluate((element) =>
+      (element as HTMLElement).style.getPropertyValue("--hold"),
+    ),
+  ).toBe("0.5");
   await cancel.dispatchEvent("pointercancel", { pointerId: 1 });
   await page.mouse.up();
   await page.clock.runFor(1500);

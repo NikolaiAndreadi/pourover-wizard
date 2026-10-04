@@ -64,7 +64,12 @@ export function useBrew(memory: BrewMemory = createRememberedBrew()) {
   const now = () => performance.now() - clock.current;
   const apply = (event: Event) => {
     if (!active.current) return null;
+    const wasBrewing = active.current.phase === "brewing";
     active.current = updateSession(active.current, event);
+    if (active.current.phase === "cancelled" && !wasBrewing) {
+      restart();
+      return null;
+    }
     setSession(active.current);
     return active.current;
   };

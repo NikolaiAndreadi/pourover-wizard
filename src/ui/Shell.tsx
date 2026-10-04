@@ -40,6 +40,7 @@ export function Shell({
       </button>
       {!brewing && (
         <header>
+          {/* biome-ignore lint/a11y/useValidAnchor: a real link home that also resets in-app state */}
           <a
             className="brand"
             href="#/"

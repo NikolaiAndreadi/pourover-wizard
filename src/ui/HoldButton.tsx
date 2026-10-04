@@ -2,6 +2,7 @@ import {
   type CSSProperties,
   type ReactNode,
   useEffect,
+  useEffectEvent,
   useId,
   useRef,
   useState,
@@ -46,12 +47,14 @@ export function HoldButton({
       }
     }, 50);
   };
+  const onLeave = useEffectEvent(release);
   useEffect(() => {
-    window.addEventListener("blur", release);
-    document.addEventListener("visibilitychange", release);
+    const leave = () => onLeave();
+    window.addEventListener("blur", leave);
+    document.addEventListener("visibilitychange", leave);
     return () => {
-      window.removeEventListener("blur", release);
-      document.removeEventListener("visibilitychange", release);
+      window.removeEventListener("blur", leave);
+      document.removeEventListener("visibilitychange", leave);
       window.clearInterval(timer.current);
     };
   }, []);

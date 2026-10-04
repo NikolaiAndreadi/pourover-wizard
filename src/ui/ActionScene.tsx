@@ -81,6 +81,7 @@ export function ActionScene({
         >
           {frames.map((frame, index) => (
             <g
+              // biome-ignore lint/suspicious/noArrayIndexKey: frames are a fixed sequence that never reorders
               key={`frame-${index}`}
               transform={`translate(${index * SCENE_SIZE} 0)`}
             >

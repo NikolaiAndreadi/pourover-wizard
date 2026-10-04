@@ -246,59 +246,57 @@ function Home({ model }: { model: BrewModel }) {
   const { recipe } = model;
   const dose = Number(model.dose);
   return (
-    <>
-      <section className="brew-panel">
-        <div className="home-head">
-          <h1>Prepare your brew</h1>
-          <ActionScene action="prepare" durationMs={2400} />
-        </div>
-        {hasScanResults(model) && (
-          <aside className="scale-setup" aria-label="Live scale setup">
-            <ScanResults model={model} />
-          </aside>
-        )}
-        <RecipePicker model={model} />
-        <label>
-          Coffee dose (g)
-          <input
-            type="number"
-            min={recipe.minDoseGrams}
-            max={recipe.maxDoseGrams}
-            step="0.1"
-            value={model.dose}
-            onChange={(event) => model.setDose(event.target.value)}
-            aria-invalid={!model.doseValid}
-          />
-        </label>
-        {!model.doseValid && (
-          <p role="alert">
-            Choose a coffee dose from {recipe.minDoseGrams} to{" "}
-            {recipe.maxDoseGrams} g.
-          </p>
-        )}
-        <p>
-          {model.doseValid ? waterForDose(recipe, dose) : "—"} g water ·{" "}
-          {formatRatio(recipe)}. Timings stay the same at any dose; the original
-          uses {recipe.doseGrams} g.
+    <section className="brew-panel">
+      <div className="home-head">
+        <h1>Prepare your brew</h1>
+        <ActionScene action="prepare" durationMs={2400} />
+      </div>
+      {hasScanResults(model) && (
+        <aside className="scale-setup" aria-label="Live scale setup">
+          <ScanResults model={model} />
+        </aside>
+      )}
+      <RecipePicker model={model} />
+      <label>
+        Coffee dose (g)
+        <input
+          type="number"
+          min={recipe.minDoseGrams}
+          max={recipe.maxDoseGrams}
+          step="0.1"
+          value={model.dose}
+          onChange={(event) => model.setDose(event.target.value)}
+          aria-invalid={!model.doseValid}
+        />
+      </label>
+      {!model.doseValid && (
+        <p role="alert">
+          Choose a coffee dose from {recipe.minDoseGrams} to{" "}
+          {recipe.maxDoseGrams} g.
         </p>
-        <button
-          type="button"
-          className="button get-ready"
-          disabled={!model.doseValid}
-          onClick={model.prepare}
-        >
-          Get ready
-        </button>
-        <button
-          type="button"
-          className="brew-history-link"
-          onClick={model.showHistory}
-        >
-          Brew history
-        </button>
-        <Source recipe={recipe} />
-      </section>
-    </>
+      )}
+      <p>
+        {model.doseValid ? waterForDose(recipe, dose) : "—"} g water ·{" "}
+        {formatRatio(recipe)}. Timings stay the same at any dose; the original
+        uses {recipe.doseGrams} g.
+      </p>
+      <button
+        type="button"
+        className="button get-ready"
+        disabled={!model.doseValid}
+        onClick={model.prepare}
+      >
+        Get ready
+      </button>
+      <button
+        type="button"
+        className="brew-history-link"
+        onClick={model.showHistory}
+      >
+        Brew history
+      </button>
+      <Source recipe={recipe} />
+    </section>
   );
 }
 function History({ model }: { model: BrewModel }) {

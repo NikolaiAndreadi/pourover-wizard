@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import {
   createSession,
   type Event,
@@ -127,13 +127,15 @@ export function useBrew(
       session?.phase === "armed" ||
       session?.phase === "brewing",
   );
+  const onTick = useEffectEvent(() =>
+    apply({ type: "tick", nowMs: now(), holdNowMs: performance.now() }),
+  );
+  const onLeave = useEffectEvent(() =>
+    apply({ type: "release", nowMs: now(), holdNowMs: performance.now() }),
+  );
   useEffect(() => {
-    const timer = window.setInterval(
-      () => apply({ type: "tick", nowMs: now(), holdNowMs: performance.now() }),
-      100,
-    );
-    const release = () =>
-      apply({ type: "release", nowMs: now(), holdNowMs: performance.now() });
+    const timer = window.setInterval(() => onTick(), 100);
+    const release = () => onLeave();
     window.addEventListener("blur", release);
     document.addEventListener("visibilitychange", release);
     return () => {
@@ -175,29 +177,30 @@ export function useBrew(
     preview.current = clamped;
     setPreviewIndex(clamped);
   };
+  const onKey = useEffectEvent((event: KeyboardEvent) => {
+    if (
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.defaultPrevented
+    )
+      return;
+    const target = event.target;
+    if (
+      target instanceof HTMLElement &&
+      (target.isContentEditable ||
+        target.closest("input, textarea, select, [contenteditable]"))
+    )
+      return;
+    if (!browsable() || document.querySelector("[role=dialog], dialog[open]"))
+      return;
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    browseStep(event.key === "ArrowLeft" ? -1 : 1);
+  });
   useEffect(() => {
-    const browse = (event: KeyboardEvent) => {
-      if (
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey ||
-        event.shiftKey ||
-        event.defaultPrevented
-      )
-        return;
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.isContentEditable ||
-          target.closest("input, textarea, select, [contenteditable]"))
-      )
-        return;
-      if (!browsable() || document.querySelector("[role=dialog], dialog[open]"))
-        return;
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-      event.preventDefault();
-      browseStep(event.key === "ArrowLeft" ? -1 : 1);
-    };
+    const browse = (event: KeyboardEvent) => onKey(event);
     window.addEventListener("keydown", browse);
     return () => window.removeEventListener("keydown", browse);
   }, []);
@@ -216,19 +219,22 @@ export function useBrew(
     resetLive();
   };
   const connected = live.liveState.status === "connected";
-  useEffect(() => {
+  const matchMode = useEffectEvent((isConnected: boolean) => {
     const current = active.current;
     if (current?.phase !== "preparation") return;
-    const mode: Mode = connected ? "live" : "timer";
+    const mode: Mode = isConnected ? "live" : "timer";
     if (current.mode === mode) return;
     goToStart();
     active.current = createSession(recipe, Number(dose), mode, now());
     setSession(active.current);
+  });
+  useEffect(() => {
+    matchMode(connected);
   }, [connected]);
   const [armPending, setArmPending] = useState(false);
   const toggleArm = () => {
     const current = active.current;
-    if (!current || current.mode !== "live") return;
+    if (current?.mode !== "live") return;
     if (current.phase === "armed") {
       dispatch("disarm");
       return;
@@ -245,16 +251,16 @@ export function useBrew(
     if (!current.tared) live.tareLive();
   };
   const { pendingTare } = live.liveState;
+  const arm = useEffectEvent(() => dispatch("arm"));
   useEffect(() => {
     if (!armPending) return;
-    const current = active.current;
-    const tareFailed = !current?.tared && !pendingTare;
-    if (!connected || current?.phase !== "preparation" || tareFailed) {
+    const tareFailed = !session?.tared && !pendingTare;
+    if (!connected || session?.phase !== "preparation" || tareFailed) {
       setArmPending(false);
       return;
     }
-    if (!live.liveCanArm || previewOpen.current) return;
-    dispatch("arm");
+    if (!live.liveCanArm || previewing) return;
+    arm();
     setArmPending(false);
   }, [
     armPending,

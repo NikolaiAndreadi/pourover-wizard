@@ -40,10 +40,10 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 const isText = (value: unknown): value is string => typeof value === "string";
 const isNumber = (value: unknown): value is number => typeof value === "number";
-const isFinite = (value: unknown): value is number =>
+const isFiniteNumber = (value: unknown): value is number =>
   isNumber(value) && Number.isFinite(value);
 const isAmount = (value: unknown): value is number =>
-  isFinite(value) && value >= 0;
+  isFiniteNumber(value) && value >= 0;
 const isOptional = <T>(
   value: unknown,
   check: (value: unknown) => value is T,
@@ -65,8 +65,8 @@ function parseSample(value: unknown): ScaleSample | undefined {
   if (
     !isObject(value) ||
     !isAmount(value.atMs) ||
-    !isFinite(value.grams) ||
-    !isOptional(value.segment, isFinite)
+    !isFiniteNumber(value.grams) ||
+    !isOptional(value.segment, isFiniteNumber)
   )
     return undefined;
   const { atMs, grams, segment } = value;

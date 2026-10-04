@@ -47,7 +47,14 @@ describe("remembered brew storage", () => {
       KEY,
       JSON.stringify({
         recipeId: 7,
-        doses: { a: 20, b: "20", c: -1, d: 0, e: null, f: 1e400 },
+        doses: {
+          a: 20,
+          b: "20",
+          c: -1,
+          d: 0,
+          e: null,
+          f: Number.POSITIVE_INFINITY,
+        },
       }),
     );
     expect(createRememberedBrew(() => storage).load()).toEqual({

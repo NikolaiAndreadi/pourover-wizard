@@ -1,16 +1,31 @@
+import { useEffect } from "react";
 import { modelName } from "@/app/liveScale";
 import type { BrewModel } from "@/app/useBrew";
+import type { ThemeModel } from "@/app/useTheme";
 import { Brew } from "./Brew";
 import { SessionBar } from "./SessionBar";
+
+const THEME_LABEL = { system: "System", light: "Light", dark: "Dark" };
 export function Shell({
   brew,
   offline,
+  theme,
 }: {
   brew: BrewModel;
   offline: { offlineReady: boolean; updateReady: boolean };
+  theme: ThemeModel;
 }) {
+  const active = Boolean(brew.session);
+  const home = !active && !brew.historyOpen && !brew.reviewing;
+  useEffect(() => {
+    if (!active || !window.matchMedia("(max-width: 600px)").matches) return;
+    document.getElementById("content")?.scrollIntoView({ block: "start" });
+  }, [active]);
   return (
-    <div className={`shell ${brew.session ? "active-session" : ""}`}>
+    <div
+      className={`shell ${active ? "active-session" : ""}`}
+      data-offline-ready={offline.offlineReady}
+    >
       <button
         type="button"
         className="skip"
@@ -45,34 +60,43 @@ export function Shell({
           Update ready. After brewing, close all app tabs and windows, then
           reopen to use it.
         </p>
-      ) : offline.offlineReady ? (
-        <p className="offline-status">Available offline</p>
       ) : null}
-      <footer>
-        <p className="footer-scales">
-          Supported scales:{" "}
-          {brew.supportedScales.map((scale, index) => (
-            <span key={scale.id}>
-              {index > 0 && ", "}
-              {modelName(scale)} · {scale.verified ? "verified" : "untested"}
-            </span>
-          ))}
-        </p>
-        <a
-          href="https://github.com/NikolaiAndreadi"
-          target="_blank"
-          rel="noreferrer"
-        >
-          GitHub
-        </a>
-        <a
-          href="https://www.linkedin.com/in/andreadi-n"
-          target="_blank"
-          rel="noreferrer"
-        >
-          LinkedIn
-        </a>
-      </footer>
+      {home && (
+        <footer>
+          <div className="footer-scales">
+            <p>Supported scales:</p>
+            <ul>
+              {brew.supportedScales.map((scale) => (
+                <li key={scale.id}>
+                  {modelName(scale)} ·{" "}
+                  {scale.verified ? "verified" : "untested"}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <a
+            href="https://github.com/NikolaiAndreadi/pourover-wizard"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub
+          </a>
+          <a
+            href="https://www.linkedin.com/in/andreadi-n"
+            target="_blank"
+            rel="noreferrer"
+          >
+            LinkedIn
+          </a>
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={theme.cycleTheme}
+          >
+            Theme · {THEME_LABEL[theme.theme]}
+          </button>
+        </footer>
+      )}
     </div>
   );
 }

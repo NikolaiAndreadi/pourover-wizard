@@ -67,9 +67,10 @@ test("cached app cold-opens offline, survives a hash-route reload and brews", as
   page,
 }) => {
   await page.goto(appUrl);
-  await expect(
-    page.getByText("Available offline", { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".shell")).toHaveAttribute(
+    "data-offline-ready",
+    "true",
+  );
   const manifest = await page.evaluate(async () => {
     const link = document.querySelector<HTMLLinkElement>(
       'link[rel="manifest"]',
@@ -110,9 +111,10 @@ test("failed update retains offline version; complete update waits for every tab
   page,
 }) => {
   await page.goto(appUrl);
-  await expect(
-    page.getByText("Available offline", { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".shell")).toHaveAttribute(
+    "data-offline-ready",
+    "true",
+  );
   const second = await context.newPage();
   await second.goto(appUrl);
   await page.getByRole("button", { name: "Get ready" }).click();
@@ -159,7 +161,8 @@ test("failed update retains offline version; complete update waits for every tab
   const reopened = await context.newPage();
   await reopened.goto(appUrl);
   await expect(reopened).toHaveTitle("Pourover Wizard v2");
-  await expect(
-    reopened.getByText("Available offline", { exact: true }),
-  ).toBeVisible();
+  await expect(reopened.locator(".shell")).toHaveAttribute(
+    "data-offline-ready",
+    "true",
+  );
 });

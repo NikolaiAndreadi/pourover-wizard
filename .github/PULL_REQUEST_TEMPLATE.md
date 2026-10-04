@@ -5,5 +5,5 @@
 ## Checklist
 
 - [ ] `npm run check` passes
-- [ ] User-visible behaviour changes are reflected in `docs/behavior.md`
+- [ ] User-visible changes are described above
 - [ ] A new scale or recipe links its source and notes what was verified on hardware

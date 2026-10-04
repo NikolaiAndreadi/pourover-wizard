@@ -21,14 +21,17 @@ test("loads built assets under the project path and ignores unknown hashes", asy
   await expect(page.getByRole("link", { name: "Scale lab" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "About" })).toHaveCount(0);
   const footer = page.locator("footer");
-  await expect(footer.getByRole("link", { name: "GitHub" })).toHaveAttribute(
+  const github = footer.getByRole("link", { name: "GitHub" });
+  await expect(github).toHaveAttribute(
     "href",
-    "https://github.com/NikolaiAndreadi",
+    "https://github.com/NikolaiAndreadi/pourover-wizard",
   );
+  await expect(github).toHaveAttribute("rel", "noreferrer");
   await expect(footer.getByRole("link", { name: "LinkedIn" })).toHaveAttribute(
     "rel",
     "noreferrer",
   );
+  await expect(footer.getByRole("link")).toHaveCount(2);
   await page.screenshot({
     path: testInfo.outputPath("home.png"),
     fullPage: true,
@@ -46,4 +49,30 @@ test("loads built assets under the project path and ignores unknown hashes", asy
     ),
   ).toBe(true);
   expect(failures).toEqual([]);
+});
+
+test("the footer theme switch cycles system, light and dark and is remembered", async ({
+  page,
+}) => {
+  await page.goto("./");
+  const root = page.locator("html");
+  const toggle = page.getByRole("button", { name: /^Theme · / });
+  await expect(toggle).toHaveText("Theme · System");
+  await expect(root).not.toHaveAttribute("data-theme");
+  await toggle.click();
+  await expect(toggle).toHaveText("Theme · Light");
+  await expect(root).toHaveAttribute("data-theme", "light");
+  await toggle.click();
+  await expect(toggle).toHaveText("Theme · Dark");
+  await expect(root).toHaveAttribute("data-theme", "dark");
+  await expect(root).toHaveCSS("background-color", "rgb(32, 37, 31)");
+  await page.reload();
+  await expect(root).toHaveAttribute("data-theme", "dark");
+  await expect(toggle).toHaveText("Theme · Dark");
+  await toggle.click();
+  await expect(toggle).toHaveText("Theme · System");
+  await expect(root).not.toHaveAttribute("data-theme");
+  expect(
+    await page.evaluate(() => localStorage.getItem("pourover-wizard.theme")),
+  ).toBeNull();
 });

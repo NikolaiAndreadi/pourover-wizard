@@ -94,8 +94,7 @@ Contributions for other scales are welcome; see [CONTRIBUTING.md](CONTRIBUTING.m
 
 Recipe names omit the authors' names and the credits do not imply
 endorsement. Where a source gives no clock time for a swirl or stir, the guide
-models it as a ten-second step; the details are in
-[docs/behavior.md](docs/behavior.md#recipes).
+models it as a ten-second step.
 
 ## Good to know
 
@@ -123,7 +122,6 @@ npm run check    # type checks, lint, architecture, unit and browser tests
 
 [CONTRIBUTING.md](CONTRIBUTING.md) covers the toolchain, the quality gates, the
 layered architecture, CI, and how to build the iOS app.
-[docs/behavior.md](docs/behavior.md) is the detailed behavior reference.
 
 ## License
 

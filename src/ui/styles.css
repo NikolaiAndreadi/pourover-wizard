@@ -6,6 +6,12 @@
   line-height: 1.6;
   color-scheme: light dark;
 }
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
 * {
   box-sizing: border-box;
 }
@@ -100,7 +106,7 @@ footer {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   border-top: 1px solid #d9dbcf;
   padding: 24px 0;
   color: #596052;
@@ -109,12 +115,32 @@ footer {
 }
 .footer-scales {
   flex: 1 1 240px;
-  margin: 0;
 }
-footer a {
+.footer-scales p,
+.footer-scales ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+footer a,
+.theme-toggle {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+}
+.theme-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  cursor: pointer;
+}
+.theme-toggle:focus-visible {
+  outline: 3px solid #697753;
+  outline-offset: 5px;
 }
 .skip {
   position: absolute;
@@ -141,29 +167,46 @@ footer a {
     margin-top: 32px;
   }
   footer {
-    justify-content: flex-start;
     gap: 24px;
   }
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color: #eeeee5;
     background: #20251f;
   }
-  header,
-  section,
-  footer {
+  :root:not([data-theme="light"]) header,
+  :root:not([data-theme="light"]) section,
+  :root:not([data-theme="light"]) footer {
     border-color: #48503f;
   }
-  .eyebrow,
-  section p,
-  footer {
+  :root:not([data-theme="light"]) .eyebrow,
+  :root:not([data-theme="light"]) section p,
+  :root:not([data-theme="light"]) footer {
     color: #b6c1a9;
   }
-  .button {
+  :root:not([data-theme="light"]) .button {
     background: #c4d0b3;
     color: #20251f;
   }
+}
+:root[data-theme="dark"] {
+  color: #eeeee5;
+  background: #20251f;
+}
+:root[data-theme="dark"] header,
+:root[data-theme="dark"] section,
+:root[data-theme="dark"] footer {
+  border-color: #48503f;
+}
+:root[data-theme="dark"] .eyebrow,
+:root[data-theme="dark"] section p,
+:root[data-theme="dark"] footer {
+  color: #b6c1a9;
+}
+:root[data-theme="dark"] .button {
+  background: #c4d0b3;
+  color: #20251f;
 }
 :root {
   --accent: #33452f;
@@ -276,10 +319,14 @@ figcaption,
   --hold-fill: #69775366;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --accent: #c4d0b3;
     --muted: #b6c1a9;
   }
+}
+:root[data-theme="dark"] {
+  --accent: #c4d0b3;
+  --muted: #b6c1a9;
 }
 @media (max-width: 600px) {
   header {
@@ -318,6 +365,41 @@ figcaption,
   }
   .active-session .brand span {
     display: none;
+  }
+  html:has(.active-session) {
+    scroll-padding-bottom: 210px;
+  }
+  .active-session .session-bar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 2;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: #f6f3ed;
+    border-top: 1px solid #d9dbcf;
+    box-shadow: 0 -6px 16px #292e2714;
+  }
+  .active-session .session-bar button {
+    width: 100%;
+  }
+  .active-session .session-bar .weight {
+    min-width: 0;
+  }
+}
+@media (max-width: 600px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .active-session .session-bar {
+    background: #20251f;
+    border-color: #48503f;
+    box-shadow: 0 -6px 16px #00000066;
+  }
+}
+@media (max-width: 600px) {
+  :root[data-theme="dark"] .active-session .session-bar {
+    background: #20251f;
+    border-color: #48503f;
+    box-shadow: 0 -6px 16px #00000066;
   }
 }
 .brew-panel:has(.brew-chart) {
@@ -415,18 +497,30 @@ figcaption,
   border-color: #b65a4d;
 }
 @media (prefers-color-scheme: dark) {
-  .history-row {
+  :root:not([data-theme="light"]) .history-row {
     border-color: #48503f;
   }
-  .history-when,
-  .history-meta {
+  :root:not([data-theme="light"]) .history-when,
+  :root:not([data-theme="light"]) .history-meta {
     color: #b6c1a9;
   }
-  .clear-history {
+  :root:not([data-theme="light"]) .clear-history {
     --hold-fill: #d8766680;
     color: #e9a497;
     border-color: #b96a5d;
   }
+}
+:root[data-theme="dark"] .history-row {
+  border-color: #48503f;
+}
+:root[data-theme="dark"] .history-when,
+:root[data-theme="dark"] .history-meta {
+  color: #b6c1a9;
+}
+:root[data-theme="dark"] .clear-history {
+  --hold-fill: #d8766680;
+  color: #e9a497;
+  border-color: #b96a5d;
 }
 .brew-chart {
   --recommendation: #a65e10;
@@ -517,15 +611,20 @@ figcaption,
   }
 }
 @media (prefers-color-scheme: dark) {
-  .brew-chart {
+  :root:not([data-theme="light"]) .brew-chart {
     --recommendation: #e9b665;
     --actual: #69d6df;
     --stage: #b9c49e;
   }
 }
+:root[data-theme="dark"] .brew-chart {
+  --recommendation: #e9b665;
+  --actual: #69d6df;
+  --stage: #b9c49e;
+}
 @media (max-width: 600px) {
   .shell.active-session {
-    padding: 0 12px;
+    padding: 0 12px 200px;
   }
   .active-session .brew-panel {
     padding: 12px;
@@ -561,10 +660,14 @@ figcaption,
   background: #20251fcc;
 }
 @media (prefers-color-scheme: dark) {
-  .disconnect-dialog {
+  :root:not([data-theme="light"]) .disconnect-dialog {
     background: #292e27;
     color: #f6f3ed;
   }
+}
+:root[data-theme="dark"] .disconnect-dialog {
+  background: #292e27;
+  color: #f6f3ed;
 }
 .brew-chart {
   --swirl: #8d51b3;
@@ -582,9 +685,12 @@ figcaption,
   border-top: 0.75px dashed var(--swirl);
 }
 @media (prefers-color-scheme: dark) {
-  .brew-chart {
+  :root:not([data-theme="light"]) .brew-chart {
     --swirl: #cd9ded;
   }
+}
+:root[data-theme="dark"] .brew-chart {
+  --swirl: #cd9ded;
 }
 
 .offline-status {
@@ -774,15 +880,24 @@ figcaption,
   color: #4f6a45;
 }
 @media (prefers-color-scheme: dark) {
-  .pace-faster dd {
+  :root:not([data-theme="light"]) .pace-faster dd {
     color: #e9b665;
   }
-  .pace-slower dd {
+  :root:not([data-theme="light"]) .pace-slower dd {
     color: #e9a497;
   }
-  .pace-steady dd {
+  :root:not([data-theme="light"]) .pace-steady dd {
     color: #b9d4a4;
   }
+}
+:root[data-theme="dark"] .pace-faster dd {
+  color: #e9b665;
+}
+:root[data-theme="dark"] .pace-slower dd {
+  color: #e9a497;
+}
+:root[data-theme="dark"] .pace-steady dd {
+  color: #b9d4a4;
 }
 .drawdown-note {
   margin: 0;
@@ -816,10 +931,14 @@ figcaption,
   color: #1f2a1c;
 }
 @media (prefers-color-scheme: dark) {
-  .start-row .auto-start {
+  :root:not([data-theme="light"]) .start-row .auto-start {
     background: #3a4434;
     color: #eef0e6;
   }
+}
+:root[data-theme="dark"] .start-row .auto-start {
+  background: #3a4434;
+  color: #eef0e6;
 }
 .done {
   width: 100%;
@@ -942,18 +1061,30 @@ figcaption,
   font-variant-numeric: tabular-nums;
 }
 @media (prefers-color-scheme: dark) {
-  .recipe-preview,
-  .recipe-card {
+  :root:not([data-theme="light"]) .recipe-preview,
+  :root:not([data-theme="light"]) .recipe-card {
     border-color: #48503f;
   }
-  .recipe-card.is-selected {
+  :root:not([data-theme="light"]) .recipe-card.is-selected {
     border-color: var(--muted);
     background: #d9dbcf1a;
   }
-  .recipe-author,
-  .recipe-meta {
+  :root:not([data-theme="light"]) .recipe-author,
+  :root:not([data-theme="light"]) .recipe-meta {
     color: #b6c1a9;
   }
+}
+:root[data-theme="dark"] .recipe-preview,
+:root[data-theme="dark"] .recipe-card {
+  border-color: #48503f;
+}
+:root[data-theme="dark"] .recipe-card.is-selected {
+  border-color: var(--muted);
+  background: #d9dbcf1a;
+}
+:root[data-theme="dark"] .recipe-author,
+:root[data-theme="dark"] .recipe-meta {
+  color: #b6c1a9;
 }
 /* Compact recipe progress for timer brewing. */
 .progress-strip {
@@ -1015,13 +1146,20 @@ figcaption,
   font-variant-numeric: tabular-nums;
 }
 @media (prefers-color-scheme: dark) {
-  .progress-strip {
+  :root:not([data-theme="light"]) .progress-strip {
     --recommendation: #e9b665;
     --swirl: #cd9ded;
   }
-  .strip-marker {
+  :root:not([data-theme="light"]) .strip-marker {
     box-shadow: 0 0 0 2px #20251f;
   }
+}
+:root[data-theme="dark"] .progress-strip {
+  --recommendation: #e9b665;
+  --swirl: #cd9ded;
+}
+:root[data-theme="dark"] .strip-marker {
+  box-shadow: 0 0 0 2px #20251f;
 }
 
 /* Pixel-art action scenes: frames sit side by side and step past a 32-cell window. */
@@ -1037,7 +1175,7 @@ figcaption,
   --px-accent: #c0701a;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --scene-bg: #2b3229;
     --px-steel: #c3cbbb;
     --px-shine: #6f786b;
@@ -1048,6 +1186,17 @@ figcaption,
     --px-glass: #7d9ca2;
     --px-accent: #e9b665;
   }
+}
+:root[data-theme="dark"] {
+  --scene-bg: #2b3229;
+  --px-steel: #c3cbbb;
+  --px-shine: #6f786b;
+  --px-ceramic: #ece6d8;
+  --px-grounds: #b07a48;
+  --px-coffee: #a0643a;
+  --px-water: #6fcfe3;
+  --px-glass: #7d9ca2;
+  --px-accent: #e9b665;
 }
 .action-scene {
   flex: none;
@@ -1118,16 +1267,26 @@ figcaption,
 }
 
 @media (prefers-color-scheme: dark) {
-  .step-now {
+  :root:not([data-theme="light"]) .step-now {
     background: #d9dbcf2e;
   }
-  .step-next {
+  :root:not([data-theme="light"]) .step-next {
     background: #d9dbcf14;
     color: #b6c1a9;
   }
-  .step-hint {
+  :root:not([data-theme="light"]) .step-hint {
     color: #b6c1a9;
   }
+}
+:root[data-theme="dark"] .step-now {
+  background: #d9dbcf2e;
+}
+:root[data-theme="dark"] .step-next {
+  background: #d9dbcf14;
+  color: #b6c1a9;
+}
+:root[data-theme="dark"] .step-hint {
+  color: #b6c1a9;
 }
 
 /* Live pours: the current pour segment zoomed beneath the strip. */
@@ -1206,12 +1365,18 @@ figcaption,
   border-top: 3px solid var(--actual);
 }
 @media (prefers-color-scheme: dark) {
-  .progress-strip {
+  :root:not([data-theme="light"]) .progress-strip {
     --actual: #69d6df;
   }
-  .zoom-dot {
+  :root:not([data-theme="light"]) .zoom-dot {
     box-shadow: 0 0 0 2px #20251f;
   }
+}
+:root[data-theme="dark"] .progress-strip {
+  --actual: #69d6df;
+}
+:root[data-theme="dark"] .zoom-dot {
+  box-shadow: 0 0 0 2px #20251f;
 }
 
 /* Session controls live in the header so the card holds only the brew. */
@@ -1244,22 +1409,34 @@ figcaption,
   color: #596052;
 }
 @media (prefers-color-scheme: dark) {
-  .weight-caption {
+  :root:not([data-theme="light"]) .weight-caption {
     color: #b6c1a9;
   }
 }
+:root[data-theme="dark"] .weight-caption {
+  color: #b6c1a9;
+}
 @media (prefers-color-scheme: dark) {
-  .cancel {
+  :root:not([data-theme="light"]) .cancel {
     --hold-fill: #d8766680;
     color: #e9a497;
     border-color: #b96a5d;
   }
 }
+:root[data-theme="dark"] .cancel {
+  --hold-fill: #d8766680;
+  color: #e9a497;
+  border-color: #b96a5d;
+}
 @media (prefers-color-scheme: dark) {
-  .progress-plot svg,
-  .pour-zoom-plot svg {
+  :root:not([data-theme="light"]) .progress-plot svg,
+  :root:not([data-theme="light"]) .pour-zoom-plot svg {
     background: #ffffff0d;
   }
+}
+:root[data-theme="dark"] .progress-plot svg,
+:root[data-theme="dark"] .pour-zoom-plot svg {
+  background: #ffffff0d;
 }
 /* Live scale setup: all-devices fallback and the iOS scan list. */
 .all-devices button,

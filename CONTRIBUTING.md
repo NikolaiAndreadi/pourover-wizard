@@ -100,9 +100,6 @@ itself. `app/` composes adapters; `ui/` uses app and type-only core imports.
 Dependency checks reject cycles and invalid layer imports; Bluetooth APIs and
 native imports belong in `scale/transport/`.
 
-Behavior is specified in [docs/behavior.md](docs/behavior.md). Keep it in
-step with user-visible changes.
-
 ## CI
 
 - **Check** (`.github/workflows/check.yml`) runs on pushes to `main`, pull

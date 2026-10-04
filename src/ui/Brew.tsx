@@ -555,7 +555,7 @@ export function Brew({ model }: { model: BrewModel }) {
             <p className="note arm-hint">
               {session.tared
                 ? "Waiting for a steady zero on the scale…"
-                : "Auto start needs a tared scale: tap the weight in the header to tare."}
+                : "Auto start needs a tared scale: tap the weight button to tare."}
             </p>
           )}
         <Preview model={model} />

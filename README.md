@@ -53,9 +53,10 @@ devices** lists everything if yours does not appear.
 
 Safari has no Web Bluetooth, so there are two ways to brew with a scale:
 
-1. **Web Bluetooth browser.** Install a BLE-enabled browser such as
+1. **Web Bluetooth browser.** Install
    [Bluefy](https://apps.apple.com/app/bluefy-web-ble-browser/id1492822055)
-   and open the same link in it. No install beyond the browser.
+   and open the same link in it. Live scale assist works there, including
+   with the BOOKOO Themis Mini. No install beyond the browser.
 2. **Native app via SideStore.** Download `PouroverWizard.ipa` from the
    [Releases page](https://github.com/NikolaiAndreadi/pourover-wizard/releases),
    install [SideStore](https://docs.sidestore.io/docs/intro), then import the

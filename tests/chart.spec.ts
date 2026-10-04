@@ -27,9 +27,9 @@ test("live brewing uses the compact strip, zooms into pours, and the summary sho
   ).toBeVisible();
   await expect(zoom).toContainText("1:10 · 100 g");
   await expect(zoom).toContainText("1:20 · 150 g");
-  await expect(page.locator(".step-current")).toContainText("Pour to 150 g");
+  await expect(page.locator(".step-now")).toContainText("Pour to 150 g");
   await expect(page.locator(".step-next")).toContainText("Wait");
-  await expect(page.locator(".step-current")).toHaveAttribute(
+  await expect(page.locator(".step-now")).toHaveAttribute(
     "aria-current",
     "step",
   );
@@ -47,7 +47,7 @@ test("live brewing uses the compact strip, zooms into pours, and the summary sho
   await page.emulateMedia({ reducedMotion: "reduce" });
   expect(
     await page
-      .locator(".step-context")
+      .locator(".step-panes")
       .evaluate((element) => getComputedStyle(element).animationName),
   ).toBe("none");
   await page.clock.runFor(4000);

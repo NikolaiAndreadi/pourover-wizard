@@ -182,11 +182,14 @@ controls; **Go to start**, or stepping back before the first step, restores
 them.
 Previewing never starts a timer or produces scale measurements.
 
-While brewing, the screen shows the step headline (pours name their scaled
-target, such as "Pour to 100 g"), a pixel-art scene of the current action, time
-left in the step (the largest number during swirls and waits), Now and Next step
-cards (the Next card shows a still frame of its scene), the recipe progress, and
-the compact progress strip. The elapsed timer stays small in the top corner.
+While brewing, the screen splits in two. The left pane is the current step: its
+headline (pours name their scaled target, such as "Pour to 100 g"), a pixel-art
+scene of the action, and the time left in the step (the largest number during
+swirls and waits). The right pane, muted, is the next step: its headline, a
+still frame of its scene, and the countdown to it; during drawdown it says to
+finish when dripping stops. The compact progress strip follows. The elapsed
+timer stays small in the top corner. While previewing, the left pane also shows
+the step's one-line hint from the recipe data; hints are not shown while brewing.
 The page header holds the session controls: in live mode **Connect scale**, or
 once connected **Disconnect** and a weight button reading the identified model
 and the current weight, which tares the scale when tapped; then **Back** before

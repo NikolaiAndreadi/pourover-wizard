@@ -40,6 +40,7 @@ header {
   font-weight: 650;
   text-decoration: none;
   letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 .brand span {
   display: block;
@@ -384,34 +385,6 @@ figcaption,
 .recommendation-key::before {
   border-top: 0.5px dashed var(--recommendation);
 }
-.step-context {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  padding: 0;
-  margin: 18px 0;
-  list-style: none;
-  gap: 10px;
-  animation: step-enter 350ms ease both;
-}
-.step-context li {
-  min-width: 0;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 14px;
-  line-height: 1.4;
-  background: #d9dbcf33;
-}
-.step-context span {
-  display: block;
-  font-size: 11px;
-  margin-bottom: 6px;
-  opacity: 0.7;
-  font-variant-numeric: tabular-nums;
-}
-.step-context .step-current {
-  background: #d9dbcf99;
-  box-shadow: inset 0 0 0 1px #68725155;
-}
 @keyframes step-enter {
   from {
     opacity: 0.6;
@@ -436,18 +409,14 @@ figcaption,
   .active-session .brew-panel {
     padding: 12px;
   }
-  .step-context {
+  .step-panes {
     gap: 6px;
   }
-  .step-context li {
+  .step-panes li {
     padding: 8px;
-    font-size: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .step-context {
-    animation: none;
-  }
   .chart-step,
   .chart-now,
   .chart-marker {
@@ -530,21 +499,77 @@ figcaption,
 }
 .brew-panel .step-title,
 .active-session .brew-panel .step-title {
-  font-size: clamp(40px, 11vw, 60px);
+  font-size: clamp(30px, 7.5vw, 48px);
   line-height: 1.05;
-  margin: 10px 0 14px;
+  margin: 4px 0 10px;
 }
-.step-hero {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.step-panes {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 12px;
   margin: 8px 0 16px;
+  padding: 0;
+  list-style: none;
+  animation: step-enter 350ms ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-panes {
+    animation: none;
+  }
+}
+.step-panes li {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 12px;
+}
+.step-now {
+  background: #d9dbcf55;
+}
+.step-next {
+  background: #d9dbcf22;
+  color: #596052;
+}
+.step-next .action-scene {
+  filter: grayscale(0.6);
+  opacity: 0.7;
+}
+.pane-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+.next-title {
+  margin: 4px 0 10px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+.next-note {
+  margin: 8px 0 0;
+  font-size: 15px;
+}
+.step-hint {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #596052;
+}
+.step-panes .action-scene {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+}
+.step-next .action-scene {
+  width: 72px;
+  height: 72px;
 }
 .hero-stats {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 0;
+  margin: 12px 0 0;
 }
 .hero-stats dt {
   font-size: 12px;
@@ -558,11 +583,11 @@ figcaption,
   font-variant-numeric: tabular-nums;
 }
 .hero-stats .hero-number {
-  font-size: 60px;
+  font-size: clamp(40px, 12vw, 60px);
   line-height: 1;
 }
 .step-pour .hero-stats .hero-number {
-  font-size: 34px;
+  font-size: clamp(28px, 8vw, 34px);
 }
 .drawdown-note {
   margin: 0;
@@ -635,9 +660,6 @@ figcaption,
 .recipe-preview .preview-caption {
   margin: 0;
   opacity: 0.8;
-}
-.recipe-preview .step-context {
-  margin: 10px 0;
 }
 .preview-nav {
   margin: 8px 0;
@@ -879,9 +901,13 @@ figcaption,
   }
 }
 @media (min-width: 601px) {
-  .step-hero .action-scene {
+  .step-now .action-scene {
     width: 128px;
     height: 128px;
+  }
+  .step-next .action-scene {
+    width: 96px;
+    height: 96px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -893,27 +919,16 @@ figcaption,
   }
 }
 
-/* The next step previews its scene as a still frame. */
-.step-next {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.step-next .action-scene {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-}
-.step-next > div {
-  min-width: 0;
-}
 @media (prefers-color-scheme: dark) {
-  .step-context li {
-    background: #d9dbcf14;
-  }
-  .step-context .step-current {
+  .step-now {
     background: #d9dbcf2e;
-    box-shadow: inset 0 0 0 1px #b6c1a955;
+  }
+  .step-next {
+    background: #d9dbcf14;
+    color: #b6c1a9;
+  }
+  .step-hint {
+    color: #b6c1a9;
   }
 }
 
@@ -1009,7 +1024,7 @@ figcaption,
 
 /* Session controls live in the header so the card holds only the brew. */
 .session-bar {
-  flex-basis: 100%;
+  flex: 1 1 320px;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;

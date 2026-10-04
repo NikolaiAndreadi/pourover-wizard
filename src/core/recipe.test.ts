@@ -10,6 +10,13 @@ import {
 import { recipe, recipeById, recipes } from "./recipes";
 
 describe("Hoffmann recipe guidance", () => {
+  it("rejects blank step hints", () => {
+    const [first, ...rest] = recipe.steps;
+    if (!first) throw new Error("recipe has steps");
+    expect(() =>
+      validateRecipe({ ...recipe, steps: [{ ...first, hint: " " }, ...rest] }),
+    ).toThrow("hints");
+  });
   it("matches independent source timing and target checkpoints", () => {
     expect(recipe.steps.map((step) => step.atMs)).toEqual([
       0, 10000, 15000, 45000, 60000, 70000, 80000, 90000, 100000, 110000,

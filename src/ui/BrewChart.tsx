@@ -1,6 +1,5 @@
 import { movesDripper, stepTitle } from "@/app/stepText";
 import type { BrewModel } from "@/app/useBrew";
-import { ActionScene } from "./ActionScene";
 
 export function chartTime(ms: number) {
   const seconds = Math.floor(ms / 1000);
@@ -257,31 +256,5 @@ export function BrewChart({
         </span>
       </figcaption>
     </figure>
-  );
-}
-
-export function BrewSteps({ model }: { model: BrewModel }) {
-  const { session, step, nextStep } = model;
-  if (!session || !step) return null;
-  return (
-    <ol className="step-context" aria-label="Brew steps" key={step.atMs}>
-      <li className="step-current" aria-current="step">
-        <span>Now · {chartTime(step.atMs)}</span>
-        {stepTitle(step, session.recipe)}
-      </li>
-      <li className="step-next">
-        {nextStep && <ActionScene action={nextStep.action} still />}
-        <div>
-          <span>
-            {nextStep
-              ? `Next · in ${chartTime(nextStep.atMs - model.displayElapsedMs)}`
-              : "Next"}
-          </span>
-          {nextStep
-            ? stepTitle(nextStep, session.recipe)
-            : "Finish when it stops dripping"}
-        </div>
-      </li>
-    </ol>
   );
 }

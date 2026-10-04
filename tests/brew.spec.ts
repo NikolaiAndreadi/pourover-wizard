@@ -116,6 +116,10 @@ for (const mode of ["timer", "live"] as const) {
       page.getByRole("heading", { name: "Pour to 50 g", exact: true }),
     ).toBeVisible();
     await expect(page.getByText("Step 1 of 12 · 0:00")).toBeVisible();
+    await expect(
+      page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
+    ).toBeVisible();
+    await expect(page.locator(".step-next")).toContainText("Swirl gently");
     await expect(page.getByRole("button", { name: "Start now" })).toHaveCount(
       0,
     );
@@ -163,6 +167,9 @@ for (const mode of ["timer", "live"] as const) {
     await page.keyboard.press("ArrowLeft");
     await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
     await page.getByRole("button", { name: "Start now" }).click();
+    await expect(
+      page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
+    ).toHaveCount(0);
     await page.keyboard.press("ArrowRight");
     await expect(page.getByRole("button", { name: "Go to start" })).toHaveCount(
       0,

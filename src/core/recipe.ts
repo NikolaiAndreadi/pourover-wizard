@@ -7,6 +7,8 @@ export interface RecipeStep {
   targetFraction: number;
   /** Named brewing stage shown alongside the step, such as the bloom. */
   stage?: string;
+  /** What to pay attention to; shown while previewing, not while brewing. */
+  hint?: string;
 }
 export interface RecipeSource {
   label: string;
@@ -86,6 +88,8 @@ export function validateRecipe(value: Recipe): void {
     value.finishGuideMs <= drawdownStartMs(value)
   )
     throw new Error("Recipe finish guide must come after drawdown starts.");
+  if (value.steps.some((step) => step.hint !== undefined && !step.hint.trim()))
+    throw new Error("Recipe step hints must not be blank.");
 }
 /** Brewing can be finished once its single, final drawdown step begins. */
 export function drawdownStartMs(value: Recipe): number {

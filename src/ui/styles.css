@@ -316,6 +316,20 @@ figcaption,
 .brew-panel:has(.brew-chart) {
   max-width: 900px;
 }
+/* Finished brews read as a centred card: summary, chart key and the restart button. */
+.brew-summary {
+  text-align: center;
+}
+.brew-summary .metrics {
+  justify-content: center;
+}
+.brew-summary .brew-chart figcaption {
+  justify-content: center;
+}
+.restart {
+  display: flex;
+  margin: 12px auto 0;
+}
 .brew-chart {
   --recommendation: #a65e10;
   --actual: #007b88;

@@ -283,7 +283,7 @@ function Summary({ model }: { model: BrewModel }) {
   if (!session) return null;
   const poured = session.pouredGrams;
   return (
-    <section className="brew-panel">
+    <section className="brew-panel brew-summary">
       <p className="eyebrow">Your brew</p>
       <h1>Brew summary</h1>
       <dl className="metrics">
@@ -331,7 +331,11 @@ function Summary({ model }: { model: BrewModel }) {
         </>
       )}
       <BrewChart model={model} />
-      <button type="button" className="button" onClick={model.restart}>
+      <button
+        type="button"
+        className="button restart"
+        onClick={model.restart}
+      >
         Prepare another brew
       </button>
       <Source recipe={session.recipe} />
@@ -346,7 +350,11 @@ export function Brew({ model }: { model: BrewModel }) {
       <section className="brew-panel">
         <h1>Brew cancelled</h1>
         <p>Nothing was saved. Start again whenever you’re ready.</p>
-        <button type="button" className="button" onClick={model.restart}>
+        <button
+        type="button"
+        className="button restart"
+        onClick={model.restart}
+      >
           Prepare another brew
         </button>
       </section>
@@ -360,7 +368,11 @@ export function Brew({ model }: { model: BrewModel }) {
           {formatTime(session.elapsedMs)}
         </p>
         <BrewChart model={model} />
-        <button type="button" className="button" onClick={model.restart}>
+        <button
+        type="button"
+        className="button restart"
+        onClick={model.restart}
+      >
           Prepare another brew
         </button>
       </section>

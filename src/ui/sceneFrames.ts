@@ -3,7 +3,8 @@
  *
  * Each scene is a list of frames; each frame is 32 strings of 32 palette
  * characters. Parts are authored below as character sprites and composed into
- * frames once, at module load. `.` is transparent.
+ * frames once, at module load; the prepare scene's bean is ray-cast instead.
+ * `.` is transparent.
  */
 export type SceneName =
   | "prepare"
@@ -25,6 +26,7 @@ export const PALETTE = {
   w: "px-water",
   g: "px-glass",
   h: "px-accent",
+  r: "px-roast",
 } as const;
 type Ink = keyof typeof PALETTE;
 type Point = { x: number; y: number };
@@ -81,12 +83,6 @@ const SPOON = [
   "..sss...",
   ".sssss..",
   "..sss...",
-];
-/** Kitchen scale with its display (`d`) and tare button (`t`). */
-const SCALE = [
-  "..kkkkkkkkkkkkkkkkkkkkkkkk..",
-  ".kssssssssddddddssssssttssk.",
-  "kkkkkkkkkkkkkkkkkkkkkkkkkkkk",
 ];
 
 /** Where the cone and server stand in the brewing scenes. */
@@ -293,24 +289,76 @@ function drawdown(index: number): Frame {
   drips(canvas, index, level);
   return frame(canvas);
 }
+const BEAN = { length: 12, width: 9, depth: 6 } as const;
+const BEAN_TILT = 0.35;
+const BEAN_FRAMES = 12;
+const LIGHT = { x: -0.4, y: -0.5, z: 0.77 };
+function creaseOffset(along: number) {
+  return Math.sin((Math.PI * along) / BEAN.length) * 1.4;
+}
+function beanInk(dx: number, dy: number, angle: number) {
+  const { length, width, depth } = BEAN;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const leanCos = Math.cos(BEAN_TILT);
+  const leanSin = Math.sin(BEAN_TILT);
+  const across = dx * leanCos + dy * leanSin;
+  const along = dy * leanCos - dx * leanSin;
+  const a = sin ** 2 / width ** 2 + cos ** 2 / depth ** 2;
+  const b = 2 * across * cos * sin * (1 / depth ** 2 - 1 / width ** 2);
+  const c =
+    across ** 2 * (cos ** 2 / width ** 2 + sin ** 2 / depth ** 2) +
+    along ** 2 / length ** 2 -
+    1;
+  const discriminant = b ** 2 - 4 * a * c;
+  if (discriminant < 0) return ".";
+  const z = (-b + Math.sqrt(discriminant)) / (2 * a);
+  const modelX = across * cos - z * sin;
+  const modelZ = across * sin + z * cos;
+  const onFront = modelZ > 0 && Math.abs(along) < length * 0.86;
+  const fromCrease = Math.abs(modelX - creaseOffset(along));
+  if (onFront && fromCrease < 0.9) return "r";
+  const nx = modelX / width ** 2;
+  const ny = along / length ** 2;
+  const nz = modelZ / depth ** 2;
+  const turnedX = nx * cos + nz * sin;
+  const turnedZ = nz * cos - nx * sin;
+  const screenX = turnedX * leanCos - ny * leanSin;
+  const screenY = turnedX * leanSin + ny * leanCos;
+  const lit =
+    (screenX * LIGHT.x + screenY * LIGHT.y + turnedZ * LIGHT.z) /
+    Math.hypot(screenX, screenY, turnedZ);
+  const lip = onFront && fromCrease < 1.8 ? 0.12 : 0;
+  return lit + lip > 0.85 ? "h" : lit > 0.3 ? "b" : "c";
+}
+function bean(canvas: Canvas, angle: number) {
+  const centre = SCENE_SIZE / 2;
+  for (let y = 0; y < SCENE_SIZE; y++)
+    for (let x = 0; x < SCENE_SIZE; x++)
+      put(canvas, x, y, beanInk(x + 0.5 - centre, y + 0.5 - centre, angle));
+  const edge = (x: number, y: number) =>
+    inkAt(canvas, x, y) !== "." &&
+    [
+      inkAt(canvas, x - 1, y),
+      inkAt(canvas, x + 1, y),
+      inkAt(canvas, x, y - 1),
+      inkAt(canvas, x, y + 1),
+    ].includes(".");
+  const rim: Point[] = [];
+  for (let y = 0; y < SCENE_SIZE; y++)
+    for (let x = 0; x < SCENE_SIZE; x++) if (edge(x, y)) rim.push({ x, y });
+  for (const { x, y } of rim) put(canvas, x, y, "r");
+}
 function prepare(index: number): Frame {
   const canvas = blank();
-  // A rinsed, empty cone on its server, standing on a scale beside the kettle.
-  const at = { x: 10, y: 7 };
-  brewer(canvas, SCENE_SIZE, at);
-  bed(canvas, "p", () => true, [at.y + 1, at.y + 2]);
-  stamp(canvas, KETTLE, { x: 0, y: 0 });
-  // Tare: the display and its button light up.
-  stamp(canvas, SCALE, { x: 4, y: 29 }, (ink) =>
-    ink === "d" || ink === "t" ? (index === 1 ? "h" : "s") : ink,
-  );
+  bean(canvas, (index * 2 * Math.PI) / BEAN_FRAMES);
   return frame(canvas);
 }
 function frames(count: number, draw: (index: number) => Frame) {
   return Array.from({ length: count }, (_, index) => draw(index));
 }
 export const scenes: Record<SceneName, readonly Frame[]> = {
-  prepare: frames(2, prepare),
+  prepare: frames(BEAN_FRAMES, prepare),
   pour: frames(4, pour),
   swirl: frames(4, swirl),
   stir: frames(4, stir),

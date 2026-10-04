@@ -1180,6 +1180,7 @@ figcaption,
   --px-water: #2f9bbd;
   --px-glass: #8eaeb4;
   --px-accent: #c0701a;
+  --px-roast: #3a1d0e;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -1192,6 +1193,7 @@ figcaption,
     --px-water: #6fcfe3;
     --px-glass: #7d9ca2;
     --px-accent: #e9b665;
+    --px-roast: #3f2314;
   }
 }
 :root[data-theme="dark"] {
@@ -1204,6 +1206,7 @@ figcaption,
   --px-water: #6fcfe3;
   --px-glass: #7d9ca2;
   --px-accent: #e9b665;
+  --px-roast: #3f2314;
 }
 .action-scene {
   flex: none;
@@ -1241,6 +1244,9 @@ figcaption,
 }
 .px-accent {
   fill: var(--px-accent);
+}
+.px-roast {
+  fill: var(--px-roast);
 }
 .scene-reel {
   animation: scene-reel var(--scene-duration, 1600ms) steps(var(--frames), end)

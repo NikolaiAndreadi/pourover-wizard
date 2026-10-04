@@ -40,7 +40,7 @@ const reels = Object.fromEntries(
   Object.entries(scenes).map(([name, frames]) => [name, frames.map(runs)]),
 ) as Record<SceneName, Run[][]>;
 const TITLES: Record<SceneName, string> = {
-  prepare: "Get ready: kettle, rinsed cone on the server, scale tared",
+  prepare: "A coffee bean turning slowly",
   pour: "Pour water in small circles over the coffee",
   swirl: "Swirl the cone gently",
   stir: "Stir the coffee once each way with a spoon",

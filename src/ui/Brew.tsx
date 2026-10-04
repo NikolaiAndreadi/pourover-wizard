@@ -255,7 +255,7 @@ function Home({ model }: { model: BrewModel }) {
       <section className="brew-panel">
         <div className="home-head">
           <h1>Prepare your brew</h1>
-          <ActionScene action="prepare" />
+          <ActionScene action="prepare" durationMs={2400} />
         </div>
         <RecipePicker model={model} />
         <label>
@@ -507,7 +507,7 @@ export function Brew({ model }: { model: BrewModel }) {
         <h1>{armed ? "Waiting for a pour" : "Ready when you are"}</h1>
         <ScaleSetup model={model} />
         <div className="ready-hint">
-          <ActionScene action="prepare" />
+          <ActionScene action="prepare" durationMs={2400} />
           <div>
             <ol>
               <li>Rinse the paper and preheat the V60.</li>

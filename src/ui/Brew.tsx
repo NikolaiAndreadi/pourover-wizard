@@ -416,15 +416,16 @@ export function Brew({ model }: { model: BrewModel }) {
             </button>
           )}
         </div>
-        {live && model.liveState.status === "connected" && !armed && (
-          <p className="note arm-hint">
-            {!session.tared
-              ? "Auto start needs a tared scale: tap the weight in the header to tare."
-              : model.liveCanArm
-                ? "Scale is zeroed and steady; auto start is ready."
-                : "Waiting for a steady zero on the scale…"}
-          </p>
-        )}
+        {live &&
+          model.liveState.status === "connected" &&
+          !armed &&
+          !model.liveCanArm && (
+            <p className="note arm-hint">
+              {session.tared
+                ? "Waiting for a steady zero on the scale…"
+                : "Auto start needs a tared scale: tap the weight in the header to tare."}
+            </p>
+          )}
         <Preview model={model} />
       </section>
     );

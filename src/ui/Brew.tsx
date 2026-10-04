@@ -1,4 +1,3 @@
-import { modelName } from "@/app/liveScale";
 import {
   formatRatio,
   formatTime,
@@ -72,17 +71,6 @@ function ScaleSetup({ model }: { model: BrewModel }) {
         <p className="note">
           This browser can’t reach the scale. Use Chrome on a Mac or the iOS
           app.
-        </p>
-      )}
-      {model.liveSupported && (
-        <p className="note supported-scales">
-          Supported scales:{" "}
-          {model.supportedScales.map((scale, index) => (
-            <span key={scale.id}>
-              {index > 0 && ", "}
-              {modelName(scale)} · {scale.verified ? "verified" : "untested"}
-            </span>
-          ))}
         </p>
       )}
       {model.liveSupported && live.offerAllDevices && idle && (

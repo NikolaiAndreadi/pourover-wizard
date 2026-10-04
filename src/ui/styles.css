@@ -94,12 +94,18 @@ section p {
 }
 footer {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   border-top: 1px solid #d9dbcf;
   padding: 24px 0;
   color: #596052;
   font-size: 12px;
   gap: 16px;
+}
+.footer-scales {
+  flex: 1 1 240px;
+  margin: 0;
 }
 footer a {
   display: inline-flex;
@@ -1048,7 +1054,24 @@ figcaption,
   white-space: nowrap;
 }
 .session-bar .weight {
+  min-width: 15em;
+  justify-content: center;
   font-variant-numeric: tabular-nums;
+}
+.weight-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.weight-caption {
+  font-size: 11px;
+  color: #596052;
+}
+@media (prefers-color-scheme: dark) {
+  .weight-caption {
+    color: #b6c1a9;
+  }
 }
 @media (prefers-color-scheme: dark) {
   .cancel {

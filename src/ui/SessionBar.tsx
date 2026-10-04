@@ -36,18 +36,20 @@ function ScaleControls({ model }: { model: BrewModel }) {
       <button type="button" onClick={model.disconnectLive}>
         Disconnect
       </button>
-      <button
-        type="button"
-        className="weight"
-        aria-describedby="tare-hint"
-        disabled={live.pendingTare}
-        onClick={model.tareLive}
-      >
-        {live.pendingTare ? "Taring…" : `${name} · ${weight} g`}
-      </button>
-      <span id="tare-hint" className="visually-hidden">
-        Tap the weight to tare the scale.
-      </span>
+      <div className="weight-control">
+        <button
+          type="button"
+          className="weight"
+          aria-describedby="tare-hint"
+          disabled={live.pendingTare}
+          onClick={model.tareLive}
+        >
+          {name} · {weight} g
+        </button>
+        <span id="tare-hint" className="weight-caption">
+          {live.pendingTare ? "Taring…" : "Press to tare"}
+        </span>
+      </div>
     </>
   );
 }

@@ -401,8 +401,9 @@ test("a cancelled filtered chooser offers Show all devices, which requests every
   await page.goto("./");
   await page.getByRole("button", { name: "Get ready" }).click();
   const setup = page.getByRole("complementary", { name: "Live scale setup" });
-  await expect(setup).toContainText("BOOKOO Themis Mini · verified");
-  await expect(setup).toContainText("BOOKOO Ultra Scale · untested");
+  const footer = page.getByRole("contentinfo");
+  await expect(footer).toContainText("BOOKOO Themis Mini · verified");
+  await expect(footer).toContainText("BOOKOO Ultra Scale · untested");
   await expect(
     setup.getByRole("button", { name: "Show all devices" }),
   ).toHaveCount(0);

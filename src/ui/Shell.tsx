@@ -1,3 +1,4 @@
+import { modelName } from "@/app/liveScale";
 import type { BrewModel } from "@/app/useBrew";
 import { Brew } from "./Brew";
 import { SessionBar } from "./SessionBar";
@@ -38,6 +39,15 @@ export function Shell({
         <p className="offline-status">Available offline</p>
       ) : null}
       <footer>
+        <p className="footer-scales">
+          Supported scales:{" "}
+          {brew.supportedScales.map((scale, index) => (
+            <span key={scale.id}>
+              {index > 0 && ", "}
+              {modelName(scale)} · {scale.verified ? "verified" : "untested"}
+            </span>
+          ))}
+        </p>
         <a
           href="https://github.com/NikolaiAndreadi"
           target="_blank"

@@ -125,8 +125,8 @@ connecting, identify the model from the device's services (short and long
 UUID forms are normalized) before selecting its characteristics; a device
 with no supported service is released with "This device is not a supported
 scale", and a model whose protocol the app cannot decode is refused rather
-than decoded. The connected status names the identified model. The ready
-screen lists the registry as **Supported scales**, marking each entry
+than decoded. The connected status names the identified model. The page
+footer lists the registry as **Supported scales**, marking each entry
 verified or untested.
 
 The device chooser is filtered to supported scales: on the web, devices
@@ -193,8 +193,9 @@ finish when dripping stops. The compact progress strip follows. The elapsed
 timer stays small in the top corner. While previewing, the left pane also shows
 the step's one-line hint from the recipe data; hints are not shown while brewing.
 The page header holds the session controls: in live mode **Connect scale**, or
-once connected **Disconnect** and a weight button reading the identified model
-and the current weight, which tares the scale when tapped; then **Back** before
+once connected **Disconnect** and a fixed-width weight button reading the
+identified model and the current weight, captioned **Press to tare**, which
+tares the scale when tapped (the caption reads **Taring…** meanwhile); then **Back** before
 the brew starts, or **Hold to cancel** once it is armed or brewing.
 **Auto start on weight change** stays on the ready screen. Both modes brew with a compact
 progress strip showing the recipe shape, step boundaries, swirl bands and the

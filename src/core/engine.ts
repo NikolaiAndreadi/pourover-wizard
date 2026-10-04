@@ -284,6 +284,7 @@ function disarm(next: Session): Session {
     ...next,
     phase: "preparation",
     tared: false,
+    baselineVerified: false,
     armedAtMs: null,
     detector: IDLE_DETECTOR,
     lastSample: null,

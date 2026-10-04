@@ -244,6 +244,15 @@ describe("live stream readiness and loss", () => {
     const brewing = event(armed(), "start", 700);
     expect(event(brewing, "disarm", 800).phase).toBe("brewing");
   });
+  it("a manual start after disarming does not trust the old zero", () => {
+    let state = event(armed(), "disarm", 650);
+    expect(state.baselineVerified).toBe(false);
+    state = event(sample(state, 700, 500), "start", 700);
+    for (const time of [950, 1200, 1450]) state = sample(state, time, 500);
+    expect(state.phase).toBe("brewing");
+    expect(state.baselineVerified).toBe(false);
+    expect(state.pouredGrams).toBeNull();
+  });
   it("disarms on physical disconnect while leaving timer mode unaffected", () => {
     const state = event(event(ready(), "arm", 600), "disconnect", 700);
     expect(state.phase).toBe("preparation");

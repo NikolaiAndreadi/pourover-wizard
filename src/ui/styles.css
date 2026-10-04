@@ -426,6 +426,10 @@ figcaption,
   display: flex;
   margin: 12px auto 0;
 }
+.brew-summary .restart {
+  width: 100%;
+  justify-content: center;
+}
 /* Reviewing a finished brew: one browsed step pane above the strip and chart. */
 .brew-summary .step-caption {
   margin: 0 0 12px;
@@ -1293,8 +1297,9 @@ figcaption,
   color: #b6c1a9;
 }
 
-/* Live pours: the current pour segment zoomed beneath the strip. */
-.progress-strip {
+.progress-strip,
+.pour-zoom {
+  --recommendation: #a65e10;
   --actual: #007b88;
 }
 .strip-step.is-zoomed {
@@ -1369,14 +1374,18 @@ figcaption,
   border-top: 3px solid var(--actual);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .progress-strip {
+  :root:not([data-theme="light"]) .progress-strip,
+  :root:not([data-theme="light"]) .pour-zoom {
+    --recommendation: #e9b665;
     --actual: #69d6df;
   }
   :root:not([data-theme="light"]) .zoom-dot {
     box-shadow: 0 0 0 2px #20251f;
   }
 }
-:root[data-theme="dark"] .progress-strip {
+:root[data-theme="dark"] .progress-strip,
+:root[data-theme="dark"] .pour-zoom {
+  --recommendation: #e9b665;
   --actual: #69d6df;
 }
 :root[data-theme="dark"] .zoom-dot {

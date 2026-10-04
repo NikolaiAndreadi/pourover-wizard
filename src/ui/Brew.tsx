@@ -11,7 +11,7 @@ import type { Recipe } from "@/core/recipe";
 import { ActionScene } from "./ActionScene";
 import { BrewChart } from "./BrewChart";
 import { HoldButton } from "./HoldButton";
-import { ProgressStrip } from "./ProgressStrip";
+import { PourZoom, ProgressStrip, showsPourZoom } from "./ProgressStrip";
 
 /** Saved brews complete in UTC and are shown in the viewer's local time. */
 const localTime = (iso: string) =>
@@ -415,8 +415,8 @@ function Summary({ model }: { model: BrewModel }) {
         </>
       )}
       <StepNav model={model} label="Browse brew steps" />
-      {model.isPreviewing && <ProgressStrip model={model} />}
       <BrewChart model={model} />
+      {model.isPreviewing && showsPourZoom(model) && <PourZoom model={model} />}
       {model.isPreviewing && (
         <button
           type="button"

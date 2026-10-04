@@ -95,9 +95,9 @@ test("a completed timer brew is kept in local time, reviewed step by step and de
   await expect(page.getByText("Step 1 of 12 · 0:00")).toBeVisible();
   await expect(page.locator(".step-next")).toHaveCount(0);
   await expect(page.getByText("Now", { exact: true })).toHaveCount(0);
-  await expect(
-    page.getByRole("img", { name: "Recipe progress" }),
-  ).toBeVisible();
+  await expect(page.getByRole("img", { name: "Recipe progress" })).toHaveCount(
+    0,
+  );
   await expect(page.getByTestId("pour-zoom")).toHaveCount(0);
   await expect(
     page.getByRole("img", { name: "Expected water guidance curve" }),

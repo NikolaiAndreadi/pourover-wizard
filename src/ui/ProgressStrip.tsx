@@ -16,12 +16,21 @@ type StripModel = Pick<
 >;
 const ZOOM_HEIGHT = 160;
 
+export function showsPourZoom({ session, step, nextStep }: StripModel) {
+  return (
+    session?.mode === "live" &&
+    (session.phase === "brewing" || session.phase === "completed") &&
+    step?.action === "pour" &&
+    nextStep !== null
+  );
+}
+
 /**
  * Live pours only: zooms into the current pour's time and gram range, with the
  * ideal ramp dashed and measured weight solid. Readings during swirls and
  * stirs are hidden.
  */
-function PourZoom({ model }: { model: StripModel }) {
+export function PourZoom({ model }: { model: StripModel }) {
   const { session, step, nextStep } = model;
   if (!session || !step || !nextStep) return null;
   const { recipe } = session;
@@ -164,11 +173,7 @@ export function ProgressStrip({ model }: { model: StripModel }) {
   const now = x(model.displayElapsedMs);
   const step = model.step;
   const stepEnd = model.nextStep?.atMs ?? duration;
-  const zoomed =
-    session.mode === "live" &&
-    (session.phase === "brewing" || session.phase === "completed") &&
-    step?.action === "pour" &&
-    model.nextStep !== null;
+  const zoomed = showsPourZoom(model);
   const marker = {
     left: `${(now / WIDTH) * 100}%`,
     top: `${(y(model.expected) / HEIGHT) * 100}%`,

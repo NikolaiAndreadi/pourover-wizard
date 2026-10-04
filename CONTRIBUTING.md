@@ -23,6 +23,10 @@ dependencies with `npm ci`, then `npx playwright install chromium` (Linux CI
 adds `--with-deps`). Track the latest stable Node Current and the latest
 compatible npm when updating the runtime.
 
+Installing also points Git at `.githooks/`, whose `pre-push` hook runs
+`npm run check` so a push never reaches CI with a failure it would have
+caught locally. Skip it once with `git push --no-verify`.
+
 | Command                      | Purpose / output                                                                                |
 |------------------------------|-------------------------------------------------------------------------------------------------|
 | `npm run dev`                | Local app at `/pourover-wizard/`                                                                |

@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+cd "$(git rev-parse --show-toplevel)"
+if ! command -v npm >/dev/null 2>&1; then
+  echo "pre-push: npm is not on PATH; run \`nvm use\` or push with --no-verify." >&2
+  exit 1
+fi
+echo "pre-push: running npm run check"
+npm run check

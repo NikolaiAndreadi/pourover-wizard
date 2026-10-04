@@ -77,8 +77,11 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
     page.getByRole("heading", { name: "Pour to 60 g", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Step 1 of 12 · 0:00")).toBeVisible();
+  await expect(page.getByRole("img", { name: "Recipe progress" })).toHaveCount(
+    0,
+  );
   await expect(
-    page.getByRole("img", { name: "Recipe progress" }),
+    page.getByRole("img", { name: "Expected water guidance curve" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Go to start" }).click();
   await expect(page.getByRole("heading", { name: "Your brew" })).toBeVisible();

@@ -62,8 +62,12 @@ jobs:
           TAG: ${{ github.ref_name }}
           REPO: ${{ github.repository }}
         run: |
-          gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 \
-            || gh release create "$TAG" --repo "$REPO" --verify-tag --generate-notes \
-                 --notes "Unsigned iOS build for SideStore. Verify the SHA-256 before importing."
-          gh release upload "$TAG" --repo "$REPO" --clobber \
-            ipa/PouroverWizard.ipa ipa/PouroverWizard.ipa.sha256
+          draft=$(gh release view "$TAG" --repo "$REPO" --json isDraft -q .isDraft 2>/dev/null || true)
+          if [ "$draft" = false ]; then
+            echo "::error::Release $TAG is already published and immutable; push a new tag."
+            exit 1
+          fi
+          [ "$draft" = true ] || gh release create "$TAG" --repo "$REPO" --draft --verify-tag \
+            --generate-notes --notes "Unsigned iOS build for SideStore. Verify the SHA-256 before importing."
+          gh release upload "$TAG" --repo "$REPO" --clobber ipa/PouroverWizard.ipa ipa/PouroverWizard.ipa.sha256
+          gh release edit "$TAG" --repo "$REPO" --draft=false

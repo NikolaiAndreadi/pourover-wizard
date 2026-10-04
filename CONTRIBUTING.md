@@ -88,7 +88,10 @@ git tag v1.2.0
 git push origin v1.2.0
 ```
 
-The iOS workflow creates the release with the IPA attached. The web app
+The iOS workflow creates the release with the IPA attached. Releases are
+immutable, so don't publish one by hand: a published release can't take the
+IPA, and its tag can never be reused. To write your own notes, create a draft
+for the tag before pushing it; the workflow fills and publishes it. The web app
 deploys from every push to `main`, independent of tags.
 
 ## iOS build

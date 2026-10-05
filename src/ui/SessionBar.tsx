@@ -23,9 +23,6 @@ function BluetoothIcon() {
 }
 function ScaleControls({ model }: { model: BrewModel }) {
   const live = model.liveState;
-  const showsScan = model.session
-    ? model.session.phase === "preparation" && !model.isPreviewing
-    : !model.historyOpen;
   if (live.status === "disconnected")
     return (
       <div className="connect-row">
@@ -36,7 +33,7 @@ function ScaleControls({ model }: { model: BrewModel }) {
         >
           Connect <BluetoothIcon /> scale
         </button>
-        {!live.scanning && showsScan && (
+        {!live.scanning && (
           <button type="button" onClick={model.connectAllLive}>
             Show all <BluetoothIcon /> devices
           </button>

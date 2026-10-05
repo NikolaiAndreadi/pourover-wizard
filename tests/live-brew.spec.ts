@@ -440,7 +440,7 @@ test("mocked live brewing reconnects to the remembered scale without the chooser
   await expect(page.getByText("Timer only")).toBeVisible();
 });
 
-test("home offers Show all devices beside Connect scale, and a cancelled chooser is no error", async ({
+test("Show all devices sits beside Connect scale on home and history, and a cancelled chooser is no error", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -464,7 +464,10 @@ test("home offers Show all devices beside Connect scale, and a cancelled chooser
   await expect(page.getByRole("alert")).toHaveCount(0);
   await expect(showAll).toBeVisible();
   await page.getByRole("button", { name: "Brew history" }).click();
-  await expect(showAll).toHaveCount(0);
+  await expect(showAll).toBeVisible();
+  await expect(
+    header.getByRole("button", { name: "Connect scale" }),
+  ).toBeVisible();
 });
 
 test("after a cancelled filtered chooser, Show all devices requests every device and identifies the pick", async ({

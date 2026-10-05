@@ -41,11 +41,16 @@ test("picking a recipe shows its credits, resets the dose and scales pour target
   await expect(page.getByText("Sweetness · Step 1 of 10")).toBeVisible();
   await page.clock.fastForward(174500);
   await expect(
-    page.getByRole("heading", {
-      name: "Let it drain, then remove the dripper",
-    }),
+    page.getByRole("heading", { name: "Let it drain", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Done around 3:30.")).toBeVisible();
+  await expect(page.locator(".step-now .hero-stats")).toHaveText(
+    "Done around3:30",
+  );
+  await expect(
+    page.getByText(
+      "Remove the dripper at 3:30 even if water remains, then tap Done.",
+    ),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Done", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Your brew" })).toBeVisible();
   await expect(page.getByText("Recipe by Tetsu Kasuya")).toBeVisible();

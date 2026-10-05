@@ -177,12 +177,14 @@ function StepPanes({ model, brewing }: { model: BrewModel; brewing: boolean }) {
           durationMs={step.action === "wait" ? 2000 : 1600}
         />
         {step.action === "drawdown" ? (
-          <p className="drawdown-note">
-            Done around {formatTime(session.recipe.finishGuideMs)}.{" "}
-            {brewing
-              ? "Tap Done when it stops dripping."
-              : "Finish when it stops dripping."}
-          </p>
+          <dl className="hero-stats">
+            <div>
+              <dt>Done around</dt>
+              <dd className="hero-number">
+                {formatTime(session.recipe.finishGuideMs)}
+              </dd>
+            </div>
+          </dl>
         ) : (
           remaining && (
             <>
@@ -194,13 +196,13 @@ function StepPanes({ model, brewing }: { model: BrewModel; brewing: boolean }) {
                   <dd className="hero-number">{remaining}</dd>
                 </div>
               </dl>
-              {pour && (
+              {pour && brewing && (
                 <dl className="pour-stats" aria-label="Pour guidance">
                   <div className="aim">
                     <dt>Aim for</dt>
                     <dd>{Math.round(model.expected)} g</dd>
                   </div>
-                  {brewing && session.mode === "live" && (
+                  {session.mode === "live" && (
                     <div className="actual">
                       <dt>Actual</dt>
                       <dd>
@@ -222,22 +224,16 @@ function StepPanes({ model, brewing }: { model: BrewModel; brewing: boolean }) {
             </>
           )
         )}
-        {!brewing && step.hint && <p className="step-hint">{step.hint}</p>}
+        {step.hint && <p className="step-hint">{step.hint}</p>}
       </li>
       <li className="step-next">
         <span className="pane-label">
           {remaining ? `Next · in ${remaining}` : "Next"}
         </span>
-        {nextStep ? (
-          <>
-            <h2 className="next-title">
-              {stepTitle(nextStep, session.recipe)}
-            </h2>
-            <ActionScene action={nextStep.action} still />
-          </>
-        ) : (
-          <p className="next-note">Finish when it stops dripping</p>
-        )}
+        <h2 className="next-title">
+          {nextStep ? stepTitle(nextStep, session.recipe) : "Finish"}
+        </h2>
+        {nextStep && <ActionScene action={nextStep.action} still />}
       </li>
     </ol>
   );
@@ -361,23 +357,16 @@ function Summary({ model }: { model: BrewModel }) {
   if (!session || !step) return null;
   const poured = session.pouredGrams;
   return (
-    <section className="brew-panel brew-summary">
+    <section
+      className={`brew-panel brew-summary${model.isPreviewing ? " is-preview" : ""}`}
+    >
       {model.isPreviewing ? (
         <>
           <p className="eyebrow step-caption">
             Step {model.previewIndex + 1} of {session.recipe.steps.length} ·{" "}
             {formatTime(model.displayElapsedMs)}
           </p>
-          <ol
-            className="step-panes is-single"
-            aria-label="Brew steps"
-            key={step.atMs}
-          >
-            <li className={`step-now step-${step.action}`} aria-current="step">
-              <h1 className="step-title">{stepTitle(step, session.recipe)}</h1>
-              <ActionScene action={step.action} still />
-            </li>
-          </ol>
+          <StepPanes model={model} brewing={false} />
         </>
       ) : (
         <>

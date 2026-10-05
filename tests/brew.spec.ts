@@ -50,12 +50,13 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
   await expect(
     page.getByRole("heading", { name: "Let it drain" }),
   ).toBeVisible();
+  await expect(page.locator(".step-now .hero-stats")).toHaveText(
+    "Done around3:00",
+  );
   await expect(
     page.getByText("Tap Done when it stops dripping."),
   ).toBeVisible();
-  await expect(page.locator(".step-next")).toHaveText(
-    "NextFinish when it stops dripping",
-  );
+  await expect(page.locator(".step-next")).toHaveText("NextFinish");
   await expect(page.locator(".step-next .action-scene")).toHaveCount(0);
   await page.screenshot({
     path: info.outputPath("drawdown.png"),
@@ -180,7 +181,7 @@ test("a prepared brew previews every stage without starting, then returns to sta
   await page.getByRole("button", { name: "Start now" }).click();
   await expect(
     page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
-  ).toHaveCount(0);
+  ).toBeVisible();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("button", { name: "Go to start" })).toHaveCount(
     0,

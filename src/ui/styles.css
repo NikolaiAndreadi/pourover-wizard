@@ -475,12 +475,11 @@ figcaption,
   width: 100%;
   justify-content: center;
 }
-/* Reviewing a finished brew: one browsed step pane above the strip and chart. */
+/* Reviewing a finished brew: the brewing step cards above the chart. */
 .brew-summary .step-caption {
   margin: 0 0 12px;
 }
-.step-panes.is-single {
-  grid-template-columns: 1fr;
+.brew-summary .step-panes {
   text-align: left;
 }
 .brew-summary .preview-nav {
@@ -800,10 +799,6 @@ figcaption,
 .next-title {
   margin: 4px 0 10px;
 }
-.next-note {
-  margin: 8px 0 0;
-  font-size: var(--text-body);
-}
 .step-hint {
   margin: 10px 0 0;
   font-size: var(--text-small);
@@ -907,11 +902,6 @@ figcaption,
 }
 :root[data-theme="dark"] .pace-steady dd {
   color: #b9d4a4;
-}
-.drawdown-note {
-  margin: 0;
-  font-size: var(--text-sub);
-  line-height: 1.4;
 }
 .scale-setup .controls {
   margin: 10px 0;

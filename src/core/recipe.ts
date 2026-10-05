@@ -7,7 +7,7 @@ export interface RecipeStep {
   targetFraction: number;
   /** Named brewing stage shown alongside the step, such as the bloom. */
   stage?: string;
-  /** What to pay attention to; shown while previewing, not while brewing. */
+  /** What to pay attention to during the step. */
   hint?: string;
 }
 export interface RecipeSource {

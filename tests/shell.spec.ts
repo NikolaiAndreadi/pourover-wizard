@@ -76,3 +76,22 @@ test("the footer theme switch cycles system, light and dark and is remembered", 
     await page.evaluate(() => localStorage.getItem("pourover-wizard.theme")),
   ).toBeNull();
 });
+
+test("the footer Sound Assist switch defaults to off and is remembered", async ({
+  page,
+}) => {
+  await page.goto("./");
+  const toggle = page.getByRole("button", { name: /^Sound Assist · / });
+  await expect(toggle).toHaveText("Sound Assist · Off");
+  await toggle.click();
+  await expect(toggle).toHaveText("Sound Assist · On");
+  await page.reload();
+  await expect(toggle).toHaveText("Sound Assist · On");
+  await toggle.click();
+  await expect(toggle).toHaveText("Sound Assist · Off");
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("pourover-wizard.sound-assist"),
+    ),
+  ).toBeNull();
+});

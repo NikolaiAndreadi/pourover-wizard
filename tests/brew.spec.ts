@@ -1,4 +1,32 @@
 import { expect, test } from "@playwright/test";
+import { beepsFor, installFakeAudio, STOP_CHIME_HZ } from "./fakeAudio";
+
+test("Sound Assist chimes at the end of each timer pour, but not on cancel", async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
+  await installFakeAudio(page);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Get ready" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
+  expect(await beepsFor(page, 5000)).toEqual([]);
+  expect(await beepsFor(page, 6000)).toEqual(STOP_CHIME_HZ);
+  await expect(
+    page.getByRole("heading", { name: "Swirl gently", exact: true }),
+  ).toBeVisible();
+  expect(await beepsFor(page, 40000)).toEqual([]);
+  await expect(page.getByRole("heading", { name: /^Pour to / })).toBeVisible();
+  const cancel = page.getByRole("button", { name: "Hold to cancel" });
+  await cancel.focus();
+  await page.keyboard.down(" ");
+  expect(await beepsFor(page, 1100)).toEqual([]);
+  await page.keyboard.up(" ");
+  await expect(
+    page.getByRole("heading", { name: "Prepare your brew" }),
+  ).toBeVisible();
+  expect(await beepsFor(page, 20000)).toEqual([]);
+});
 
 test("timer brew completes with truthful summary and safe cancellation/restart", async ({
   page,

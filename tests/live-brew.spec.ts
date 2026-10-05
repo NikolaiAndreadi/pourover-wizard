@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { syntheticFrame } from "../src/scale/bookoo/synthetic.fixture";
+import { beepsFor, installFakeAudio, STOP_CHIME_HZ } from "./fakeAudio";
 
 /** A tap must not disconnect; a one-second hold under the installed clock does. */
 async function holdToDisconnect(page: Page) {
@@ -38,6 +39,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
 }) => {
   await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
   await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
+  await installFakeAudio(page);
   await page.addInitScript(() => {
     const characteristic = new EventTarget();
     const notify = Object.assign(characteristic, {
@@ -264,26 +266,34 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await expect(guidance).toContainText("Aim for14 g");
   await expect(guidance).toContainText("Actual20.0 g");
   await expect(guidance).toContainText("Pace– Keep pace");
+  expect(await beepsFor(page, 200)).toEqual([]);
   for (let i = 0; i < 2; i++) {
     await page.clock.runFor(250);
     await emit(60);
   }
   await expect(guidance).toContainText("↓ Slow down");
+  const slower = await beepsFor(page, 200);
+  expect(slower.length).toBeGreaterThan(0);
+  expect(new Set(slower)).toEqual(new Set([500]));
   for (let i = 0; i < 3; i++) {
     await page.clock.runFor(250);
     await emit(0);
   }
   await expect(guidance).toContainText("↑ Faster");
+  const faster = await beepsFor(page, 200);
+  expect(faster.length).toBeGreaterThan(0);
+  expect(new Set(faster)).toEqual(new Set([1200]));
   await expect(page.locator(".brew-chart")).toHaveCount(0);
   await page.screenshot({
     path: test.info().outputPath("live-pour-zoom.png"),
     fullPage: true,
   });
-  await page.clock.runFor(15000);
+  expect((await beepsFor(page, 15000)).slice(-3)).toEqual(STOP_CHIME_HZ);
   await expect(
     page.getByRole("heading", { name: "Let it bloom", exact: true }),
   ).toBeVisible();
   await expect(page.getByTestId("pour-zoom")).toHaveCount(0);
+  expect(await beepsFor(page, 600)).toEqual([]);
   await holdToDisconnect(page);
   await expect(
     page.getByRole("dialog", { name: "Scales disconnected!" }),

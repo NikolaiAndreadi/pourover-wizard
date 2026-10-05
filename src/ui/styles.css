@@ -158,7 +158,7 @@ footer {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 0 16px;
   margin-left: auto;
 }
 .footer-scales p,
@@ -168,12 +168,12 @@ footer {
   list-style: none;
 }
 footer a,
-.theme-toggle {
+.footer-toggle {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
 }
-.theme-toggle {
+.footer-toggle {
   padding: 0;
   border: 0;
   background: none;
@@ -183,7 +183,7 @@ footer a,
   text-underline-offset: 0.25em;
   cursor: pointer;
 }
-.theme-toggle:focus-visible {
+.footer-toggle:focus-visible {
   outline: 3px solid #697753;
   outline-offset: 5px;
 }

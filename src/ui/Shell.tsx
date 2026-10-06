@@ -23,9 +23,8 @@ export function Shell({
   const brewing = phase === "armed" || phase === "brewing";
   const home = !active && !brew.historyOpen && !brew.reviewing;
   useEffect(() => {
-    if (!active || !window.matchMedia("(max-width: 600px)").matches) return;
-    document.getElementById("content")?.scrollIntoView({ block: "start" });
-  }, [active]);
+    if (active || brewing) window.scrollTo(0, 0);
+  }, [active, brewing]);
   return (
     <div
       className={`shell ${active ? "active-session" : ""}`}

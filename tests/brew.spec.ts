@@ -83,6 +83,33 @@ test("Sound Assist resets the countdown when a delayed tick skips a pour", async
   expect(await beepsFor(page, 14200)).toEqual(COUNTDOWN_HZ);
 });
 
+test("the Now pane flashes 3, 2, 1 before a pour, blinks its edge on go and pulses it once when the pour ends", async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
+  await page.goto("./");
+  await page.getByRole("button", { name: "Get ready" }).click();
+  const nowPane = page.locator(".step-now");
+  await page.getByRole("button", { name: "Start now" }).click();
+  await expect(nowPane).toHaveAttribute("data-cue", "go");
+  await page.clock.runFor(1000);
+  await expect(nowPane).not.toHaveAttribute("data-cue");
+  await page.clock.runFor(9000);
+  await expect(nowPane).toHaveAttribute("data-cue", "done");
+  await page.clock.runFor(1000);
+  await expect(nowPane).not.toHaveAttribute("data-cue");
+  await page.clock.runFor(30900);
+  await expect(nowPane).not.toHaveAttribute("data-cue");
+  for (const count of ["3", "2", "1"]) {
+    await page.clock.runFor(1000);
+    await expect(nowPane).toHaveAttribute("data-cue", count);
+  }
+  await page.clock.runFor(1000);
+  await expect(page.getByRole("heading", { name: /^Pour to / })).toBeVisible();
+  await expect(nowPane).toHaveAttribute("data-cue", "go");
+});
+
 test("timer brew completes with truthful summary and safe cancellation/restart", async ({
   page,
 }, info) => {

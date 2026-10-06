@@ -1314,6 +1314,74 @@ figcaption,
   }
 }
 
+.step-now {
+  --cue: #1e9e46;
+  --cue-tint: #1e9e4666;
+  position: relative;
+  isolation: isolate;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .step-now {
+    --cue: #c8f53b;
+    --cue-tint: #c8f53b40;
+  }
+}
+:root[data-theme="dark"] .step-now {
+  --cue: #c8f53b;
+  --cue-tint: #c8f53b40;
+}
+.cue {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.cue-count {
+  background: var(--cue-tint);
+  box-shadow: inset 0 0 0 3px var(--cue);
+  animation: cue-fade 900ms ease-out both;
+}
+.cue-go {
+  box-shadow: inset 0 0 0 4px var(--cue);
+  animation: cue-blink 330ms step-end both;
+}
+.cue-done {
+  box-shadow: inset 0 0 0 4px var(--cue);
+  animation: cue-hold 900ms ease-out both;
+}
+@keyframes cue-hold {
+  50% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes cue-fade {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes cue-blink {
+  0%,
+  33%,
+  67% {
+    opacity: 1;
+  }
+  21%,
+  55%,
+  88%,
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cue-go {
+    animation: cue-fade 600ms ease-out both;
+  }
+}
+
 .progress-strip,
 .pour-zoom {
   --recommendation: #a65e10;

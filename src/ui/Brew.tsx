@@ -7,7 +7,7 @@ import {
   waterForDose,
 } from "@/app/stepText";
 import type { BrewModel } from "@/app/useBrew";
-import type { Recipe } from "@/core/recipe";
+import type { Recipe, RecipeStep } from "@/core/recipe";
 import { ActionScene } from "./ActionScene";
 import { BrewChart } from "./BrewChart";
 import { HoldButton } from "./HoldButton";
@@ -160,6 +160,14 @@ function Preview({ model }: { model: BrewModel }) {
     </div>
   );
 }
+function stepCue(model: BrewModel, step: RecipeStep): string | null {
+  const count = model.nextPour ? Math.ceil(model.nextPour.inMs / 1000) : 0;
+  if (count >= 1 && count <= 3) return String(count);
+  if (model.displayElapsedMs - step.atMs >= 1000) return null;
+  if (step.action === "pour") return "go";
+  const steps = model.session?.recipe.steps ?? [];
+  return steps[steps.indexOf(step) - 1]?.action === "pour" ? "done" : null;
+}
 function StepPanes({ model, brewing }: { model: BrewModel; brewing: boolean }) {
   const { session, step, nextStep } = model;
   if (!session || !step) return null;
@@ -167,13 +175,22 @@ function StepPanes({ model, brewing }: { model: BrewModel; brewing: boolean }) {
   const remaining = nextStep
     ? formatTime(nextStep.atMs - model.displayElapsedMs)
     : null;
+  const cue = brewing ? stepCue(model, step) : null;
   return (
     <ol className="step-panes" aria-label="Brew steps" key={step.atMs}>
       <li
         className={`step-now step-${step.action}`}
         aria-current="step"
         data-pace={pour && brewing ? (model.pace ?? undefined) : undefined}
+        data-cue={cue ?? undefined}
       >
+        {cue && (
+          <span
+            className={`cue cue-${cue === "go" || cue === "done" ? cue : "count"}`}
+            key={cue}
+            aria-hidden="true"
+          />
+        )}
         <span className="pane-label">Now</span>
         <h1 className="step-title">{stepTitle(step, session.recipe)}</h1>
         <ActionScene

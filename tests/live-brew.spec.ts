@@ -266,12 +266,15 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
   await expect(guidance).toContainText("Aim for14 g");
   await expect(guidance).toContainText("Actual20.0 g");
   await expect(guidance).toContainText("Pace– Keep pace");
+  const nowPane = page.locator(".step-now");
+  await expect(nowPane).toHaveAttribute("data-pace", "steady");
   expect(await beepsFor(page, 200)).toEqual([]);
   for (let i = 0; i < 2; i++) {
     await page.clock.runFor(250);
     await emit(60);
   }
   await expect(guidance).toContainText("↓ Slow down");
+  await expect(nowPane).toHaveAttribute("data-pace", "slower");
   const slower = await beepsFor(page, 200);
   expect(slower.length).toBeGreaterThan(0);
   expect(new Set(slower)).toEqual(new Set([500]));
@@ -280,6 +283,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     await emit(0);
   }
   await expect(guidance).toContainText("↑ Faster");
+  await expect(nowPane).toHaveAttribute("data-pace", "faster");
   const faster = await beepsFor(page, 200);
   expect(faster.length).toBeGreaterThan(0);
   expect(new Set(faster)).toEqual(new Set([1200]));

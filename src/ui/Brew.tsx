@@ -169,7 +169,11 @@ function StepPanes({ model, brewing }: { model: BrewModel; brewing: boolean }) {
     : null;
   return (
     <ol className="step-panes" aria-label="Brew steps" key={step.atMs}>
-      <li className={`step-now step-${step.action}`} aria-current="step">
+      <li
+        className={`step-now step-${step.action}`}
+        aria-current="step"
+        data-pace={pour && brewing ? (model.pace ?? undefined) : undefined}
+      >
         <span className="pane-label">Now</span>
         <h1 className="step-title">{stepTitle(step, session.recipe)}</h1>
         <ActionScene

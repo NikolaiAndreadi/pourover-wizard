@@ -1,7 +1,14 @@
 import { expect, test } from "@playwright/test";
-import { beepsFor, CHIME_HZ, installFakeAudio } from "./fakeAudio";
+import {
+  beepsFor,
+  CHIME_HZ,
+  COUNTDOWN_HZ,
+  FINISH_HZ,
+  GO_HZ,
+  installFakeAudio,
+} from "./fakeAudio";
 
-test("Sound Assist chimes at the end of each timer pour, but not on cancel", async ({
+test("Sound Assist signals each timer pour's start and end, but not on cancel", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
@@ -10,13 +17,16 @@ test("Sound Assist chimes at the end of each timer pour, but not on cancel", asy
   await page.goto("./");
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Start now" }).click();
+  await expect.poll(() => page.evaluate(() => window.beeps)).toEqual(GO_HZ);
   expect(await beepsFor(page, 5000)).toEqual([]);
   expect(await beepsFor(page, 6000)).toEqual(CHIME_HZ);
   await expect(
     page.getByRole("heading", { name: "Swirl gently", exact: true }),
   ).toBeVisible();
-  expect(await beepsFor(page, 40000)).toEqual([]);
+  expect(await beepsFor(page, 30000)).toEqual([]);
+  expect(await beepsFor(page, 5000)).toEqual(COUNTDOWN_HZ);
   await expect(page.getByRole("heading", { name: /^Pour to / })).toBeVisible();
+  expect(await beepsFor(page, 5000)).toEqual([]);
   const cancel = page.getByRole("button", { name: "Hold to cancel" });
   await cancel.focus();
   await page.keyboard.down(" ");
@@ -26,6 +36,51 @@ test("Sound Assist chimes at the end of each timer pour, but not on cancel", asy
     page.getByRole("heading", { name: "Prepare your brew" }),
   ).toBeVisible();
   expect(await beepsFor(page, 20000)).toEqual([]);
+});
+
+for (const soundAssist of [true, false]) {
+  test(`brew completion plays C–E–G–C only with Sound Assist enabled (${soundAssist})`, async ({
+    page,
+  }) => {
+    await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
+    await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
+    await installFakeAudio(page, soundAssist);
+    await page.goto("./");
+    await page.getByRole("button", { name: "Get ready" }).click();
+    await page.getByRole("button", { name: "Start now" }).click();
+    await page.clock.fastForward(130000);
+    await page.evaluate(() => {
+      window.beeps = [];
+    });
+    await page.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: "Your brew" }),
+    ).toBeVisible();
+    expect(await page.evaluate(() => window.beeps)).toEqual(
+      soundAssist ? FINISH_HZ : [],
+    );
+    expect(await beepsFor(page, 1000)).toEqual([]);
+    await page.getByRole("button", { name: "Next step" }).click();
+    await page.getByRole("button", { name: "Go to start" }).click();
+    expect(await page.evaluate(() => window.beeps)).toEqual([]);
+  });
+}
+
+test("Sound Assist resets the countdown when a delayed tick skips a pour", async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date("2026-10-03T00:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-03T00:00:01Z"));
+  await installFakeAudio(page);
+  await page.goto("./");
+  await page.getByRole("button", { name: "Get ready" }).click();
+  await page.getByRole("button", { name: "Start now" }).click();
+  await page.clock.runFor(44800);
+  await page.clock.fastForward(16000);
+  await expect(
+    page.getByRole("heading", { name: "Wait", exact: true }),
+  ).toBeVisible();
+  expect(await beepsFor(page, 14200)).toEqual(COUNTDOWN_HZ);
 });
 
 test("timer brew completes with truthful summary and safe cancellation/restart", async ({

@@ -8,7 +8,12 @@ export function App() {
   const brew = useBrew();
   const offline = useOfflineApp();
   const theme = useTheme();
-  const sound = useSoundAssist(brew.pace, brew.pourStep);
+  const sound = useSoundAssist(
+    brew.pace,
+    brew.pourStep,
+    brew.nextPour,
+    brew.completed,
+  );
   return (
     <>
       <Shell brew={brew} offline={offline} theme={theme} sound={sound} />

@@ -54,3 +54,6 @@ export async function beepsFor(page: Page, ms: number) {
   return page.evaluate(() => window.beeps);
 }
 export const CHIME_HZ = [523.25, 659.25, 783.99];
+export const FINISH_HZ = [523.25, 659.25, 783.99, 1046.5];
+export const GO_HZ = [1760, 1760, 1760];
+export const COUNTDOWN_HZ = [880, 880, 880, ...GO_HZ];

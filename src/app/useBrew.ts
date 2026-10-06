@@ -384,6 +384,14 @@ export function useBrew(
     session?.phase === "brewing"
       ? stepAt(session.recipe, session.elapsedMs).action === "pour"
       : null;
+  const upcoming =
+    pourStep === false
+      ? session?.recipe.steps.find((item) => item.atMs > session.elapsedMs)
+      : undefined;
+  const nextPour =
+    session && upcoming?.action === "pour"
+      ? { atMs: upcoming.atMs, inMs: upcoming.atMs - session.elapsedMs }
+      : null;
   const holdProgress =
     session?.holdAtMs === null || session?.holdAtMs === undefined
       ? 0
@@ -423,9 +431,10 @@ export function useBrew(
     nextStep,
     /** Pour pace against the ideal ramp while pouring with a scale; otherwise null. */
     pace,
-    /** Whether the running brew is on a pour step; null when not brewing. */
     pourStep,
+    nextPour,
     holdProgress,
+    completed: session?.phase === "completed",
     canFinish:
       session?.phase === "brewing" &&
       session.elapsedMs >= drawdownStartMs(session.recipe),

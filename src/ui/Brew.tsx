@@ -292,7 +292,7 @@ function Home({ model }: { model: BrewModel }) {
           {recipe.maxDoseGrams} g.
         </p>
       )}
-      <p>
+      <p className="dose-note">
         {model.doseValid ? waterForDose(recipe, dose) : "—"} g water ·{" "}
         {formatRatio(recipe)}. Timings stay the same at any dose; the original
         uses {recipe.doseGrams} g.

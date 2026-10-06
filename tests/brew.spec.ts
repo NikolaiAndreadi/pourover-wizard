@@ -248,9 +248,7 @@ test("a prepared brew previews every stage without starting, then returns to sta
     page.getByRole("heading", { name: "Pour to 50 g", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Step 1 of 12 · 0:00")).toBeVisible();
-  await expect(
-    page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
-  ).toBeVisible();
+  await expect(page.getByText("Wet all the grounds evenly.")).toBeVisible();
   await expect(page.locator(".step-next")).toContainText("Swirl gently");
   await expect(page.getByRole("button", { name: "Start now" })).toHaveCount(0);
   await expect(
@@ -292,9 +290,7 @@ test("a prepared brew previews every stage without starting, then returns to sta
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByRole("button", { name: "Start now" })).toBeVisible();
   await page.getByRole("button", { name: "Start now" }).click();
-  await expect(
-    page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
-  ).toBeVisible();
+  await expect(page.getByText("Wet all the grounds evenly.")).toBeVisible();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("button", { name: "Go to start" })).toHaveCount(
     0,

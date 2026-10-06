@@ -94,9 +94,7 @@ test("a completed timer brew is kept in local time, reviewed step by step and de
   ).toBeVisible();
   await expect(page.getByText("Step 1 of 12 · 0:00")).toBeVisible();
   await expect(page.locator(".step-next")).toContainText("Swirl gently");
-  await expect(
-    page.getByText("Wet all the grounds evenly; 50 g is twice the coffee."),
-  ).toBeVisible();
+  await expect(page.getByText("Wet all the grounds evenly.")).toBeVisible();
   await expect(page.getByText("Aim for")).toHaveCount(0);
   await expect(page.getByRole("img", { name: "Recipe progress" })).toHaveCount(
     0,

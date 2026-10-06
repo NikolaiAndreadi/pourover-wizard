@@ -48,7 +48,7 @@ test("picking a recipe shows its credits, resets the dose and scales pour target
   );
   await expect(
     page.getByText(
-      "Remove the dripper at 3:30 even if water remains, then tap Done.",
+      "Remove the dripper at 3:30 even if water remains, and then tap Done.",
     ),
   ).toBeVisible();
   await page.getByRole("button", { name: "Done", exact: true }).click();

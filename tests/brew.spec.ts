@@ -121,7 +121,10 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
     path: info.outputPath("summary.png"),
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Prepare another brew" }).click();
+  await page.getByRole("link", { name: /Pourover Wizard/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Prepare your brew" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Start now" }).click();
   await cancel.focus();

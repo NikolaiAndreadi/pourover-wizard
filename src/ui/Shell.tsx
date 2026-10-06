@@ -50,7 +50,7 @@ export function Shell({
             onClick={(event) => {
               event.preventDefault();
               if (brew.reviewing || brew.historyOpen) brew.closeHistory();
-              else if (phase === "preparation") brew.restart();
+              else if (active) brew.restart();
             }}
           >
             Pourover Wizard<span>V60 brew guide</span>

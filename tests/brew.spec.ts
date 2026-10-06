@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { beepsFor, installFakeAudio, STOP_CHIME_HZ } from "./fakeAudio";
+import { beepsFor, CHIME_HZ, installFakeAudio } from "./fakeAudio";
 
 test("Sound Assist chimes at the end of each timer pour, but not on cancel", async ({
   page,
@@ -11,7 +11,7 @@ test("Sound Assist chimes at the end of each timer pour, but not on cancel", asy
   await page.getByRole("button", { name: "Get ready" }).click();
   await page.getByRole("button", { name: "Start now" }).click();
   expect(await beepsFor(page, 5000)).toEqual([]);
-  expect(await beepsFor(page, 6000)).toEqual(STOP_CHIME_HZ);
+  expect(await beepsFor(page, 6000)).toEqual(CHIME_HZ);
   await expect(
     page.getByRole("heading", { name: "Swirl gently", exact: true }),
   ).toBeVisible();

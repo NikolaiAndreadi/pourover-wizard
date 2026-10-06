@@ -5,13 +5,10 @@ declare global {
     beeps: number[];
   }
 }
-/**
- * Turns Sound Assist on and replaces AudioContext with one that records the
- * frequency of every note on window.beeps, timed by the page clock.
- */
-export async function installFakeAudio(page: Page) {
-  await page.addInitScript(() => {
-    localStorage.setItem("pourover-wizard.sound-assist", "on");
+/** Records scheduled note frequencies using the page clock. */
+export async function installFakeAudio(page: Page, soundAssist = true) {
+  await page.addInitScript((on) => {
+    localStorage.setItem("pourover-wizard.sound-assist", on ? "on" : "off");
     window.beeps = [];
     Object.defineProperty(window, "AudioContext", {
       configurable: true,
@@ -47,9 +44,8 @@ export async function installFakeAudio(page: Page) {
         }
       },
     });
-  });
+  }, soundAssist);
 }
-/** Clears window.beeps, runs the page clock, and returns what played. */
 export async function beepsFor(page: Page, ms: number) {
   await page.evaluate(() => {
     window.beeps = [];
@@ -57,4 +53,4 @@ export async function beepsFor(page: Page, ms: number) {
   await page.clock.runFor(ms);
   return page.evaluate(() => window.beeps);
 }
-export const STOP_CHIME_HZ = [523.25, 659.25, 783.99];
+export const CHIME_HZ = [523.25, 659.25, 783.99];

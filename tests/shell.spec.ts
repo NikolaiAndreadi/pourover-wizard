@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { CHIME_HZ, installFakeAudio } from "./fakeAudio";
 
 test("loads built assets under the project path and ignores unknown hashes", async ({
   page,
@@ -94,4 +95,15 @@ test("the footer Sound Assist switch defaults to off and is remembered", async (
       localStorage.getItem("pourover-wizard.sound-assist"),
     ),
   ).toBeNull();
+});
+
+test("turning Sound Assist on confirms with the chime", async ({ page }) => {
+  await installFakeAudio(page, false);
+  await page.goto("./");
+  const toggle = page.getByRole("button", { name: /^Sound Assist · / });
+  await toggle.click();
+  await expect.poll(() => page.evaluate(() => window.beeps)).toEqual(CHIME_HZ);
+  await toggle.click();
+  await expect(toggle).toHaveText("Sound Assist · Off");
+  expect(await page.evaluate(() => window.beeps)).toEqual(CHIME_HZ);
 });

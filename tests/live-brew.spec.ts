@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
-import { syntheticFrame } from "../src/scale/bookoo/synthetic.fixture";
-import { beepsFor, installFakeAudio, STOP_CHIME_HZ } from "./fakeAudio";
+import { syntheticFrame } from "../src/scale/bookoo/synthetic.fixture.ts";
+import { beepsFor, CHIME_HZ, installFakeAudio } from "./fakeAudio";
 
 /** A tap must not disconnect; a one-second hold under the installed clock does. */
 async function holdToDisconnect(page: Page) {
@@ -288,7 +288,7 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     path: test.info().outputPath("live-pour-zoom.png"),
     fullPage: true,
   });
-  expect((await beepsFor(page, 15000)).slice(-3)).toEqual(STOP_CHIME_HZ);
+  expect((await beepsFor(page, 15000)).slice(-3)).toEqual(CHIME_HZ);
   await expect(
     page.getByRole("heading", { name: "Let it bloom", exact: true }),
   ).toBeVisible();

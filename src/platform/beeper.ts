@@ -12,7 +12,7 @@ export interface Beeper {
   /** Creates or resumes audio; browsers only allow this from a user gesture. */
   unlock(): void;
   play(tone: Tone | null): void;
-  /** Plays the notes once; a later play() does not cut them. */
+  /** Plays once, waiting for a pending unlock; tone changes do not cut the notes. */
   chime(notes: readonly Note[]): void;
 }
 export interface BeeperOptions {
@@ -68,6 +68,7 @@ export function createBeeper(
   let tone: Tone | null = null;
   let nextAt = 0;
   let timer: ReturnType<typeof setInterval> | undefined;
+  let pendingResume: Promise<void> | undefined;
   const queued = new Map<
     Oscillator,
     {
@@ -141,9 +142,21 @@ export function createBeeper(
     unlock() {
       try {
         audio ??= makeAudio();
-        if (audio && audio.state !== "running")
-          audio.resume().then(schedule, () => {});
-        else schedule();
+        if (audio && audio.state !== "running") {
+          if (pendingResume) return;
+          pendingResume = audio.resume();
+          void pendingResume.then(
+            () => {
+              pendingResume = undefined;
+              try {
+                schedule();
+              } catch {}
+            },
+            () => {
+              pendingResume = undefined;
+            },
+          );
+        } else schedule();
       } catch {}
     },
     play(next) {
@@ -155,13 +168,17 @@ export function createBeeper(
       timer = setInterval(schedule, TICK_MS);
     },
     chime(notes) {
-      const context = audio;
-      if (context?.state !== "running") return;
-      const start = context.currentTime + START_LEAD_S;
-      try {
-        for (const note of notes)
-          beep(context, note, start + note.offsetMs / 1000, false);
-      } catch {}
+      const ring = () => {
+        const context = audio;
+        if (context?.state !== "running") return;
+        const start = context.currentTime + START_LEAD_S;
+        try {
+          for (const note of notes)
+            beep(context, note, start + note.offsetMs / 1000, false);
+        } catch {}
+      };
+      if (audio?.state === "running") ring();
+      else void pendingResume?.then(ring, () => {});
     },
   };
 }

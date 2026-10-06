@@ -229,6 +229,58 @@ describe("beeper", () => {
     vi.advanceTimersByTime(1000);
     expect(beeps.length).toBe(count);
   });
+  it("plays a chime requested while unlock is resuming audio", async () => {
+    const { audio, beeps } = fakeAudio();
+    let finishResume = () => {};
+    audio.resume = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishResume = () => {
+            audio.state = "running";
+            resolve();
+          };
+        }),
+    );
+    const beeper = createBeeper(() => audio);
+    beeper.unlock();
+    beeper.unlock();
+    expect(audio.resume).toHaveBeenCalledOnce();
+    beeper.chime([{ hz: 523.25, offsetMs: 0, beepMs: 120 }]);
+    expect(beeps).toEqual([]);
+    finishResume();
+    await vi.runOnlyPendingTimersAsync();
+    expect(beeps.map((beep) => beep.hz)).toEqual([523.25]);
+  });
+  it("drops a chime after a failed resume and allows a retry", async () => {
+    const { audio, beeps } = fakeAudio();
+    const resume = vi
+      .spyOn(audio, "resume")
+      .mockRejectedValueOnce(new Error("audio unavailable"));
+    const beeper = createBeeper(() => audio);
+    const notes = [{ hz: 523.25, offsetMs: 0, beepMs: 120 }];
+    beeper.unlock();
+    beeper.chime(notes);
+    audio.state = "running";
+    await vi.runOnlyPendingTimersAsync();
+    expect(beeps).toEqual([]);
+    audio.state = "suspended";
+    beeper.unlock();
+    beeper.chime(notes);
+    await vi.runOnlyPendingTimersAsync();
+    expect(resume).toHaveBeenCalledTimes(2);
+    expect(beeps.map((beep) => beep.hz)).toEqual([523.25]);
+  });
+  it("skips chimes after audio suspends until another unlock", async () => {
+    const { audio, beeps } = fakeAudio();
+    const beeper = createBeeper(() => audio);
+    beeper.unlock();
+    await vi.runOnlyPendingTimersAsync();
+    audio.state = "suspended";
+    beeper.chime([{ hz: 523.25, offsetMs: 0, beepMs: 120 }]);
+    audio.state = "running";
+    await vi.runOnlyPendingTimersAsync();
+    expect(beeps).toEqual([]);
+  });
   it("skips a chime while audio is locked", () => {
     const { audio, beeps } = fakeAudio();
     createBeeper(() => audio).chime([{ hz: 523.25, offsetMs: 0, beepMs: 120 }]);

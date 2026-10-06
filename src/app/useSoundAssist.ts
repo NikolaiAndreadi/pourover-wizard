@@ -8,8 +8,7 @@ const TONES: Record<Pace, Tone | null> = {
   steady: null,
   slower: { hz: 500, perSecond: 2, beepMs: 220 },
 };
-/** Rising C major arpeggio (C5, E5, G5) that signals the end of a pour. */
-const STOP_CHIME: Note[] = [
+const CHIME: Note[] = [
   { hz: 523.25, offsetMs: 0, beepMs: 120 },
   { hz: 659.25, offsetMs: 100, beepMs: 120 },
   { hz: 783.99, offsetMs: 200, beepMs: 180 },
@@ -28,7 +27,7 @@ export function useSoundAssist(
   const wasPouring = useRef(pourStep);
   useEffect(() => {
     if (on && wasPouring.current === true && pourStep === false)
-      beeper.chime(STOP_CHIME);
+      beeper.chime(CHIME);
     wasPouring.current = pourStep;
   }, [on, pourStep]);
   useEffect(() => {
@@ -51,7 +50,10 @@ export function useSoundAssist(
   const toggleSoundAssist = useCallback(() => {
     const next = !on;
     memory.save(next);
-    if (next) beeper.unlock();
+    if (next) {
+      beeper.unlock();
+      beeper.chime(CHIME);
+    }
     setOn(next);
   }, [on]);
   return { soundAssist: on, toggleSoundAssist };

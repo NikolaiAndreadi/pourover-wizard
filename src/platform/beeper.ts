@@ -9,14 +9,11 @@ export interface Note {
   beepMs: number;
 }
 export interface Beeper {
-  /** Creates or resumes audio; browsers only allow this from a user gesture. */
   unlock(): void;
   play(tone: Tone | null): void;
-  /** Plays once, waiting for a pending unlock; tone changes do not cut the notes. */
   chime(notes: readonly Note[]): void;
 }
 export interface BeeperOptions {
-  /** Fade at each edge, capped at half the beep duration. */
   fadeMs?: number;
 }
 interface Oscillator {
@@ -46,6 +43,7 @@ const LOOKAHEAD_S = 0.15;
 const TICK_MS = 50;
 const START_LEAD_S = 0.02;
 const VOLUME = 0.3;
+const LATE_MS = 250;
 function defaultAudio(): Audio | undefined {
   const session = (
     globalThis.navigator as { audioSession?: { type: string } } | undefined
@@ -138,25 +136,36 @@ export function createBeeper(
     queued.clear();
     nextAt = 0;
   };
+  const wake = () => {
+    if (!audio || audio.state === "running") return;
+    if (pendingResume) return pendingResume;
+    try {
+      pendingResume = audio.resume();
+    } catch {
+      return;
+    }
+    void pendingResume.then(
+      () => {
+        pendingResume = undefined;
+        try {
+          schedule();
+        } catch {}
+      },
+      () => {
+        pendingResume = undefined;
+      },
+    );
+    return pendingResume;
+  };
+  const tick = () => {
+    wake();
+    schedule();
+  };
   return {
     unlock() {
       try {
         audio ??= makeAudio();
-        if (audio && audio.state !== "running") {
-          if (pendingResume) return;
-          pendingResume = audio.resume();
-          void pendingResume.then(
-            () => {
-              pendingResume = undefined;
-              try {
-                schedule();
-              } catch {}
-            },
-            () => {
-              pendingResume = undefined;
-            },
-          );
-        } else schedule();
+        tick();
       } catch {}
     },
     play(next) {
@@ -164,21 +173,29 @@ export function createBeeper(
       silence();
       tone = next;
       if (!tone) return;
-      schedule();
-      timer = setInterval(schedule, TICK_MS);
+      tick();
+      timer = setInterval(tick, TICK_MS);
     },
     chime(notes) {
-      const ring = () => {
+      const ring = (lateMs: number) => {
         const context = audio;
         if (context?.state !== "running") return;
         const start = context.currentTime + START_LEAD_S;
         try {
-          for (const note of notes)
-            beep(context, note, start + note.offsetMs / 1000, false);
+          for (const note of notes) {
+            const offsetMs = note.offsetMs - lateMs;
+            if (offsetMs < -LATE_MS) continue;
+            const at = start + Math.max(0, offsetMs) / 1000;
+            beep(context, note, at, false);
+          }
         } catch {}
       };
-      if (audio?.state === "running") ring();
-      else void pendingResume?.then(ring, () => {});
+      if (audio?.state === "running") return ring(0);
+      const askedAt = Date.now();
+      void wake()?.then(
+        () => ring(Date.now() - askedAt),
+        () => {},
+      );
     },
   };
 }

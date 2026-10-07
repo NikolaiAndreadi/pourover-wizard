@@ -10,6 +10,7 @@ function fakeAudio(state = "suspended") {
     state,
     destination: {},
     resumes: 0,
+    close: vi.fn(async () => undefined),
     async resume() {
       audio.resumes += 1;
       audio.state = "running";
@@ -180,6 +181,46 @@ describe("beeper", () => {
       expect(param.cancelScheduledValues).toHaveBeenCalledOnce();
     },
   );
+  it("purges a fading tone when its audio clock stalls after stopping", () => {
+    const first = fakeAudio("running");
+    const second = fakeAudio("running");
+    const queue = [first, second];
+    const beeper = createBeeper(() => queue.shift()?.audio);
+    beeper.unlock();
+    beeper.play(slow);
+    first.audio.currentTime = first.beeps[0]!.at + 0.05;
+    vi.advanceTimersByTime(50);
+    beeper.play(null);
+    expect(first.beeps[0]!.cut).toBe(false);
+    vi.advanceTimersByTime(1000);
+    expect(first.beeps[0]!.cut).toBe(true);
+    expect(first.nodes[0]!.disconnect).toHaveBeenCalledOnce();
+    expect(first.gains[0]!.disconnect).toHaveBeenCalledOnce();
+    expect(first.audio.close).toHaveBeenCalledOnce();
+    expect(second.beeps).toHaveLength(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("tracks a fading tone until it ends without fading it again", () => {
+    const { audio, beeps, nodes, gains } = fakeAudio("running");
+    const beeper = createBeeper(() => audio);
+    beeper.unlock();
+    beeper.play(slow);
+    audio.currentTime = beeps[0]!.at + 0.05;
+    beeper.play(null);
+    const stopAt = beeps[0]!.until;
+    beeper.play(fast);
+    beeper.play(null);
+    expect(beeps[0]!.cut).toBe(false);
+    expect(beeps[0]!.until).toBe(stopAt);
+    expect(gains[0]!.gain.cancelScheduledValues).toHaveBeenCalledOnce();
+    vi.advanceTimersByTime(50);
+    expect(vi.getTimerCount()).toBe(1);
+    nodes[0]!.onended!(new Event("ended"));
+    expect(nodes[0]!.disconnect).toHaveBeenCalledOnce();
+    expect(gains[0]!.disconnect).toHaveBeenCalledOnce();
+    vi.advanceTimersByTime(50);
+    expect(vi.getTimerCount()).toBe(0);
+  });
   it("schedules a requested tone ahead of the clock when unlocked with running audio", () => {
     const { audio, beeps } = fakeAudio("running");
     const beeper = createBeeper(() => audio);
@@ -244,7 +285,7 @@ describe("beeper", () => {
     const beeper = createBeeper(() => audio);
     beeper.unlock();
     beeper.unlock();
-    expect(audio.resume).toHaveBeenCalledOnce();
+    expect(audio.resume).toHaveBeenCalledTimes(2);
     beeper.chime([{ hz: 523.25, offsetMs: 0, beepMs: 120 }]);
     expect(beeps).toEqual([]);
     finishResume();
@@ -317,6 +358,77 @@ describe("beeper", () => {
     await vi.advanceTimersByTimeAsync(50);
     expect(audio.resumes).toBe(2);
     expect(beeps.length).toBeGreaterThan(count);
+  });
+  it("replaces audio whose clock stalls and drops what it had queued", () => {
+    const first = fakeAudio("running");
+    const second = fakeAudio("running");
+    const contexts = [first, second];
+    const beeper = createBeeper(() => contexts.shift()?.audio);
+    beeper.unlock();
+    beeper.chime([{ hz: 523.25, offsetMs: 0, beepMs: 120 }]);
+    beeper.play(fast);
+    expect(first.beeps).toHaveLength(2);
+    vi.advanceTimersByTime(950);
+    expect(first.audio.close).not.toHaveBeenCalled();
+    expect(first.beeps.every((beep) => !beep.cut)).toBe(true);
+    vi.advanceTimersByTime(50);
+    expect(first.audio.close).toHaveBeenCalledOnce();
+    expect(first.beeps).toHaveLength(2);
+    expect(first.beeps.every((beep) => beep.cut)).toBe(true);
+    for (const node of first.nodes) expect(node.disconnect).toHaveBeenCalled();
+    for (const gain of first.gains) expect(gain.disconnect).toHaveBeenCalled();
+    expect(second.beeps).toHaveLength(1);
+    second.audio.currentTime = 0.2;
+    vi.advanceTimersByTime(50);
+    expect(second.beeps).toHaveLength(2);
+    expect(second.beeps.every((beep) => beep.hz === 1200 && !beep.cut)).toBe(
+      true,
+    );
+  });
+  it("stops queuing when the replacement stalls too, until the next unlock", () => {
+    const contexts = [
+      fakeAudio("running"),
+      fakeAudio("running"),
+      fakeAudio("running"),
+    ];
+    const [first, second, third] = contexts as [
+      ReturnType<typeof fakeAudio>,
+      ReturnType<typeof fakeAudio>,
+      ReturnType<typeof fakeAudio>,
+    ];
+    const queue = [...contexts];
+    const beeper = createBeeper(() => queue.shift()?.audio);
+    beeper.unlock();
+    beeper.play(fast);
+    vi.advanceTimersByTime(2000);
+    expect(first.audio.close).toHaveBeenCalledOnce();
+    expect(second.audio.close).not.toHaveBeenCalled();
+    expect(second.beeps).toHaveLength(1);
+    expect(second.beeps[0]!.cut).toBe(true);
+    beeper.chime([{ hz: 523.25, offsetMs: 0, beepMs: 120 }]);
+    vi.advanceTimersByTime(1000);
+    expect(second.beeps).toHaveLength(1);
+    expect(third.beeps).toHaveLength(0);
+    beeper.unlock();
+    expect(second.audio.close).toHaveBeenCalledOnce();
+    expect(third.beeps).toHaveLength(1);
+    expect(third.beeps[0]!.cut).toBe(false);
+  });
+  it("resumes on the same audio once its clock moves again", () => {
+    const queue = [fakeAudio("running"), fakeAudio("running")];
+    const second = queue[1]!;
+    const beeper = createBeeper(() => queue.shift()?.audio);
+    beeper.unlock();
+    beeper.play(fast);
+    vi.advanceTimersByTime(2000);
+    expect(second.beeps).toHaveLength(1);
+    expect(second.beeps[0]!.cut).toBe(true);
+    second.audio.currentTime = 5;
+    vi.advanceTimersByTime(50);
+    expect(second.audio.close).not.toHaveBeenCalled();
+    expect(second.beeps).toHaveLength(2);
+    expect(second.beeps[1]!.cut).toBe(false);
+    expect(second.beeps[1]!.at).toBeGreaterThan(5);
   });
   it("skips a chime while audio is locked", () => {
     const { audio, beeps } = fakeAudio();

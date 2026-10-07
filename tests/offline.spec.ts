@@ -167,11 +167,13 @@ test("failed update retains offline version; complete update reloads idle tabs a
   await page.bringToFront();
   await page.getByRole("button", { name: "Hold to cancel" }).focus();
   await page.keyboard.down(" ");
-  await expect(page).toHaveTitle("Pourover Wizard · V60 brew guide v2");
-  await page.keyboard.up(" ");
   await expect(
-    page.getByRole("heading", { name: "Prepare your brew" }),
+    page.getByRole("heading", { name: "Brew cancelled" }),
   ).toBeVisible();
+  await page.keyboard.up(" ");
+  await expect(page).toHaveTitle("Pourover Wizard · V60 brew guide");
+  await page.getByRole("button", { name: "Prepare another brew" }).click();
+  await expect(page).toHaveTitle("Pourover Wizard · V60 brew guide v2");
   await context.setOffline(true);
   await page.close();
   await second.close();

@@ -33,7 +33,7 @@ test("Sound Assist signals each timer pour's start and end, but not on cancel", 
   expect(await beepsFor(page, 1100)).toEqual([]);
   await page.keyboard.up(" ");
   await expect(
-    page.getByRole("heading", { name: "Prepare your brew" }),
+    page.getByRole("heading", { name: "Brew cancelled" }),
   ).toBeVisible();
   expect(await beepsFor(page, 20000)).toEqual([]);
 });
@@ -213,6 +213,7 @@ test("timer brew completes with truthful summary and safe cancellation/restart",
   await page.keyboard.down("Enter");
   await page.clock.runFor(1000);
   await page.keyboard.up("Enter");
+  await page.clock.runFor(1000);
   await expect(
     page.getByRole("heading", { name: "Brew cancelled" }),
   ).toBeVisible();

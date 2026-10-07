@@ -100,9 +100,14 @@ export function useBrew(
   };
   const apply = (event: Event) => {
     if (!active.current) return null;
-    const wasBrewing = active.current.phase === "brewing";
+    const was = active.current.phase;
+    const wasBrewing = was === "brewing";
     active.current = updateSession(active.current, event);
-    if (active.current.phase === "cancelled" && !wasBrewing) {
+    if (
+      active.current.phase === "cancelled" &&
+      !wasBrewing &&
+      was !== "cancelled"
+    ) {
       restart();
       return null;
     }

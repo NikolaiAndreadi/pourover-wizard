@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export function useOfflineApp() {
+export function useOfflineApp(idle: boolean) {
   const [offlineReady, setOfflineReady] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
+  const [stale, setStale] = useState(false);
+  const registration = useRef<ServiceWorkerRegistration | undefined>(undefined);
   useEffect(() => {
     if (
       !import.meta.env.PROD ||
@@ -11,21 +13,30 @@ export function useOfflineApp() {
     )
       return;
     let disposed = false;
-    let registration: ServiceWorkerRegistration | undefined;
+    let hadWorker = Boolean(navigator.serviceWorker.controller);
     const refresh = () => {
-      if (disposed || !registration) return;
-      setOfflineReady(Boolean(registration.active));
-      setUpdateReady(Boolean(registration.waiting && registration.active));
+      const current = registration.current;
+      if (disposed || !current) return;
+      setOfflineReady(Boolean(current.active));
+      setUpdateReady(Boolean(current.waiting && current.active));
     };
     const installing = () => {
-      registration?.installing?.addEventListener("statechange", refresh);
+      registration.current?.installing?.addEventListener(
+        "statechange",
+        refresh,
+      );
       refresh();
     };
     const check = () => {
-      if (navigator.onLine) void registration?.update().catch(() => {});
+      if (navigator.onLine) void registration.current?.update().catch(() => {});
     };
     const visible = () => {
       if (document.visibilityState === "visible") check();
+    };
+    const controllerChanged = () => {
+      if (hadWorker && !disposed) setStale(true);
+      hadWorker = true;
+      refresh();
     };
     navigator.serviceWorker
       .register(`${import.meta.env.BASE_URL}sw.js`, {
@@ -34,22 +45,35 @@ export function useOfflineApp() {
       })
       .then((result) => {
         if (disposed) return;
-        registration = result;
+        registration.current = result;
+        hadWorker ||= Boolean(result.active);
         result.addEventListener("updatefound", installing);
         installing();
         check();
       })
       .catch(() => {});
-    navigator.serviceWorker.addEventListener("controllerchange", refresh);
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      controllerChanged,
+    );
     window.addEventListener("online", check);
     document.addEventListener("visibilitychange", visible);
     return () => {
       disposed = true;
-      registration?.removeEventListener("updatefound", installing);
-      navigator.serviceWorker.removeEventListener("controllerchange", refresh);
+      registration.current?.removeEventListener("updatefound", installing);
+      navigator.serviceWorker.removeEventListener(
+        "controllerchange",
+        controllerChanged,
+      );
       window.removeEventListener("online", check);
       document.removeEventListener("visibilitychange", visible);
     };
   }, []);
-  return { offlineReady, updateReady };
+  useEffect(() => {
+    if (!idle) return;
+    if (stale) window.location.reload();
+    else if (updateReady)
+      registration.current?.waiting?.postMessage("apply-update");
+  }, [idle, stale, updateReady]);
+  return { offlineReady, updateReady: updateReady || stale };
 }

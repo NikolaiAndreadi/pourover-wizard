@@ -88,7 +88,10 @@ self.addEventListener("install", (event) => {
     await cache.addAll(ASSETS.map((url) => new Request(url, { cache: "reload" })));
   })());
 });
-// Deliberately no skipWaiting: every tab keeps its version until all close.
+// Only an idle tab asks to activate early; a tab mid-brew keeps its loaded code until it is idle.
+self.addEventListener("message", (event) => {
+  if (event.data === "apply-update") self.skipWaiting();
+});
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     for (const key of await caches.keys()) {

@@ -71,8 +71,7 @@ export function Shell({
       {active && <SessionBar model={brew} />}
       {offline.updateReady ? (
         <p role="status" className="offline-status">
-          Update ready. After brewing, close all app tabs and windows, then
-          reopen to use it.
+          Update ready. It loads when you’re back on the home screen.
         </p>
       ) : null}
       {home && (

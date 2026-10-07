@@ -117,7 +117,7 @@ test("cached app cold-opens offline, survives a hash-route reload and brews", as
   expect(cached).toEqual(files.map(() => 200));
 });
 
-test("failed update retains offline version; complete update waits for every tab to close", async ({
+test("failed update retains offline version; complete update reloads idle tabs and waits out a brew", async ({
   context,
   page,
 }) => {
@@ -155,6 +155,7 @@ test("failed update retains offline version; complete update waits for every tab
   failDownload = false;
   // Returning online invokes the app's own update check.
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await expect(second).toHaveTitle("Pourover Wizard · V60 brew guide v2");
   await expect(page.getByRole("status")).toContainText("Update ready");
   await expect(page.getByRole("timer")).toBeVisible();
   expect(
@@ -163,11 +164,16 @@ test("failed update retains offline version; complete update waits for every tab
     ),
   ).toBe("preserved");
   await expect(page).toHaveTitle("Pourover Wizard · V60 brew guide");
-  await page.close();
-  await second.reload();
-  await expect(second).toHaveTitle("Pourover Wizard · V60 brew guide");
-  await expect(second.getByRole("status")).toContainText("Update ready");
+  await page.bringToFront();
+  await page.getByRole("button", { name: "Hold to cancel" }).focus();
+  await page.keyboard.down(" ");
+  await expect(page).toHaveTitle("Pourover Wizard · V60 brew guide v2");
+  await page.keyboard.up(" ");
+  await expect(
+    page.getByRole("heading", { name: "Prepare your brew" }),
+  ).toBeVisible();
   await context.setOffline(true);
+  await page.close();
   await second.close();
   const reopened = await context.newPage();
   await reopened.goto(appUrl);

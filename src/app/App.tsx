@@ -6,7 +6,7 @@ import { useSoundAssist } from "./useSoundAssist";
 import { useTheme } from "./useTheme";
 export function App() {
   const brew = useBrew();
-  const offline = useOfflineApp();
+  const offline = useOfflineApp(!brew.session && !brew.historyOpen);
   const theme = useTheme();
   const sound = useSoundAssist(
     brew.pace,

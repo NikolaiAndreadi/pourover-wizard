@@ -98,8 +98,9 @@ deploys from every push to `main`, independent of tags.
 
 The native app wraps the same SPA in Capacitor with native Bluetooth LE.
 Bundle identifier `com.nikolaiandreadi.pouroverwizard`, deployment target iOS
-**15.0**. Native builds use root-relative assets in `dist-ios/` and register
-no service worker or manifest.
+**16.4**, matching Vite's default build target (`baseline-widely-available`);
+raise both together. Native builds use root-relative assets in `dist-ios/` and
+register no service worker or manifest.
 
 You need macOS and Xcode **26.6** with its iOS platform; see
 [Capacitor's environment requirements](https://capacitorjs.com/docs/getting-started/environment-setup).

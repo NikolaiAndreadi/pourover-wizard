@@ -464,7 +464,7 @@ export function Brew({ model }: { model: BrewModel }) {
     );
   if (session.phase === "cancelled")
     return (
-      <section className="brew-panel">
+      <section className="brew-panel brew-cancelled">
         <h1>Brew cancelled</h1>
         <p>Start again whenever you’re ready.</p>
         <button

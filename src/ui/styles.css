@@ -486,8 +486,8 @@ figcaption,
   border-top: 1px solid var(--border);
 }
 
-/* Finished brews read as a centred card: summary, chart key and the restart button. */
-.brew-summary {
+.brew-summary,
+.brew-cancelled {
   text-align: center;
 }
 /* The summary's only title is its eyebrow, kept as the heading for assistive tech. */

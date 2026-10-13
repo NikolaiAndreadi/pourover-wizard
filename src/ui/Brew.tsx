@@ -12,6 +12,7 @@ import { ActionScene } from "./ActionScene";
 import { BrewChart } from "./BrewChart";
 import { HoldButton } from "./HoldButton";
 import { PourZoom, ProgressStrip, showsPourZoom } from "./ProgressStrip";
+import { ScaleHelp } from "./ScaleHelp";
 
 /** Saved brews complete in UTC and are shown in the viewer's local time. */
 const localTime = (iso: string) =>
@@ -72,8 +73,8 @@ function ScaleSetup({ model }: { model: BrewModel }) {
     <aside className="scale-setup" aria-label="Live scale setup">
       {!model.liveSupported && (
         <p className="note">
-          This browser can’t reach the scale. Use Chrome on a Mac or the iOS
-          app.
+          This browser can’t reach the scale.{" "}
+          <ScaleHelp className="text-button">How to connect one</ScaleHelp>
         </p>
       )}
       <ScanResults model={model} />

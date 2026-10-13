@@ -171,6 +171,13 @@ footer a,
   text-underline-offset: 0.25em;
   cursor: pointer;
 }
+.text-button {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
 .footer-toggle:focus-visible {
   outline: 3px solid #697753;
   outline-offset: 5px;
@@ -668,7 +675,8 @@ figcaption,
     transition: none;
   }
 }
-.disconnect-dialog {
+.disconnect-dialog,
+.scale-help {
   max-width: min(420px, calc(100vw - 32px));
   padding: 28px;
   border: 1px solid #68725155;
@@ -677,20 +685,38 @@ figcaption,
   color: #292e27;
   box-shadow: 0 20px 60px #0003;
 }
-.disconnect-dialog h2 {
+.disconnect-dialog h2,
+.scale-help h2 {
   font-size: var(--text-value);
   margin-top: 0;
 }
-.disconnect-dialog::backdrop {
+.scale-help {
+  text-align: left;
+  font-size: var(--text-body);
+  white-space: normal;
+}
+.scale-help ul {
+  display: grid;
+  gap: 10px;
+  padding-left: 1.2em;
+}
+.scale-help form button {
+  width: 100%;
+  justify-content: center;
+}
+.disconnect-dialog::backdrop,
+.scale-help::backdrop {
   background: #20251fcc;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .disconnect-dialog {
+  :root:not([data-theme="light"]) .disconnect-dialog,
+  :root:not([data-theme="light"]) .scale-help {
     background: #292e27;
     color: #f6f3ed;
   }
 }
-:root[data-theme="dark"] .disconnect-dialog {
+:root[data-theme="dark"] .disconnect-dialog,
+:root[data-theme="dark"] .scale-help {
   background: #292e27;
   color: #f6f3ed;
 }

@@ -2,6 +2,7 @@ import { type LiveSnapshot, modelName } from "@/app/liveScale";
 import type { BrewModel } from "@/app/useBrew";
 import { HoldButton } from "./HoldButton";
 import { HoldToCancel } from "./HoldToCancel";
+import { ScaleHelp } from "./ScaleHelp";
 
 function connectingLabel({ progress }: LiveSnapshot): string {
   if (!progress) return "Connecting…";
@@ -83,6 +84,14 @@ function ScaleControls({ model }: { model: BrewModel }) {
 export function SessionBar({ model }: { model: BrewModel }) {
   const phase = model.session?.phase;
   const cancellable = phase === "armed" || phase === "brewing";
+  if (!model.liveSupported && !model.session)
+    return (
+      <div className="session-bar">
+        <ScaleHelp>
+          Connect <BluetoothIcon /> scale
+        </ScaleHelp>
+      </div>
+    );
   if (!model.liveSupported && !cancellable) return null;
   return (
     <div className="session-bar">

@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { syntheticFrame } from "../src/scale/bookoo/synthetic.fixture.ts";
+import { syntheticFrame } from "@/scale/bookoo/synthetic.fixture.ts";
 import { beepsFor, CHIME_HZ, installFakeAudio } from "./fakeAudio";
 
 /** A tap must not disconnect; a one-second hold under the installed clock does. */
@@ -584,6 +584,18 @@ test("without Bluetooth the brew is timer only and never fabricates samples", as
     }),
   );
   await page.goto("./");
+  await page.getByRole("button", { name: "Connect scale" }).click();
+  const help = page.getByRole("dialog", { name: "Connect a scale" });
+  await expect(help).toBeVisible();
+  await expect(help.getByRole("link", { name: "Bluefy" })).toBeVisible();
+  await expect(
+    help.getByRole("link", { name: "GitHub Releases" }),
+  ).toHaveAttribute(
+    "href",
+    "https://github.com/NikolaiAndreadi/pourover-wizard/releases",
+  );
+  await help.getByRole("button", { name: "Got it!" }).click();
+  await expect(help).toBeHidden();
   await page.getByRole("button", { name: "Get ready" }).click();
   await expect(page.getByRole("button", { name: "Connect scale" })).toHaveCount(
     0,
@@ -591,6 +603,15 @@ test("without Bluetooth the brew is timer only and never fabricates samples", as
   await expect(
     page.getByText("This browser can’t reach the scale."),
   ).toBeVisible();
+  await page.getByRole("button", { name: "How to connect one" }).click();
+  await expect(help).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(help).toBeHidden();
+  await page.getByRole("button", { name: "How to connect one" }).click();
+  await help.click({ position: { x: 10, y: 10 } });
+  await expect(help).toBeVisible();
+  await page.mouse.click(5, 5);
+  await expect(help).toBeHidden();
   await expect(
     page.getByRole("button", { name: "Tare and auto start on weight change" }),
   ).toHaveCount(0);

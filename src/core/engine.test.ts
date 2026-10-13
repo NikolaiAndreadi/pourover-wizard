@@ -83,6 +83,11 @@ describe("brew state and clock", () => {
     state = sample(state, 30500, 3.2);
     expect(state.originMs).toBe(30000);
     expect(state.elapsedMs).toBe(500);
+    expect(state.samples.map(({ atMs, grams }) => [atMs, grams])).toEqual([
+      [0, 0],
+      [250, 1.5],
+      [500, 3.2],
+    ]);
     expect(event(state, "start", 30500).originMs).toBe(30000);
     let manual = event(armed(), "start", 700);
     manual = sample(manual, 750, 0);

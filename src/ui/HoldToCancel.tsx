@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { BrewModel } from "@/app/useBrew";
+import { isHoldPress } from "./HoldButton";
 
 /** Cancels the session after a one-second hold of pointer, Space or Enter. */
 export function HoldToCancel({
@@ -16,11 +17,12 @@ export function HoldToCancel({
         aria-describedby="cancel-hint"
         style={{ "--hold": model.holdProgress } as CSSProperties}
         onPointerDown={(event) => {
+          if (!isHoldPress(event)) return;
           event.currentTarget.setPointerCapture(event.pointerId);
           dispatch("hold");
         }}
-        onPointerUp={() => dispatch("release")}
-        onPointerCancel={() => dispatch("release")}
+        onPointerUp={(event) => event.isPrimary && dispatch("release")}
+        onPointerCancel={(event) => event.isPrimary && dispatch("release")}
         onLostPointerCapture={() => dispatch("release")}
         onBlur={() => dispatch("release")}
         onKeyDown={(event) => {

@@ -35,6 +35,7 @@ describe("auto-start pour detector", () => {
       onset: null,
       rises: 0,
       last: { atMs: 0, grams: 50 },
+      trail: [],
     });
     expect(pourStartMs).toBeNull();
   });
@@ -52,6 +53,7 @@ describe("auto-start pour detector", () => {
       onset: null,
       rises: 0,
       last: { atMs: 600, grams: 5 },
+      trail: [],
     });
     expect(pourStartMs).toBeNull();
   });
@@ -82,16 +84,30 @@ describe("auto-start pour detector", () => {
         [250, 2],
         [500, 2],
       ]).detector,
-    ).toEqual({ onset: null, rises: 0, last: { atMs: 500, grams: 2 } });
+    ).toEqual({
+      onset: null,
+      rises: 0,
+      last: { atMs: 500, grams: 2 },
+      trail: [],
+    });
   });
-  it("keeps the first onset across consecutive rises", () => {
+  it("keeps the first onset and every spaced rise across consecutive rises", () => {
     expect(
       feed([
         [0, 0],
         [100, 1],
+        [150, 1.5],
         [200, 2],
       ]).detector,
-    ).toMatchObject({ rises: 2, onset: { atMs: 0, grams: 0 } });
+    ).toMatchObject({
+      rises: 2,
+      onset: { atMs: 0, grams: 0 },
+      trail: [
+        { atMs: 0, grams: 0 },
+        { atMs: 100, grams: 1 },
+        { atMs: 200, grams: 2 },
+      ],
+    });
   });
   it.each<[string, [number, number][]]>([
     [

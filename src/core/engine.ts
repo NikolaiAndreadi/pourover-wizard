@@ -161,7 +161,15 @@ function receiveSample(state: Session, sample: ScaleSample): Session {
       continuous,
     );
     next = { ...next, detector };
-    if (pourStartMs !== null) next = begin(next, pourStartMs);
+    if (pourStartMs !== null)
+      next = {
+        ...begin(next, pourStartMs),
+        samples: state.detector.trail.map((reading) => ({
+          atMs: reading.atMs - pourStartMs,
+          grams: reading.grams,
+          segment: state.segment,
+        })),
+      };
   }
   if (next.phase === "preparation")
     return { ...next, settled: addReading(next.settled, sample, continuous) };

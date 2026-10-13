@@ -20,11 +20,13 @@ export function useOfflineApp(idle: boolean) {
       setOfflineReady(Boolean(current.active));
       setUpdateReady(Boolean(current.waiting && current.active));
     };
+    const workers = new Set<ServiceWorker>();
     const installing = () => {
-      registration.current?.installing?.addEventListener(
-        "statechange",
-        refresh,
-      );
+      const worker = registration.current?.installing;
+      if (worker) {
+        workers.add(worker);
+        worker.addEventListener("statechange", refresh);
+      }
       refresh();
     };
     const check = () => {
@@ -61,6 +63,8 @@ export function useOfflineApp(idle: boolean) {
     return () => {
       disposed = true;
       registration.current?.removeEventListener("updatefound", installing);
+      for (const worker of workers)
+        worker.removeEventListener("statechange", refresh);
       navigator.serviceWorker.removeEventListener(
         "controllerchange",
         controllerChanged,

@@ -13,8 +13,14 @@ export interface Detector {
   readonly onset: ScaleSample | null;
   readonly rises: number;
   readonly last: ScaleSample | null;
+  readonly trail: readonly ScaleSample[];
 }
-export const IDLE_DETECTOR: Detector = { onset: null, rises: 0, last: null };
+export const IDLE_DETECTOR: Detector = {
+  onset: null,
+  rises: 0,
+  last: null,
+  trail: [],
+};
 
 /**
  * Feeds one fresh armed reading. A discontinuous stream restarts detection.
@@ -28,13 +34,16 @@ export function observePour(
   const reference = state.last;
   let detector = state;
   if (!continuous || reference === null)
-    detector = { onset: null, rises: 0, last: sample };
+    detector = { ...IDLE_DETECTOR, last: sample };
   else if (sample.atMs - reference.atMs >= RISE_SPACING_MS) {
     const rising = sample.grams - reference.grams > RISE_MIN_GRAMS;
     detector = {
       onset: rising ? (state.onset ?? reference) : null,
       rises: rising ? state.rises + 1 : 0,
       last: sample,
+      trail: rising
+        ? [...(state.onset === null ? [reference] : state.trail), sample]
+        : [],
     };
   }
   const { onset } = detector;

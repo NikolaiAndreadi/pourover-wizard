@@ -1,5 +1,6 @@
 import {
   type CSSProperties,
+  type PointerEvent,
   type ReactNode,
   useEffect,
   useEffectEvent,
@@ -9,6 +10,11 @@ import {
 } from "react";
 
 const HOLD_MS = 1000;
+
+export function isHoldPress(event: PointerEvent<HTMLElement>): boolean {
+  return event.isPrimary && event.button === 0 && !event.ctrlKey;
+}
+
 /**
  * Fires after a one-second hold of pointer, Space or Enter, with the fill
  * following the physical clock. Focus loss and page hiding release the hold.
@@ -66,11 +72,12 @@ export function HoldButton({
         aria-describedby={hint}
         style={{ "--hold": progress } as CSSProperties}
         onPointerDown={(event) => {
+          if (!isHoldPress(event)) return;
           event.currentTarget.setPointerCapture(event.pointerId);
           begin();
         }}
-        onPointerUp={release}
-        onPointerCancel={release}
+        onPointerUp={(event) => event.isPrimary && release()}
+        onPointerCancel={(event) => event.isPrimary && release()}
         onLostPointerCapture={release}
         onBlur={release}
         onKeyDown={(event) => {

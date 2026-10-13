@@ -465,7 +465,7 @@ export function Brew({ model }: { model: BrewModel }) {
     return (
       <section className="brew-panel">
         <h1>Brew cancelled</h1>
-        <p>Nothing was saved. Start again whenever you’re ready.</p>
+        <p>Start again whenever you’re ready.</p>
         <button
           type="button"
           className="button restart"

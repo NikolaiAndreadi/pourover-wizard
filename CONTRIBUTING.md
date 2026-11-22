@@ -29,7 +29,7 @@ Installing points Git at `.githooks/`, whose `pre-push` hook runs
 `npm run check`. Skip it once with `git push --no-verify`.
 
 | Command              | Purpose                                                             |
-|----------------------|---------------------------------------------------------------------|
+| -------------------- | ------------------------------------------------------------------- |
 | `npm run dev`        | Local app at `/pourover-wizard/`                                    |
 | `npm run check:fast` | Type checks, Biome, dependency and Bluetooth boundaries, unit tests |
 | `npm run test:watch` | Unit tests while editing                                            |

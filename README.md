@@ -45,17 +45,17 @@ Safari has no Web Bluetooth, so there are two ways to brew with a scale:
 
 ## Supported scales
 
-| Scale              | Status                                           |
-|--------------------|--------------------------------------------------|
-| BOOKOO Themis Mini | Verified on hardware                             |
-| BOOKOO Ultra Scale | Written against vendor protocol docs, untested   |
+| Scale              | Status                                         |
+| ------------------ | ---------------------------------------------- |
+| BOOKOO Themis Mini | Verified on hardware                           |
+| BOOKOO Ultra Scale | Written against vendor protocol docs, untested |
 
 Contributions for other scales are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Recipes
 
 | Recipe           | Author         | Default      | Done around | Source                                                                                                                                                             |
-|------------------|----------------|--------------|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ---------------- | -------------- | ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Better 1 Cup V60 | James Hoffmann | 15 g / 250 g | 3:00        | [Video](https://www.youtube.com/watch?v=1oB1oDrDkHM), [Hario](https://www.hario-usa.com/blogs/recipes-and-more-from-friends/james-hoffmann-1-cup-v60-technique)    |
 | Ultimate V60     | James Hoffmann | 30 g / 500 g | 3:30        | [Video](https://www.youtube.com/watch?v=AI4ynXzkSQo), [Hario](https://www.hario-usa.com/blogs/recipes-and-more-from-friends/james-hoffmann-uitimate-v60-technique) |
 | 4:6 Method       | Tetsu Kasuya   | 20 g / 300 g | 3:30        | [Philocoffea](https://en.philocoffea.com/blogs/blog/coffee-brewing-method)                                                                                         |

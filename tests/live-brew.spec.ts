@@ -231,12 +231,12 @@ test("mocked live brewing uses the Mini profile, gates arming and stops on disco
     page.getByRole("heading", { name: "Brew stopped" }),
   ).toBeVisible();
   const stoppedChart = await page.locator("svg").first().innerHTML();
-  const stoppedSummary = await page.locator("main").innerText();
+  const stoppedSummary = await page.locator("main").textContent();
   await page.clock.runFor(2000);
   await emit(999);
   await page.clock.fastForward(130000);
   expect(await page.locator("svg").first().innerHTML()).toBe(stoppedChart);
-  expect(await page.locator("main").innerText()).toBe(stoppedSummary);
+  expect(await page.locator("main").textContent()).toBe(stoppedSummary);
   await expect(
     page.getByRole("button", { name: "Done", exact: true }),
   ).toHaveCount(0);

@@ -1,6 +1,6 @@
 # Security
 
-Pourover Wizard runs entirely in your browser or on your phone. It has no server, no accounts and no analytics; 
+Pourover Wizard runs entirely in your browser or on your phone. It has no server, no accounts and no analytics;
 brew history and settings stay in local storage on the device. The only external connection is Bluetooth to the
 scale you choose.
 

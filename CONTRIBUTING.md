@@ -107,6 +107,11 @@ You need macOS and Xcode **26.6** with its iOS platform; see
 The generated `ios/App/CapApp-SPM/Package.swift` and the committed
 `Package.resolved` pin the Capacitor packages to the npm versions.
 
+After updating Capacitor or a native plugin, run `npm ci` and
+`npm run ios:pins` on macOS. Commit the generated Swift manifest and lockfile
+changes with the npm update. Pull requests that change dependencies
+or the iOS project run the same pinned archive build used for releases.
+
 ```sh
 npm run ios:package
 ```
